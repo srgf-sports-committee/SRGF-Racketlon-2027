@@ -1297,6 +1297,17 @@ main>section:not(#home){
 #auction{display:none !important;}
 </style>
 
+<style id="player-score-filter-side-by-side">
+/* Player Scores: keep Sport and Tier filters side by side on every screen size. */
+#results .filter-row{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%;
+}
+#results .filter-row > div{min-width:0!important;}
+</style>
+
 <style id="mobile-comfort-final">
 /* Mobile/tablet comfort improvements only. Desktop layout remains unchanged. */
 @media (max-width: 1100px){
@@ -1355,7 +1366,7 @@ main>section:not(#home){
   .reference-hero{height:210px!important}
   .reference-metrics{grid-template-columns:1fr!important;width:100%!important;gap:9px!important}
 
-  .filter-row{grid-template-columns:1fr!important;gap:9px!important}
+  .filter-row{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
   .filter-row>div{min-width:0!important}
   label{font-size:12px!important}
   select,input,button{font-size:14px!important}
@@ -1617,6 +1628,12 @@ main>section:not(#home){
         <label for="resultPlayerSportFilter"><strong>Filter by Sport</strong></label>
         <select id="resultPlayerSportFilter">
           <option value="">All Sports</option>
+        </select>
+      </div>
+      <div>
+        <label for="resultPlayerTierFilter"><strong>Filter by Tier</strong></label>
+        <select id="resultPlayerTierFilter">
+          <option value="">All Tiers</option>
         </select>
       </div>
     </div>
@@ -2709,6 +2726,22 @@ function refreshResultPlayerSportFilter_(rows, headers){
   if(sports.some(s=>s===current)) select.value=current;
 }
 
+function refreshResultPlayerTierFilter_(rows, headers){
+  const select=$("resultPlayerTierFilter");
+  if(!select) return;
+  const current=select.value;
+  const tierIndex=headers.findIndex(h=>String(h||"").trim().toLowerCase()==="tier");
+  const tiers=tierIndex>=0
+    ? [...new Set(rows.map(row=>String(row[tierIndex]??"").trim()).filter(Boolean))].sort((a,b)=>{
+        const an=Number((a.match(/\d+/)||[999])[0]);
+        const bn=Number((b.match(/\d+/)||[999])[0]);
+        return an-bn || a.localeCompare(b);
+      })
+    : [];
+  select.innerHTML='<option value="">All Tiers</option>'+tiers.map(t=>`<option value="${escAttr(t)}">${esc(t)}</option>`).join("");
+  if(tiers.some(t=>t===current)) select.value=current;
+}
+
 function renderResults_(){
   const teamBody=$("teamPointsBody");
   const teamTable=$("teamPointsTable");
@@ -2839,7 +2872,9 @@ function renderResults_(){
 
   // Player score table: calculate scores for every sport from fixture game scores.
   refreshResultPlayerSportFilter_(rows, headers);
+  refreshResultPlayerTierFilter_(rows, headers);
   const selectedPlayerSport=$("resultPlayerSportFilter") ? String($("resultPlayerSportFilter").value||"").trim().toLowerCase() : "";
+  const selectedPlayerTier=$("resultPlayerTierFilter") ? String($("resultPlayerTierFilter").value||"").trim().toLowerCase() : "";
   const playerScores={};
 
   const parseScore=(raw)=>{
@@ -2854,6 +2889,7 @@ function renderResults_(){
     const p2=val(row,"player 2");
     if(!sport || !tier || (!p1 && !p2)) return;
     if(selectedPlayerSport && sport.toLowerCase()!==selectedPlayerSport) return;
+    if(selectedPlayerTier && tier.toLowerCase()!==selectedPlayerTier) return;
 
     [1,2,3,4].forEach(gameNo=>{
       const parsed=parseScore(val(row,"game "+gameNo)) || parseScore(val(row,"set "+gameNo));
@@ -2892,7 +2928,7 @@ function renderResults_(){
     : `<tr><td colspan="4" class="notice">No player scores entered yet.</td></tr>`;
   playerTable.classList.remove("hidden");
   playerMsg.textContent=playerEntries.length
-    ? `${playerEntries.length} player result(s) shown${selectedPlayerSport ? ` for ${esc($("resultPlayerSportFilter").value)}` : ""}.`
+    ? `${playerEntries.length} player result(s) shown${selectedPlayerSport ? ` for ${esc($("resultPlayerSportFilter").value)}` : ""}${selectedPlayerTier ? ` • ${esc($("resultPlayerTierFilter").value)}` : ""}.`
     : "No fixture game scores entered yet.";
 
 }
@@ -3205,6 +3241,7 @@ $("exportAuctionBtn").addEventListener("click", exportAuctionCSV);
 $("fixtureTeamFilter").addEventListener("change", renderFixtureTable_);
 $("fixtureSportFilter").addEventListener("change", renderFixtureTable_);
 $("resultPlayerSportFilter").addEventListener("change", renderResults_);
+$("resultPlayerTierFilter").addEventListener("change", renderResults_);
 $("fixturePlayerFilterButton").addEventListener("click",()=>{
   const dropdown=$("fixturePlayerDropdown");
   if(dropdown && !dropdown.classList.contains("hidden")) closeFixturePlayerDropdown_();
