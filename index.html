@@ -1702,7 +1702,7 @@ async function syncChanges(){
       };
     }catch(e){
       lastError=e;
-      if(attempt<2) await new Promise(r=>setTimeout(r,1200));
+      if(attempt<2) await new Promise(r=>setTimeout(r,700));
     }
   }
   return {synced:0,deleted:0,remainingSales:sales.length,remainingDeletes:deletes.length,error:lastError,errorMessage:(lastError&&lastError.message)?lastError.message:String(lastError),backendErrors:[]};
@@ -1747,7 +1747,7 @@ async function apiData(){
   // automatically so a normal cold-start does not make the page look offline.
   for(let attempt=1; attempt<=2; attempt++){
     try{
-      const res=await fetchWithTimeout_(CONFIG.API_URL+"?action=data",{cache:"no-store"},25000);
+      const res=await fetchWithTimeout_(CONFIG.API_URL+"?action=data",{cache:"no-store"},15000);
       if(!res.ok) throw new Error("Could not read live Google Sheet data (HTTP "+res.status+")");
       const data=await res.json();
       if(!data.ok) throw new Error(data.error||"Google Sheet API error");
@@ -2927,6 +2927,9 @@ async function loadCore_(){
     state.pending=state.auction.filter(a=>!remoteKeys.has(auctionKey(a)));
     applyAuctionToPlayers();
     render();
+    // Save the freshly loaded players/teams/auction immediately. This means the
+    // next page open can show current data from cache without waiting for fixtures.
+    saveCache();
     // Players/teams are now current, so the fixture filter can resolve teams correctly.
     // Fixture problems are isolated from the main Sheet connection: a fixture
     // timeout must not make the entire auction page look OFFLINE.
