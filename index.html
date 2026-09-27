@@ -3496,18 +3496,20 @@ async function sellPlayer(){
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 
 function escAttr(s){return esc(s)}
+function addListenerSafe_(id,event,handler){var el=document.getElementById(id);if(el)el.addEventListener(event,handler);}
+
 $("bidInput")?.addEventListener("input", validateBidInput_);
 $("bidInput")?.addEventListener("blur", validateBidInput_);
 if($("bidInput")) refreshBidAmountUI_();
 
-$("exportTeamsBtn").addEventListener("click", exportTeamsCSV);
+addListenerSafe_("exportTeamsBtn","click", exportTeamsCSV);
 $("exportAuctionBtn")?.addEventListener("click", exportAuctionCSV);
-$("fixtureStatusFilter").addEventListener("change", renderFixtureTable_);
-$("fixtureTeamFilter").addEventListener("change", renderFixtureTable_);
-$("fixtureSportFilter").addEventListener("change", renderFixtureTable_);
+addListenerSafe_("fixtureStatusFilter","change", renderFixtureTable_);
+addListenerSafe_("fixtureTeamFilter","change", renderFixtureTable_);
+addListenerSafe_("fixtureSportFilter","change", renderFixtureTable_);
 window.activePlayerScoreTab="racketlon";
 window.playerScoreTierFilters=window.playerScoreTierFilters || {racketlon:"", nonRacketlon:""};
-$("playerScoresRacketlonTab").addEventListener("click",()=>{
+addListenerSafe_("playerScoresRacketlonTab","click",()=>{
   syncPlayerScoreTierFilterState_();
   window.activePlayerScoreTab="racketlon";
   $("playerScoresRacketlonTab").classList.add("active");
@@ -3516,7 +3518,7 @@ $("playerScoresRacketlonTab").addEventListener("click",()=>{
   $("playerScoresNonRacketlonTab").setAttribute("aria-selected","false");
   renderResults_();
 });
-$("playerScoresNonRacketlonTab").addEventListener("click",()=>{
+addListenerSafe_("playerScoresNonRacketlonTab","click",()=>{
   syncPlayerScoreTierFilterState_();
   window.activePlayerScoreTab="nonRacketlon";
   $("playerScoresNonRacketlonTab").classList.add("active");
@@ -3525,17 +3527,17 @@ $("playerScoresNonRacketlonTab").addEventListener("click",()=>{
   $("playerScoresRacketlonTab").setAttribute("aria-selected","false");
   renderResults_();
 });
-$("resultPlayerSportFilter").addEventListener("change", renderResults_);
-$("resultPlayerTierFilter").addEventListener("change",()=>{
+addListenerSafe_("resultPlayerSportFilter","change", renderResults_);
+addListenerSafe_("resultPlayerTierFilter","change",()=>{
   syncPlayerScoreTierFilterState_();
   renderResults_();
 });
-$("fixturePlayerFilterButton").addEventListener("click",()=>{
+addListenerSafe_("fixturePlayerFilterButton","click",()=>{
   const dropdown=$("fixturePlayerDropdown");
   if(dropdown && !dropdown.classList.contains("hidden")) closeFixturePlayerDropdown_();
   else openFixturePlayerDropdown_();
 });
-$("fixturePlayerSearch").addEventListener("input", syncFixturePlayerDropdownUI_);
+addListenerSafe_("fixturePlayerSearch","input", syncFixturePlayerDropdownUI_);
 document.addEventListener("click",(event)=>{
   const wrap=document.querySelector(".fixture-player-filter-wrap");
   if(wrap && !wrap.contains(event.target)) closeFixturePlayerDropdown_();
@@ -3580,7 +3582,7 @@ $("syncBtn")?.addEventListener("click", async ()=>{
     }
   }finally{ btn.disabled=false; }
 });
-$("refreshBtn").addEventListener("click", ()=>{ load(); });
+addListenerSafe_("refreshBtn","click", ()=>{ load(); });
 
 
 function switchSection(sectionId){
