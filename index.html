@@ -3314,16 +3314,20 @@ async function loadCore_(){
     state.players=remotePlayers;
     state.teams=remoteTeams;
 
-    // A successful live response is authoritative. Only preserve genuinely
-    // pending browser-side auction writes; never merge previously synced cached
-    // auction rows back into an empty live result.
+    // A successful live response is authoritative for what is DISPLAYED.
+    // Do not merge cached/pending auction rows into the Teams page.
+    // If the live AUCTION result is empty, the Teams page must show empty/no
+    // players even when this browser has older cached or pending rows.
     const pendingLocalAuction = cachedState && Array.isArray(cachedState.pending)
       ? cachedState.pending
       : [];
-    state.auction=mergeAuction(remoteAuction, pendingLocalAuction);
+    state.auction=remoteAuction;
 
-    const remoteKeys=new Set(remoteAuction.map(auctionKey));
-    state.pending=state.auction.filter(a=>!remoteKeys.has(auctionKey(a)));
+    // Keep unsynced browser changes only for background sync. They must not
+    // leak back into the live Teams display.
+    state.pending=pendingLocalAuction.filter(a=>
+      !remoteAuction.some(r=>auctionKey(r)===auctionKey(a))
+    );
     applyAuctionToPlayers();
     render();
     // Players/teams are now current, so the fixture filter can resolve teams correctly.
