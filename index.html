@@ -1471,15 +1471,6 @@ main>section:not(#home){
       <span class="metric-arrow">›</span>
     </div>
 
-    <div class="metric metric-purple">
-      <div class="metric-icon">⚒</div>
-      <div>
-        <label>Auctioned Players</label>
-        <strong id="mAuctioned">0</strong>
-      </div>
-      <span class="metric-arrow">›</span>
-    </div>
-
     <div class="metric metric-gold">
       <div class="metric-icon">🏓</div>
       <div>
@@ -1517,7 +1508,7 @@ main>section:not(#home){
   </div>
 </section>
 
-<section id="auction" class="hidden">
+<section id="auction" class="hidden" style="display:none !important">
   <h1>AUCTION</h1>
   <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
     <div class="notice"><strong>Data safety:</strong> Auction history is kept in this browser until it is confirmed. <strong>Auto-sync: every 15 seconds.</strong></div>
@@ -1741,10 +1732,6 @@ main>section:not(#home){
       <button class="report-card" data-report-action="players">
         <span class="report-icon">♙</span>
         <span><strong>Player Report</strong><small>Registered player information</small></span>
-      </button>
-      <button class="report-card" data-report-action="auction">
-        <span class="report-icon">⚒</span>
-        <span><strong>Auction Report</strong><small>Auction history and allocations</small></span>
       </button>
     </div>
   </div>
@@ -3359,11 +3346,19 @@ async function loadCore_(){
     const remotePlayers=normalizePlayers(data.players||[]);
     const remoteTeams=normalizeTeams(data.teams||[]);
     const remoteAuction=normalizeAuction(data.auction||[]);
-    const localAuction=state.auction||[];
+    // IMPORTANT: only merge in genuinely-unsynced local sales (state.pending),
+    // never the full previous state.auction mirror. state.auction at this
+    // point may still hold stale entries restored from localStorage by
+    // applyCache() (e.g. from before an auction reset). Those are NOT
+    // "pending" writes - they're just old cache - so they must never be
+    // resurrected on top of a successful live read, and must never be
+    // re-queued for sync back to the sheet. The live Sheet is the source of
+    // truth here, including when it legitimately returns 0/blank.
+    const localPendingOnly=state.pending||[];
 
     state.players=remotePlayers;
     state.teams=remoteTeams;
-    state.auction=mergeAuction(remoteAuction, localAuction);
+    state.auction=mergeAuction(remoteAuction, localPendingOnly);
 
     const remoteKeys=new Set(remoteAuction.map(auctionKey));
     state.pending=state.auction.filter(a=>!remoteKeys.has(auctionKey(a)));
@@ -3642,7 +3637,6 @@ document.querySelectorAll("[data-report-action]").forEach(card=>{
     const action=card.dataset.reportAction;
     if(action==="teams") switchSection("teams");
     if(action==="players") switchSection("players");
-    if(action==="auction") switchSection("auction");
   });
 });
 function renderPlayerDropdownOptions(query=""){
