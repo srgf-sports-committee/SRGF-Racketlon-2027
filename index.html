@@ -1957,13 +1957,12 @@ function normalizePlayers(rows){
 }
 
 function normalizeTeams(rows){
-  if(rows.length) return rows.map(r=>({
+  // The live Teams response is authoritative, including an empty response.
+  // Do NOT create default teams when the source returns no rows.
+  return (Array.isArray(rows) ? rows : []).map(r=>({
     id:r["Team ID"], name:r["Team Name"]||r["Team ID"],
     budget:Number(r["Initial Budget"]||CONFIG.TEAM_BUDGET)
   })).filter(x=>x.id);
-  return Array.from({length:CONFIG.TEAM_COUNT},(_,i)=>({
-    id:`T${i+1}`,name:`Team ${i+1}`,budget:CONFIG.TEAM_BUDGET
-  }));
 }
 
 function normalizeAuction(rows){
@@ -1989,22 +1988,25 @@ function teamStats(teamId){
 }
 
 function renderTeamsBoard(){
-  const teams = state.teams.slice(0,4);
-  const fallback = Array.from({length:4},(_,i)=>({id:`T${i+1}`,name:`Team ${i+1}`}));
-  const cols = teams.length === 4 ? teams : fallback;
+  // Show exactly what the live source returned. No cached/default teams are
+  // displayed here unless the main API request itself failed and loadCore_()
+  // explicitly restores the saved state.
+  const teams = Array.isArray(state.teams) ? state.teams.slice(0,4) : [];
 
-  $("teamsBoard").innerHTML = cols.map(t=>{
-    const players = state.auction
-      .filter(a=>String(a.teamId)===String(t.id))
-      .map(a=>a.player);
+  $("teamsBoard").innerHTML = teams.length
+    ? teams.map(t=>{
+        const players = state.auction
+          .filter(a=>String(a.teamId)===String(t.id))
+          .map(a=>a.player);
 
-    return `<div class="team-column">
-      <div class="team-title">${esc(t.name)}</div>
-      ${players.length
-        ? players.map(p=>`<div class="team-player">${esc(p)}</div>`).join("")
-        : `<div class="team-player team-empty">No players</div>`}
-    </div>`;
-  }).join("");
+        return `<div class="team-column">
+          <div class="team-title">${esc(t.name)}</div>
+          ${players.length
+            ? players.map(p=>`<div class="team-player">${esc(p)}</div>`).join("")
+            : `<div class="team-player team-empty">No players</div>`}
+        </div>`;
+      }).join("")
+    : `<div class="team-player team-empty" style="grid-column:1 / -1;padding:20px">No teams found in the live source.</div>`;
 }
 
 function getInitials(name){
@@ -2279,10 +2281,9 @@ function render(){
 
   const auctionTeamsBoard = $("auctionTeamsBoard");
   if(auctionTeamsBoard){
-    const teams = state.teams.slice(0,4);
-    const fallback = Array.from({length:4},(_,i)=>({id:`T${i+1}`,name:`Team ${i+1}`}));
-    const cols = teams.length === 4 ? teams : fallback;
-    auctionTeamsBoard.innerHTML = cols.map(t=>{
+    const teams = Array.isArray(state.teams) ? state.teams.slice(0,4) : [];
+    const cols = teams;
+    auctionTeamsBoard.innerHTML = cols.length ? cols.map(t=>{
       const players = state.auction
         .filter(a=>String(a.teamId)===String(t.id))
         .map(a=>a.player);
@@ -3288,12 +3289,11 @@ async function loadOnce_(){
 }
 
 async function loadCore_(){
-  const hadCache=applyCache();
-  if(hadCache){
-    setStatus("Refreshing… showing saved data");
-    refreshFixtureTeamFilter_();
-    renderResults_();
-  }else setStatus("Loading…");
+  // IMPORTANT: Do not apply cached data before the live request.
+  // A successful live response (including blank/0/empty results) must always
+  // replace the saved state. Cache is used ONLY if the live connection fails.
+  const cachedState=readCache();
+  setStatus("Loading…");
 
   try{
     setStatus("Refreshing …");
@@ -3310,11 +3310,17 @@ async function loadCore_(){
     const remotePlayers=normalizePlayers(data.players||[]);
     const remoteTeams=normalizeTeams(data.teams||[]);
     const remoteAuction=normalizeAuction(data.auction||[]);
-    const localAuction=state.auction||[];
 
     state.players=remotePlayers;
     state.teams=remoteTeams;
-    state.auction=mergeAuction(remoteAuction, localAuction);
+
+    // A successful live response is authoritative. Only preserve genuinely
+    // pending browser-side auction writes; never merge previously synced cached
+    // auction rows back into an empty live result.
+    const pendingLocalAuction = cachedState && Array.isArray(cachedState.pending)
+      ? cachedState.pending
+      : [];
+    state.auction=mergeAuction(remoteAuction, pendingLocalAuction);
 
     const remoteKeys=new Set(remoteAuction.map(auctionKey));
     state.pending=state.auction.filter(a=>!remoteKeys.has(auctionKey(a)));
@@ -3338,7 +3344,9 @@ async function loadCore_(){
         : "LIVE · Fixtures cached · "+new Date().toLocaleTimeString());
     }
   }catch(e){
-    if(hadCache){
+    // ONLY a genuine live connection/API failure may use the saved state.
+    if(cachedState){
+      applyCache();
       render();
       setStatus("OFFLINE · using current saved state", true);
       $("auctionMessage").textContent="Network unavailable. Showing the latest saved auction state. Nothing has been reset.";
