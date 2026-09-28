@@ -1,0 +1,7 @@
+{
+  "success": false,
+  "syncedAt": "",
+  "sourceUpdatedAt": "",
+  "source": "Google Sheets via Apps Script",
+  "message": "Waiting for the first successful cloud sync."
+}
