@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: srgf-data-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -79,5 +83,11 @@ jobs:
             echo "No JSON changes to commit."
           else
             git commit -m "Auto-sync tournament data"
-            git push
+
+            # The repository may have received another commit after this
+            # workflow started (for example a manual GitHub edit). Rebase
+            # our JSON commit onto the current remote main before pushing.
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
