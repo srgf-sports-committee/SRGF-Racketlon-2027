@@ -27,6 +27,12 @@
       box.innerHTML=`<button class="secondary" id="loginBtn">Admin / Writer Login</button>`;
       document.getElementById("loginBtn")?.addEventListener("click",startLogin);
     }
+
+    // Rebuild navigation after login/logout so Auction is visible only to Admin.
+    const currentPage = document.body?.dataset?.page || "";
+    if(window.SRGF?.nav) window.SRGF.nav(currentPage);
+    document.body.classList.toggle("is-admin",canAuction());
+    document.body.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
   }
 
   function startLogin(){
@@ -52,8 +58,6 @@
     const s=readStored();
     if(s.token) session=s;
     render();
-    document.body.classList.toggle("is-admin",canAuction());
-    document.body.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
   }
 
   window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear};

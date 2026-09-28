@@ -298,36 +298,30 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   async function load(){
-    // JSON is the immediate display source. This keeps the previous good data
-    // visible while the live Apps Script request is loading.
     let shown=false;
+    // Always show the latest JSON snapshot first so a slow Apps Script call
+    // never leaves the Fixtures page blank.
     try{
-      const d=await SRGF.jsonFile("fixtures.json");
-      const f=d.rows||[];
+      const d=await SRGF.loadJsonDataset("fixtures");
+      const f=d.data||[];
       headers=d.headers||Object.keys(f[0]||{});
       rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
-      try{
-        const t=await SRGF.jsonFile("teams.json");
-        window.__SRGF_TEAMS=t.rows||t.teams||[];
-      }catch(_){window.__SRGF_TEAMS=[];}
       render();
-      setStatus("JSON data · "+new Date().toLocaleTimeString());
+      await loadJsonFreshness();
+      setStatus("JSON data");
       shown=true;
-    }catch(e){}
+    }catch(_){ }
 
-    // Refresh live after the old JSON is already visible.
+    // Editors still get live Sheet data, but only after JSON is visible.
     try{
-      const d=await live("data");
-      const f=Array.isArray(d.fixtures)?d.fixtures:[];
-      const t=Array.isArray(d.teams)?d.teams:[];
-      window.__SRGF_TEAMS=t;
-      if(!f.length){headers=[];rows=[];}
-      else{headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
+      const d=await live("fixtures");
+      const f=d.fixtures||[];
+      if(f.length){headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
+      else {headers=[];rows=[];}
       render();
-      setStatus("LIVE · "+new Date().toLocaleTimeString());
+      setStatus(roleCanEdit()?"LIVE editor data":"LIVE · Google Sheet");
     }catch(e){
-      if(!shown){headers=[];rows=[];render();setStatus("No fixture data available",true);}
-      // If JSON was shown, keep it. Never replace good old data with blank data.
+      if(!shown)setStatus("No fixture data available",true);
     }
   }
 

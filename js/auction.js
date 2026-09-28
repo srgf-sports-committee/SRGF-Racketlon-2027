@@ -29,13 +29,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   });
   $("bidInput")?.addEventListener("input",()=>{$("bidInput").value=$("bidInput").value.replace(/[^\d.]/g,"").slice(0,4)});
   async function load(){
-    let shown=false;
-    try{
-      const [p,t,a,c]=await Promise.all([SRGF.jsonFile("players.json"),SRGF.jsonFile("teams.json"),SRGF.jsonFile("auction.json"),SRGF.jsonFile("config.json")]);
-      players=p.rows||[];teams=t.rows||[];auction=a.rows||[];config={};(c.rows||[]).forEach(r=>config[r.Parameter]=r.Value);render();setStatus("JSON data · "+new Date().toLocaleTimeString(),true);shown=true;
-    }catch(_){}
-    try{const d=await live("data");players=d.players||[];teams=d.teams||[];auction=d.auction||[];config={};(d.config||[]).forEach(r=>config[r.Parameter]=r.Value);render();setStatus("LIVE · "+new Date().toLocaleTimeString())}
-    catch(e){if(!shown)setStatus(e.message,true)}
+    try{const d=await live("data");players=d.players||[];teams=d.teams||[];auction=d.auction||[];(d.config||[]).forEach(r=>config[r.Parameter]=r.Value);render();setStatus("LIVE · "+new Date().toLocaleTimeString())}
+    catch(e){setStatus(e.message,true)}
   }
-  $("refreshBtn")?.addEventListener("click",load);await load();setInterval(()=>{if(!document.hidden)load()},SRGF_CONFIG.REFRESH_MS);
+  $("refreshBtn")?.addEventListener("click",load);await load();setInterval(()=>{if(!document.hidden)load()},15000);
 });
