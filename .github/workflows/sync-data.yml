@@ -1,1 +1,37 @@
+name: Sync SRGF data
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download current tournament data
+        run: |
+          python - <<'PY'
+          import json, urllib.request, pathlib, datetime
+          api="https://script.google.com/macros/s/AKfycbw_KN0QUEsck_ChkjZ3HAS82Xj9aVb9R6UBYJzoh26MSE-ydTJjVjUzn6vFXG3WQlFJsg/exec?action=data&t="+str(__import__('time').time())
+          data=json.load(urllib.request.urlopen(api, timeout=30))
+          out=pathlib.Path("data")
+          out.mkdir(exist_ok=True)
+          for key in ["players","teams","fixtures","results","auction","config"]:
+              obj={"updatedAt":data.get("updatedAt",""),"rows":data.get(key,[])}
+              if key=="fixtures":
+                  rows=obj["rows"]
+                  obj={"updatedAt":obj["updatedAt"],"headers":list(rows[0].keys()) if rows else [],"rows":rows}
+              (out/f"{key}.json").write_text(json.dumps(obj,ensure_ascii=False,indent=2),encoding="utf-8")
+          PY
+      - name: Commit updated JSON
+        run: |
+          git config user.name "SRGF Data Sync"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/*.json
+          git diff --cached --quiet || git commit -m "Auto-sync tournament data"
+          git push
