@@ -51,10 +51,15 @@
   }
 
   function nav(active){
+    // Keep the top navigation in exactly the same order as the Home cards.
     const items = [
-      ["index.html","Home","home"],["fixtures.html","Fixtures","fixtures"],
-      ["results.html","Results","results"],["teams.html","Teams","teams"],
-      ["players.html","Players","players"],["auction.html","Auction","auction"]
+      ["registration.html","Registration Form","registration"],
+      ["players.html","Players","players"],
+      ["teams.html","Teams","teams"],
+      ["fixtures.html","Fixtures","fixtures"],
+      ["results.html","Results","results"],
+      ["important-links.html","Important Links","importantLinks"],
+      ["auction.html","Auction","auction"]
     ];
     const n=document.querySelector(".page-nav");
     if(!n) return;
@@ -63,6 +68,18 @@
       return `<a href="${href}" class="${active===key?"active":""}">${label}</a>`;
     }).join("");
   }
+
+  // Make the complete SRGF RACKETLON 2027 brand return to Home on every page.
+  document.addEventListener("DOMContentLoaded",()=>{
+    const brand=document.querySelector(".brand-wrap");
+    if(brand){
+      brand.style.cursor="pointer";
+      brand.addEventListener("click",(e)=>{
+        if(e.target.closest("a")) return;
+        window.location.href="index.html";
+      });
+    }
+  });
 
   window.SRGF = {C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,loadDataset,setStatus,nav};
 })();
