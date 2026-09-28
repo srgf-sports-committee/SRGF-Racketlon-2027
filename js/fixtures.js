@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {live,$,esc,norm,setStatus,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
+  const {live,loadJsonDataset,$,esc,norm,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
   let headers=[], rows=[], filtered=[];
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
 
@@ -71,14 +71,35 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
   async function load(){
     try{
-      const d=await live("data"); const f=d.fixtures||[];
-      if(!f.length){headers=[];rows=[];}else{headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""))}
-      render();setStatus("LIVE · "+new Date().toLocaleTimeString());
+      if(roleCanEdit()){
+        const d=await live("fixtures");
+        const f=d.fixtures||[];
+        if(!f.length){headers=[];rows=[];}
+        else{headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
+        render();
+        setStatus("LIVE editor data");
+      }else{
+        const d=await loadJsonDataset("fixtures");
+        const f=d.data||[];
+        headers=d.headers||Object.keys(f[0]||{});
+        rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        render();
+        await loadJsonFreshness();
+        setStatus("JSON data");
+      }
     }catch(e){
-      try{const d=await SRGF.jsonFile("fixtures.json");const f=d.rows||[];headers=d.headers||Object.keys(f[0]||{});rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));render();setStatus("JSON fallback",true)}
-      catch(_){setStatus("No fixture data available",true)}
+      try{
+        const d=await loadJsonDataset("fixtures");
+        const f=d.data||[];
+        headers=d.headers||Object.keys(f[0]||{});
+        rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        render();
+        await loadJsonFreshness();
+        setStatus("JSON data · live unavailable",true);
+      }catch(_){setStatus("No fixture data available",true)}
     }
   }
+
   ["fixtureStatusFilter","fixtureSportFilter","fixturePlayerFilter"].forEach(id=>$(id)?.addEventListener("change",render));
   $("refreshBtn")?.addEventListener("click",load); await load(); setInterval(()=>{if(!document.hidden)load()},30000);
 });

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {live,$,esc,setStatus,nav}=SRGF; SRGFAuth.init(); nav("results");
+  const {loadJsonDataset,$,esc,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("results");
   let results=[];
   function n(v){return Number(v)||0}
   function fields(r){return {team:r["Team"]||r["Winning Team"]||r["Winner Team"]||"",player:r["Player"]||r["Player Name"]||"",sport:r["Sport"]||"",tier:r["Tier"]||"",points:n(r["Points"]||r["Score"]||r["Sum Points"]),gw:n(r["Games Won"]||r["Games won"]),gl:n(r["Games Lost"]||r["Games lost"]),pd:n(r["Point Difference"]||r["Points Difference"])}}
@@ -19,13 +19,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     $("teamPointsBody").innerHTML=teams.map(([t,x],i)=>`<tr class="${i===0?"team-top-row":""}"><td>${esc(t)}</td><td>${x.score}</td><td>${x.gw}</td><td>${x.gl}</td><td>${x.pd>0?"+":""}${x.pd}</td></tr>`).join("")||`<tr><td colspan="5">No team results available.</td></tr>`;
     $("teamPointsTable").classList.remove("hidden");
   }
-  try{
-    const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString());
-  }catch(e){
-    try{const d=await SRGF.jsonFile("results.json");results=d.rows||[];render();setStatus("JSON fallback",true)}
-    catch(_){setStatus("No results available",true)}
+  async function load(){
+    try{const d=await loadJsonDataset("results");results=d.data||[];render();await loadJsonFreshness();setStatus("JSON data");}
+    catch(_){setStatus("JSON data unavailable",true)}
   }
+  await load();
   $("resultPlayerSportFilter")?.addEventListener("change",render);
   $("resultPlayerTierFilter")?.addEventListener("change",render);
-  setInterval(async()=>{if(document.hidden)return;try{const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString())}catch(_){}},30000);
+  setInterval(()=>{if(!document.hidden)load()},30000);
 });

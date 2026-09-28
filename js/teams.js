@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {live,$,esc,money,setStatus,nav}=SRGF; SRGFAuth.init(); nav("teams");
+  const {loadJsonDataset,$,esc,money,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("teams");
   try{
-    const d=await live("data"), teams=d.teams||[], auction=d.auction||[], players=d.players||[];
+    const [td,ad,pd]=await Promise.all([loadJsonDataset("teams"),loadJsonDataset("auction"),loadJsonDataset("players")]);
+    const teams=td.data||[], auction=ad.data||[], players=pd.data||[];
     $("teamsBoard").innerHTML=teams.slice(0,4).map(t=>{
       const id=t["Team ID"]||t.id||"", name=t["Team Name"]||t.name||id;
       const sales=auction.filter(a=>String(a["Team ID"]||a.teamId)===String(id));
@@ -15,8 +16,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       auction.forEach(a=>rows.push([a["Team Name"]||a.team||"",a["Player ID"]||a.playerId||"",a["Player Name"]||a.player||"",a.Amount||a.amount||0]));
       downloadCSV(rows,"SRGF_Racketlon_2027_Teams.csv");
     });
-    setStatus("LIVE · "+new Date().toLocaleTimeString());
-  }catch(e){setStatus(e.message,true);}
+    await loadJsonFreshness();
+    setStatus("JSON data");
+  }catch(e){setStatus("JSON data unavailable",true);}
+  $("refreshBtn")?.addEventListener("click",()=>location.reload());
+  setInterval(()=>{if(!document.hidden)location.reload()},30000);
 });
 function downloadCSV(rows,name){
   const csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
