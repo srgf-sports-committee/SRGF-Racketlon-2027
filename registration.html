@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Registration Form</title>
+<link rel="stylesheet" href="css/srgf.css">
+<style>
+.page-card{max-width:1100px;margin:32px auto;}
+.google-form-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.google-form-header h1{margin:0 0 6px}
+.google-form-header p{margin:0;color:#b9cbca;font-size:13px}
+.open-form{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;text-decoration:none;background:#ffdf00;color:#17212b;border:1px solid #e8c900;border-radius:8px;padding:10px 14px;font-weight:800}
+.open-form:hover{background:#ffe94d}
+.google-form-frame{width:100%;overflow:hidden;border-radius:12px;background:#fff}
+.google-form-frame iframe{display:block;width:100%;min-height:760px;border:0;background:#fff}
+@media(max-width:700px){.page-card{margin:20px 10px}.google-form-frame iframe{min-height:850px}}
+</style>
+</head>
+<body data-page="registration">
+<header class="topbar">
+  <div class="brand-wrap" title="Go to Home">
+    <div class="brand-mark">🏆</div>
+    <div class="brand">SRGF <span>RACKETLON 2027</span></div>
+  </div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions">
+    <div id="status" class="status">Public</div>
+    <button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button>
+    <div id="authBox" class="auth-box"></div>
+  </div>
+</header>
+<main>
+<section class="page-card">
+  <div class="card google-form-card">
+    <div class="google-form-header">
+      <div>
+        <h1>Registration Form</h1>
+        <p>Preview and complete the form below. Your responses are submitted directly to the SRGF Google Form.</p>
+      </div>
+      <a class="open-form" href="https://docs.google.com/forms/d/1wcKNvnsMQkpHHci3FWvytfeuSqqfAU081s7IIHQhw08/viewform" target="_blank" rel="noopener">Open Form in New Tab ↗</a>
+    </div>
+    <div class="google-form-frame">
+      <iframe
+        src="https://docs.google.com/forms/d/1wcKNvnsMQkpHHci3FWvytfeuSqqfAU081s7IIHQhw08/viewform?embedded=true"
+        title="SRGF Registration Form"
+        loading="lazy"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0">Loading…</iframe>
+    </div>
+  </div>
+</section>
+</main>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded",()=>{
+  SRGFAuth.init();
+  SRGF.nav("registration");
+  document.getElementById("refreshBtn")?.addEventListener("click",()=>location.reload());
+});
+</script>
+</body>
+</html>

@@ -10,9 +10,11 @@
 #home .home-action{color:inherit;text-decoration:none;}
 #home .home-action:visited{color:inherit;}
 #home .home-action *{text-decoration:none;}
+#auctionHomeCard{display:none;}
+body.is-admin #auctionHomeCard{display:flex;}
 </style>
 </head>
-<body>
+<body data-page="home">
 <header class="topbar">
   <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
   <nav class="page-nav"></nav>
@@ -22,9 +24,9 @@
 <section id="home">
 <h1>SRGF Racketlon 2027</h1>
 <div class="home-actions">
-<a class="home-action action-green" href="https://docs.google.com/forms/d/1wcKNvnsMQkpHHci3FWvytfeuSqqfAU081s7IIHQhw08/viewform" target="_blank" rel="noopener">
+<a class="home-action action-green" href="registration.html">
 <div class="action-icon">📝</div>
-<div><h3>Registration Form</h3><p>Open and submit the<br/>SRGF Google Form.</p></div>
+<div><h3>Registration Form</h3><p>Preview and submit the<br/>SRGF Google Form.</p></div>
 <span>›</span>
 </a>
 <a class="home-action action-teal" href="players.html">
@@ -47,12 +49,12 @@
 <div><h3>Results</h3><p>View tournament summaries<br/>and downloadable reports.</p></div>
 <span>›</span>
 </a>
-<a class="home-action action-blue" href="https://raw.githubusercontent.com/srgf-sports-committee/SRGF-Racketlon-2027/main/SRGF%20Racketlon%202027%20Rules.pdf" target="_blank" rel="noopener">
+<a class="home-action action-blue" href="important-links.html">
 <div class="action-icon">🔗</div>
-<div><h3>Important Links</h3><p>Rules, guidelines, PDFs<br/>and tournament documents.</p></div>
+<div><h3>Important Links</h3><p>Read rules and tournament<br/>documents online.</p></div>
 <span>›</span>
 </a>
-<a class="home-action action-purple" href="auction.html">
+<a id="auctionHomeCard" class="home-action action-purple" href="auction.html">
 <div class="action-icon">⚒</div>
 <div><h3>Auction</h3><p>View players, participate in auction<br/>and build your team.</p></div>
 <span>›</span>
