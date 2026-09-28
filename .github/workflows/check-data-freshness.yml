@@ -12,8 +12,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
       - name: Check last successful JSON sync
         run: |
@@ -24,7 +23,6 @@ jobs:
 
           if not p.exists():
               print("WARNING: data/last-update.json does not exist yet.")
-              print("The website can still use its existing JSON files.")
               sys.exit(0)
 
           try:
@@ -35,7 +33,7 @@ jobs:
 
           if not d.get("success") or not d.get("syncedAt"):
               print("WARNING: No successful JSON sync has completed yet.")
-              print("This is a warning only; the workflow will not fail.")
+              print("The website can continue using its existing JSON data.")
               sys.exit(0)
 
           try:
@@ -46,24 +44,25 @@ jobs:
               print(f"ERROR: Invalid syncedAt value: {e}")
               sys.exit(1)
 
-          age = max(0, (datetime.datetime.now(datetime.timezone.utc) - synced).total_seconds())
-          minutes = age / 60
+          age = (
+              datetime.datetime.now(datetime.timezone.utc) - synced
+          ).total_seconds()
 
-          print(f"Last successful JSON sync: {d['syncedAt']}")
-          print(f"JSON age: {minutes:.1f} minutes")
+          print(
+              f"Last successful JSON sync: "
+              f"{d['syncedAt']} ({age:.0f}s ago)"
+          )
 
-          # Stale data is intentionally allowed. The website keeps showing
-          # the last good JSON while live data is unavailable.
           if age > 1800:
               print("WARNING: JSON data is more than 30 minutes old.")
-              print("The website will continue using the last successful JSON snapshot.")
+              print("This is a warning only; the workflow will still succeed.")
           elif age > 600:
               print("WARNING: JSON data is more than 10 minutes old.")
+              print("This is a warning only; the workflow will still succeed.")
           elif age > 300:
               print("NOTICE: JSON data is more than 5 minutes old.")
           else:
               print("OK: JSON data is fresh.")
 
-          # Important: stale data is NOT a workflow failure.
-          sys.exit(0)
+          print("Freshness check completed successfully.")
           PY
