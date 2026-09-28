@@ -298,34 +298,36 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   async function load(){
+    // JSON is the immediate display source. This keeps the previous good data
+    // visible while the live Apps Script request is loading.
+    let shown=false;
+    try{
+      const d=await SRGF.jsonFile("fixtures.json");
+      const f=d.rows||[];
+      headers=d.headers||Object.keys(f[0]||{});
+      rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+      try{
+        const t=await SRGF.jsonFile("teams.json");
+        window.__SRGF_TEAMS=t.rows||t.teams||[];
+      }catch(_){window.__SRGF_TEAMS=[];}
+      render();
+      setStatus("JSON data · "+new Date().toLocaleTimeString());
+      shown=true;
+    }catch(e){}
+
+    // Refresh live after the old JSON is already visible.
     try{
       const d=await live("data");
       const f=Array.isArray(d.fixtures)?d.fixtures:[];
       const t=Array.isArray(d.teams)?d.teams:[];
       window.__SRGF_TEAMS=t;
       if(!f.length){headers=[];rows=[];}
-      else{
-        headers=Object.keys(f[0]);
-        rows=f.map(o=>headers.map(h=>o[h]??""));
-      }
+      else{headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
       render();
       setStatus("LIVE · "+new Date().toLocaleTimeString());
     }catch(e){
-      try{
-        const d=await SRGF.jsonFile("fixtures.json");
-        const f=d.rows||[];
-        headers=d.headers||Object.keys(f[0]||{});
-        rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
-        try{
-          const t=await SRGF.jsonFile("teams.json");
-          window.__SRGF_TEAMS=t.rows||t.teams||[];
-        }catch(_){window.__SRGF_TEAMS=[];}
-        render();
-        setStatus("JSON fallback",true);
-      }catch(_){
-        headers=[];rows=[];render();
-        setStatus("No fixture data available",true);
-      }
+      if(!shown){headers=[];rows=[];render();setStatus("No fixture data available",true);}
+      // If JSON was shown, keep it. Never replace good old data with blank data.
     }
   }
 
@@ -341,5 +343,5 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   setupPlayerDropdown();
   $("refreshBtn")?.addEventListener("click",load);
   await load();
-  setInterval(()=>{if(!document.hidden)load()},30000);
+  setInterval(()=>{if(!document.hidden)load()},SRGF_CONFIG.REFRESH_MS);
 });

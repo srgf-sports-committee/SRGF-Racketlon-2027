@@ -19,13 +19,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     $("teamPointsBody").innerHTML=teams.map(([t,x],i)=>`<tr class="${i===0?"team-top-row":""}"><td>${esc(t)}</td><td>${x.score}</td><td>${x.gw}</td><td>${x.gl}</td><td>${x.pd>0?"+":""}${x.pd}</td></tr>`).join("")||`<tr><td colspan="5">No team results available.</td></tr>`;
     $("teamPointsTable").classList.remove("hidden");
   }
-  try{
-    const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString());
-  }catch(e){
-    try{const d=await SRGF.jsonFile("results.json");results=d.rows||[];render();setStatus("JSON fallback",true)}
-    catch(_){setStatus("No results available",true)}
-  }
+  let shown=false;
+  try{const d=await SRGF.jsonFile("results.json");results=d.rows||[];render();setStatus("JSON data · "+new Date().toLocaleTimeString(),true);shown=true;}catch(_){}
+  try{const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString());}
+  catch(e){if(!shown)setStatus("No results available",true)}
   $("resultPlayerSportFilter")?.addEventListener("change",render);
   $("resultPlayerTierFilter")?.addEventListener("change",render);
-  setInterval(async()=>{if(document.hidden)return;try{const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString())}catch(_){}},30000);
+  setInterval(async()=>{if(document.hidden)return;try{const d=await live("results");results=d.results||[];render();setStatus("LIVE · "+new Date().toLocaleTimeString())}catch(_){}},SRGF_CONFIG.REFRESH_MS);
 });

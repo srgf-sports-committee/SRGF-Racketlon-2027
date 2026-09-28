@@ -45,6 +45,31 @@
     }
   }
 
+
+  async function loadJsonThenLive(name, action, apply){
+    // Always show the last successfully saved JSON first.
+    // Live data is refreshed afterwards, without blocking the initial display.
+    let shownFromJson=false;
+    try{
+      const raw=await jsonFile(`${name}.json`);
+      const data=raw.rows ?? raw;
+      apply(data, false);
+      shownFromJson=true;
+      setStatus(`JSON data · ${new Date().toLocaleTimeString()}`);
+    }catch(e){}
+
+    try{
+      const j=await live(action || name);
+      const data=j[name] ?? [];
+      apply(data, true);
+      setStatus(`LIVE · ${new Date().toLocaleTimeString()}`);
+      return {data, live:true};
+    }catch(e){
+      if(shownFromJson) return {live:false, error:e};
+      throw e;
+    }
+  }
+
   function setStatus(text,error=false){
     const el=$("status");
     if(el){ el.textContent=text; el.className="status"+(error?" error":""); }
@@ -64,5 +89,5 @@
     }).join("");
   }
 
-  window.SRGF = {C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,loadDataset,setStatus,nav};
+  window.SRGF = {C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,loadDataset,loadJsonThenLive,setStatus,nav};
 })();

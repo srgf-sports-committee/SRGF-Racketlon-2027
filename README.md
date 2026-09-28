@@ -46,3 +46,7 @@ Public visitors do not need to log in. Admin/Writer users use the Login button.
 3. Add the GitHub Pages origin to the Google OAuth client's authorized JavaScript origins.
 4. Enable the GitHub Action after pushing the repository.
 5. The JSON files are fallback/public snapshots; live Apps Script data is authoritative whenever it can be read.
+
+
+### Loading strategy
+Public pages load the latest GitHub JSON snapshot first so users immediately see the last good data. A live Apps Script refresh then runs in the background. Automatic refresh is every 30 minutes; the manual refresh button can still be used at any time. If the live request fails, the displayed JSON data is kept and is never replaced with blank data. GitHub Actions continues to update the JSON snapshots independently.
