@@ -1,25 +1,22 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {C,$,loadLiveFirstAll,loadJsonDataset,loadJsonFreshness,showLiveFreshness,setStatus,nav}=window.SRGF;
+  const {C,$,live,setStatus,nav}=window.SRGF;
   window.SRGFAuth.init(); nav("home");
   try{
-    const liveData=await loadLiveFirstAll();
-    let players=[], teams=[], auction=[];
-    if(liveData.live){
-      players=liveData.data.players||[]; teams=liveData.data.teams||[]; auction=liveData.data.auction||[];
-      showLiveFreshness(liveData.updatedAt);
-    }else{
-      const [p,t,a]=await Promise.all([loadJsonDataset("players"),loadJsonDataset("teams"),loadJsonDataset("auction")]);
-      players=p.data||[]; teams=t.data||[]; auction=a.data||[];
-      await loadJsonFreshness();
-    }
-    const registeredPlayers=players.filter(x=>x?.["Name"]||x?.name);
-    $("mPlayers").textContent=registeredPlayers.length;
+    const d=await live("data");
+    const players=d.players||[], teams=d.teams||[], auction=d.auction||[];
+    $("mPlayers").textContent=players.length;
     $("mTeams").textContent=teams.length;
     $("mAuctioned").textContent=auction.length;
     $("mSports").textContent="4";
-    await loadJsonFreshness();
-    setStatus(liveData.live?"LIVE · Google Sheet":"JSON data · live unavailable",!liveData.live);
-  }catch(e){setStatus("JSON data unavailable",true);}
-  $("refreshBtn")?.addEventListener("click",()=>location.reload());
-  setInterval(()=>{if(!document.hidden)location.reload()},30000);
+    setStatus("LIVE · "+new Date().toLocaleTimeString());
+  }catch(e){
+    try{
+      const [p,t,a]=await Promise.all([SRGF.jsonFile("players.json"),SRGF.jsonFile("teams.json"),SRGF.jsonFile("auction.json")]);
+      $("mPlayers").textContent=(p.rows||[]).length;
+      $("mTeams").textContent=(t.rows||[]).length;
+      $("mAuctioned").textContent=(a.rows||[]).length;
+      $("mSports").textContent="4";
+      setStatus("JSON fallback · "+new Date().toLocaleTimeString(),true);
+    }catch(_){setStatus("No data available",true);}
+  }
 });

@@ -1398,23 +1398,3 @@ main>section:not(#home){
 .permission-note{margin:12px 0;padding:12px;border-radius:10px;background:rgba(255,180,92,.08);border:1px solid rgba(255,180,92,.25)}
 @media(max-width:1000px){.topbar{flex-wrap:wrap;height:auto;padding:10px 14px}.page-nav{order:3;width:100%;overflow:auto}.page-nav a{white-space:nowrap}}
 @media(max-width:760px){.topbar{gap:8px}.page-nav{gap:4px}.page-nav a{padding:7px 8px;font-size:12px}}
-
-/* Remove duplicate trophy from the newer topbar brand; the visible trophy is .brand-mark. */
-.topbar .brand::before{display:none !important;content:none !important;}
-
-/* JSON data freshness indicator */
-.data-freshness{
-  display:inline-block;
-  margin-top:2px;
-  font-size:12px;
-  line-height:1.3;
-  font-weight:600;
-  white-space:nowrap;
-  padding:4px 8px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,.12);
-}
-.data-freshness.ok{opacity:.85}
-.data-freshness.warn{font-weight:700}
-.data-freshness.error{font-weight:800}
-@media(max-width:800px){.data-freshness{font-size:10px;padding:3px 6px}}
