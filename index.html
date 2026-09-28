@@ -98,5 +98,28 @@
 <script src="js/common.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/home.js"></script>
+<script>
+// Make the large Home page cards clickable.
+document.querySelectorAll("[data-home-tab]").forEach(card => {
+  card.addEventListener("click", () => {
+    const targets = {
+      players: "players.html",
+      teams: "teams.html",
+      fixtures: "fixtures.html",
+      results: "results.html",
+      auction: "auction.html",
+      googleForm: "https://docs.google.com/forms/d/1wcKNvnsMQkpHHci3FWvytfeuSqqfAU081s7IIHQhw08/viewform",
+      importantLinks: "https://raw.githubusercontent.com/srgf-sports-committee/SRGF-Racketlon-2027/main/SRGF%20Racketlon%202027%20Rules.pdf"
+    };
+    const target = targets[card.dataset.homeTab];
+    if (!target) return;
+    if (/^https?:\/\//i.test(target)) {
+      window.open(target, "_blank", "noopener");
+    } else {
+      window.location.href = target;
+    }
+  });
+});
+</script>
 </body>
 </html>
