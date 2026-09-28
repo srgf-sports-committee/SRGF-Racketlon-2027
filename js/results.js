@@ -15,8 +15,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     return m ? Number(m[0]) : 0;
   };
   const isRacketlon = sport => norm(sport) === "racketlon";
-  const teamKey = v => norm(String(v ?? "").replace(/\bteam\s*/i, ""));
-  const cleanTeam = v => String(v ?? "").trim().replace(/^team\s*/i, "").trim();
+  const teamKey = v => norm(String(v ?? ""));
+  const cleanTeam = v => String(v ?? "").trim();
+
+  // Convert team IDs (e.g. T1) to the actual team name (e.g. T1 Team1).
+  // This prevents the Results table from showing the same team twice.
+  function resolveTeamName(value) {
+    const raw = String(value ?? "").trim();
+    if (!raw) return "";
+
+    const rawKey = norm(raw);
+
+    // First use the TEAMS data as the authoritative ID -> name mapping.
+    for (const t of teamsData) {
+      const id = String(
+        t.id ?? t["Team ID"] ?? t["TeamID"] ?? t.teamId ?? t.TeamId ?? ""
+      ).trim();
+      const name = String(
+        t.name ?? t["Team Name"] ?? t["TeamName"] ?? t.Team ?? ""
+      ).trim();
+
+      if (name && norm(name) === rawKey) return name;
+      if (id && norm(id) === rawKey) return name || id;
+    }
+
+    // Also accept common nested/object shapes.
+    for (const t of teamsData) {
+      const id = String(t.ID ?? t.Id ?? "").trim();
+      const name = String(t.Name ?? "").trim();
+      if (name && norm(name) === rawKey) return name;
+      if (id && norm(id) === rawKey) return name || id;
+    }
+
+    // If no mapping exists, preserve the supplied value.
+    return raw;
+  }
 
   function headersFromObjects(rows) {
     const headers = Object.keys(rows[0] || {});
@@ -165,7 +198,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     teamsData.forEach(t => {
-      const name = resolveTeamName(t.name || t["Team Name"] || t.Team || t.id || t["Team ID"]);
+      const name = resolveTeamName(
+        t.name || t["Team Name"] || t["TeamName"] || t.Team ||
+        t.id || t["Team ID"] || t["TeamID"] || t.teamId
+      );
       if (name) ensure(name);
     });
 
