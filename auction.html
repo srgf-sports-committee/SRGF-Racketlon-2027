@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Auction</title>
+<link rel="stylesheet" href="css/srgf.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions"><div id="status" class="status">Loading…</div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
+</header>
+<main>
+<div id="auctionAccess" class="permission-note hidden">Auction access is restricted to Admin users.</div><section id="auction">
+<h1>AUCTION</h1>
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+<div class="notice"><strong>Data safety:</strong> Auction history is kept in this browser until it is confirmed. <strong>Public report JSON sync runs in the cloud; this page keeps Admin auction changes protected through Apps Script.</strong></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<button class="secondary" id="exportAuctionBtn">⬇ Export Auction</button>
+<button class="secondary" id="testSheetBtn">✓ Test Sheet</button>
+<button class="secondary" id="syncBtn">↥ Update Data in Sheet</button>
+</div>
+</div>
+<div class="card">
+<div class="grid" id="teamMetrics"></div>
+</div>
+<div class="card">
+<h2>Current player</h2>
+<div class="formgrid">
+<div class="player-select-wrap"><label class="field">Player</label><div class="player-combobox"><button aria-expanded="false" aria-haspopup="listbox" class="player-combobox-display" id="playerSelectDisplay" type="button">Select Player</button><div class="player-dropdown hidden" id="playerDropdown"><input aria-label="Search players in dropdown" autocomplete="off" class="player-dropdown-search" id="playerDropdownSearch" placeholder="Search player..." type="search"/><div class="player-dropdown-options" id="playerDropdownOptions" role="listbox"></div></div><select aria-hidden="true" id="playerSelect"></select></div></div>
+<div><label class="field">Team</label><select id="teamSelect"></select></div>
+<div><label class="field">Bid amount (₹)</label>
+<div class="bid-amount-wrap">
+<input aria-label="Bid amount multiplier (1 to 99.9)" autocomplete="off" id="bidInput" inputmode="decimal" placeholder="50.0" type="text"/>
+<input aria-label="Automatically applied Indian currency scale" disabled="" id="bidSuffix" type="text" value="× 1,00,000"/>
+</div>
+<small class="bid-amount-hint" id="bidAmountHint">Enter 1–99.9; one decimal place is allowed.</small>
+</div>
+<button class="primary" id="sellBtn">SELL PLAYER</button>
+</div>
+<p class="notice" id="auctionMessage">Select a player, team and amount.</p>
+<div class="player-details-empty" id="playerDetails">
+      Select a player to view player details.
+    </div>
+</div>
+<div class="card">
+<h2>Teams</h2>
+<div class="notice">Players are shown team-wise based on the current auction allocation.</div>
+<div style="margin-top:12px">
+<div class="teams-board" id="auctionTeamsBoard"></div>
+</div>
+</div>
+<div class="card">
+<h2>Auction history</h2>
+<table><thead><tr><th>Player</th><th>Team</th><th>Amount</th><th>Time</th><th>Action</th></tr></thead>
+<tbody id="historyBody"></tbody></table>
+</div>
+</section>
+
+</main>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/auction.js"></script>
+</body>
+</html>
