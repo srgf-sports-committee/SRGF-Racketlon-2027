@@ -1,8 +1,16 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {loadJsonDataset,$,esc,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("players");
+  const {loadLiveFirstAll,$,esc,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("players");
   try{
-    const [pd,ad,td]=await Promise.all([loadJsonDataset("players"),loadJsonDataset("auction"),loadJsonDataset("teams")]);
-    const players=pd.data||[], auction=ad.data||[], teams=td.data||[];
+    const liveData=await loadLiveFirstAll();
+    let players=[], auction=[], teams=[];
+    if(liveData.live){
+      players=liveData.data.players||[]; auction=liveData.data.auction||[]; teams=liveData.data.teams||[];
+      showLiveFreshness(liveData.updatedAt);
+    }else{
+      const [pd,ad,td]=await Promise.all([SRGF.loadJsonDataset("players"),SRGF.loadJsonDataset("auction"),SRGF.loadJsonDataset("teams")]);
+      players=pd.data||[]; auction=ad.data||[]; teams=td.data||[];
+      await loadJsonFreshness();
+    }
     const teamName=id=>teams.find(t=>String(t["Team ID"]||t.id)===String(id))?.["Team Name"]||teams.find(t=>String(t.id)===String(id))?.name||id||"";
     $("playersBody").innerHTML=players.filter(p=>p["Name"]||p.name).map(p=>{
       const name=p["Name"]||p.name||"", id=p["Player ID"]||p.id||"";
@@ -10,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       return `<tr><td>${esc(id)}</td><td>${esc(name)}</td><td>${esc(p["Preferred Category"]||p.category||"")}</td><td>${esc(p["Badminton Level"]||p.badminton||"")}</td><td>${esc(p["Table Tennis Level"]||p.tt||"")}</td><td>${esc(p["Lawn Tennis Level"]||p.tennis||"")}</td><td>${esc(p["Pickle Ball Level"]||p.pickle||"")}</td><td>${esc(teamName(teamId))}</td></tr>`;
     }).join("") || `<tr><td colspan="8">No players available.</td></tr>`;
     await loadJsonFreshness();
-    setStatus("JSON data");
+    setStatus(liveData.live?"LIVE · Google Sheet":"JSON data · live unavailable",!liveData.live);
   }catch(e){setStatus("JSON data unavailable",true);}
   $("refreshBtn")?.addEventListener("click",()=>location.reload());
   setInterval(()=>{if(!document.hidden)location.reload()},30000);

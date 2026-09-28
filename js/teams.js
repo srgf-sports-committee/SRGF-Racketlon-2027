@@ -1,8 +1,16 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {loadJsonDataset,$,esc,money,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("teams");
+  const {loadLiveFirstAll,$,esc,money,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("teams");
   try{
-    const [td,ad,pd]=await Promise.all([loadJsonDataset("teams"),loadJsonDataset("auction"),loadJsonDataset("players")]);
-    const teams=td.data||[], auction=ad.data||[], players=pd.data||[];
+    const liveData=await loadLiveFirstAll();
+    let teams=[], auction=[], players=[];
+    if(liveData.live){
+      teams=liveData.data.teams||[]; auction=liveData.data.auction||[]; players=liveData.data.players||[];
+      showLiveFreshness(liveData.updatedAt);
+    }else{
+      const [td,ad,pd]=await Promise.all([SRGF.loadJsonDataset("teams"),SRGF.loadJsonDataset("auction"),SRGF.loadJsonDataset("players")]);
+      teams=td.data||[]; auction=ad.data||[]; players=pd.data||[];
+      await loadJsonFreshness();
+    }
     $("teamsBoard").innerHTML=teams.slice(0,4).map(t=>{
       const id=t["Team ID"]||t.id||"", name=t["Team Name"]||t.name||id;
       const sales=auction.filter(a=>String(a["Team ID"]||a.teamId)===String(id));
@@ -17,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       downloadCSV(rows,"SRGF_Racketlon_2027_Teams.csv");
     });
     await loadJsonFreshness();
-    setStatus("JSON data");
+    setStatus(liveData.live?"LIVE · Google Sheet":"JSON data · live unavailable",!liveData.live);
   }catch(e){setStatus("JSON data unavailable",true);}
   $("refreshBtn")?.addEventListener("click",()=>location.reload());
   setInterval(()=>{if(!document.hidden)location.reload()},30000);

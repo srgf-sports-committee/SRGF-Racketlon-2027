@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {live,loadJsonDataset,$,esc,norm,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
+  const {live,loadJsonDataset,loadLiveFirstDataset,$,esc,norm,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
   let headers=[], rows=[], filtered=[];
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
 
@@ -79,13 +79,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         render();
         setStatus("LIVE editor data");
       }else{
-        const d=await loadJsonDataset("fixtures");
+        const d=await loadLiveFirstDataset("fixtures");
         const f=d.data||[];
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
         render();
-        await loadJsonFreshness();
-        setStatus("JSON data");
+        if(d.live){ showLiveFreshness(d.updatedAt); setStatus("LIVE · Google Sheet"); }
+        else { await loadJsonFreshness(); setStatus("JSON data · live unavailable",true); }
       }
     }catch(e){
       try{

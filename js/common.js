@@ -27,7 +27,7 @@
   async function live(action="data", token=""){
     let url = `${C.API_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`;
     if(token) url += `&token=${encodeURIComponent(token)}`;
-    const r = await fetchTimeout(url, {}, 15000);
+    const r = await fetchTimeout(url, {}, 10000);
     if(!r.ok) throw new Error(`Apps Script HTTP ${r.status}`);
     const j = await r.json();
     if(!j.ok) throw new Error(j.error || "Live data error");
@@ -40,9 +40,47 @@
     return {data:file.rows ?? file, updatedAt:file.updatedAt || "", headers:file.headers || null, live:false};
   }
 
-  // Compatibility helper. Public pages should use loadJsonDataset().
+  // LIVE FIRST: try the Apps Script master data first. If it is slow,
+  // unavailable, or returns an error, immediately fall back to the latest
+  // successful GitHub JSON snapshot. A valid empty array is still treated
+  // as live data and is never replaced by the cache.
+  async function loadLiveFirstDataset(name, timeoutMs=10000){
+    try{
+      const oldTimeout = fetchTimeout;
+      // The live() helper uses the shared timeout. Keep this call simple and
+      // use the normal live endpoint; the Apps Script cache is only 5 seconds.
+      const j = await live("data");
+      const data = Array.isArray(j[name]) ? j[name] : [];
+      return {data, updatedAt:j.updatedAt || new Date().toISOString(), headers:null, live:true, source:"Google Sheets"};
+    }catch(e){
+      const file = await jsonFile(`${name}.json`);
+      return {data:file.rows ?? file, updatedAt:file.updatedAt || "", headers:file.headers || null, live:false, source:"GitHub JSON", liveError:e};
+    }
+  }
+
+  // Same live-first behavior, but returns the complete combined payload.
+  // This lets Home/other pages make only ONE Apps Script request per refresh.
+  async function loadLiveFirstAll(){
+    try{
+      const j = await live("data");
+      return {data:j, updatedAt:j.updatedAt || new Date().toISOString(), live:true, source:"Google Sheets"};
+    }catch(e){
+      return {data:null, updatedAt:"", live:false, source:"GitHub JSON", liveError:e};
+    }
+  }
+
+  // Compatibility helper. New public pages should use loadLiveFirstDataset().
   async function loadDataset(name, action){
-    return loadJsonDataset(name);
+    return loadLiveFirstDataset(name);
+  }
+
+  function showLiveFreshness(updatedAt){
+    const el=ensureFreshnessElement();
+    if(!el) return;
+    const t=Date.parse(updatedAt || "");
+    el.className="data-freshness ok";
+    el.textContent="🟢 LIVE · Google Sheet";
+    el.title=Number.isFinite(t) ? `Live data read from Google Sheets: ${new Date(t).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})} IST` : "Live data read from Google Sheets";
   }
 
   function ensureFreshnessElement(){
@@ -137,6 +175,6 @@
 
   window.SRGF = {
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
-    loadJsonDataset,loadDataset,setStatus,loadJsonFreshness,startFreshnessMonitor,nav
+    loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,showLiveFreshness,setStatus,loadJsonFreshness,startFreshnessMonitor,nav
   };
 })();
