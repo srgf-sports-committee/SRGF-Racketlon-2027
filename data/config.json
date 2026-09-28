@@ -1,4 +1,60 @@
 {
-  "updatedAt": "",
-  "rows": []
+  "updatedAt": "2026-09-28T19:22:43.931109Z",
+  "rows": [
+    {
+      "Parameter": "Tournament Name",
+      "Value": "SRGF Racketlon 2027",
+      "Notes": ""
+    },
+    {
+      "Parameter": "Number of Teams",
+      "Value": 4,
+      "Notes": ""
+    },
+    {
+      "Parameter": "Initial Budget",
+      "Value": 990000000,
+      "Notes": "₹50 lakh per team"
+    },
+    {
+      "Parameter": "Minimum Players",
+      "Value": 15,
+      "Notes": "Used for auction max-bid calculation"
+    },
+    {
+      "Parameter": "Reserve Per Slot",
+      "Value": 10000000,
+      "Notes": "₹1 lakh reserved per remaining player slot"
+    },
+    {
+      "Parameter": "Number of Sports",
+      "Value": 4,
+      "Notes": "Racketlon + Badminton + Table Tennis + Lawn Tennis + Pickleball"
+    },
+    {
+      "Parameter": "Racketlon Legs",
+      "Value": 4,
+      "Notes": "Badminton, Table Tennis, Lawn Tennis, Pickleball"
+    },
+    {
+      "Parameter": "Sport 1",
+      "Value": "Badminton",
+      "Notes": ""
+    },
+    {
+      "Parameter": "Sport 2",
+      "Value": "Table Tennis",
+      "Notes": ""
+    },
+    {
+      "Parameter": "Sport 3",
+      "Value": "Lawn Tennis",
+      "Notes": ""
+    },
+    {
+      "Parameter": "Sport 4",
+      "Value": "Pickleball",
+      "Notes": ""
+    }
+  ]
 }

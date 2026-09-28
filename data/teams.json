@@ -1,4 +1,29 @@
 {
-  "updatedAt": "",
-  "rows": []
+  "updatedAt": "2026-09-28T19:22:43.931109Z",
+  "rows": [
+    {
+      "Team ID": "T1",
+      "Team Name": "T1 Team1",
+      "Initial Budget": 990000000,
+      "Active": 1
+    },
+    {
+      "Team ID": "T2",
+      "Team Name": "T2 Team 2",
+      "Initial Budget": 990000000,
+      "Active": 1
+    },
+    {
+      "Team ID": "T3",
+      "Team Name": "T3 Team 3",
+      "Initial Budget": 990000000,
+      "Active": 1
+    },
+    {
+      "Team ID": "T4",
+      "Team Name": "T4 Team 4",
+      "Initial Budget": 990000000,
+      "Active": 1
+    }
+  ]
 }
