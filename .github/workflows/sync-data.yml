@@ -3,13 +3,12 @@ name: Sync SRGF data
 on:
   workflow_dispatch:
   schedule:
-    # GitHub-hosted schedules are not guaranteed to run every 15 seconds.
-    # 5 minutes is the practical public-sync interval used here.
     - cron: "*/5 * * * *"
 
 permissions:
   contents: write
 
+# Prevent two copies of this workflow from pushing at the same time.
 concurrency:
   group: srgf-data-sync
   cancel-in-progress: false
@@ -17,19 +16,34 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout latest main
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Download and validate current tournament data
         env:
           API_URL: "https://script.google.com/macros/s/AKfycbw_KN0QUEsck_ChkjZ3HAS82Xj9aVb9R6UBYJzoh26MSE-ydTJjVjUzn6vFXG3WQlFJsg/exec"
         run: |
+          set -e
+
+          # Make absolutely sure we start from the current remote main.
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+
           python - <<'PY'
           import json, os, pathlib, time, urllib.request
           from datetime import datetime, timezone
 
           api = os.environ["API_URL"] + "?action=data&t=" + str(time.time_ns())
-          req = urllib.request.Request(api, headers={"User-Agent": "SRGF-Racketlon-Data-Sync/1.0"})
+          req = urllib.request.Request(
+              api,
+              headers={"User-Agent": "SRGF-Racketlon-Data-Sync/1.0"}
+          )
+
           with urllib.request.urlopen(req, timeout=45) as response:
               if response.status != 200:
                   raise RuntimeError(f"Apps Script HTTP {response.status}")
@@ -41,26 +55,37 @@ jobs:
           required = ["players", "teams", "fixtures", "results", "auction", "config"]
           missing = [k for k in required if k not in payload]
           if missing:
-              raise RuntimeError("Apps Script response is missing: " + ", ".join(missing))
+              raise RuntimeError(
+                  "Apps Script response is missing: " + ", ".join(missing)
+              )
 
           out = pathlib.Path("data")
           out.mkdir(exist_ok=True)
+
           updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
           for key in required:
               rows = payload.get(key)
               if not isinstance(rows, list):
                   raise RuntimeError(f"{key} is not an array")
-              obj = {"updatedAt": updated, "rows": rows}
+
+              obj = {
+                  "updatedAt": updated,
+                  "rows": rows
+              }
+
               if key == "fixtures":
-                  obj["headers"] = list(rows[0].keys()) if rows and isinstance(rows[0], dict) else []
+                  obj["headers"] = (
+                      list(rows[0].keys())
+                      if rows and isinstance(rows[0], dict)
+                      else []
+                  )
+
               (out / f"{key}.json").write_text(
-                  json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8"
+                  json.dumps(obj, ensure_ascii=False, indent=2),
+                  encoding="utf-8"
               )
 
-          # This timestamp means the JSON files were successfully written from
-          # a successful Apps Script response. The website uses this file to
-          # show freshness and stale-data warnings.
           marker = {
               "success": True,
               "syncedAt": updated,
@@ -68,25 +93,38 @@ jobs:
               "source": "Google Sheets via Apps Script",
               "workflowRun": os.environ.get("GITHUB_RUN_ID", "")
           }
+
           (out / "last-update.json").write_text(
-              json.dumps(marker, ensure_ascii=False, indent=2), encoding="utf-8"
+              json.dumps(marker, ensure_ascii=False, indent=2),
+              encoding="utf-8"
           )
+
           print("JSON sync successful:", updated)
           PY
 
-      - name: Commit updated JSON
+      - name: Commit and push updated JSON
         run: |
           set -e
+
           git config user.name "SRGF Data Sync"
           git config user.email "actions@users.noreply.github.com"
 
-          # Build the commit from the latest remote main so manual GitHub
-          # changes made while this job was running are preserved.
-          # The JSON files generated above remain in the working tree.
+          # Save the newly generated JSON outside the Git working tree.
+          rm -rf /tmp/srgf-json
+          mkdir -p /tmp/srgf-json
+          cp -a data/. /tmp/srgf-json/
+
           for attempt in 1 2 3; do
             echo "Push attempt $attempt"
+
+            # Always rebuild the working tree from the latest remote main.
             git fetch origin main
-            git reset --mixed origin/main
+            git checkout main
+            git reset --hard origin/main
+
+            # Put our freshly downloaded JSON back.
+            cp -a /tmp/srgf-json/. data/
+
             git add data/*.json
 
             if git diff --cached --quiet; then
@@ -101,8 +139,8 @@ jobs:
               exit 0
             fi
 
-            echo "Remote changed during push; retrying from latest main..."
-            git reset --mixed origin/main
+            echo "Push rejected because main changed. Refreshing and retrying..."
+            git reset --hard origin/main
           done
 
           echo "Unable to push JSON after 3 attempts."
