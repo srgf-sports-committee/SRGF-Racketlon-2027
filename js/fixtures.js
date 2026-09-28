@@ -206,10 +206,72 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     });
   }
 
+  function teamKey(value){
+    const raw=String(value??"").trim().toLowerCase();
+    if(!raw)return "";
+
+    // Treat T1, Team 1, Team-1, Team_1 and similar forms as the same team.
+    const compact=raw.replace(/[^a-z0-9]+/g,"");
+    const m=compact.match(/^(?:team|t)0*(\d+)$/);
+    if(m)return `t${Number(m[1])}`;
+
+    // If the value is a known team ID/name, use the canonical ID.
+    const teams=Array.isArray(window.__SRGF_TEAMS)?window.__SRGF_TEAMS:[];
+    const found=teams.find(t=>{
+      const id=String(t?.id??"").trim().toLowerCase();
+      const name=String(t?.name??"").trim().toLowerCase();
+      return raw===id || raw===name;
+    });
+    if(found){
+      const id=String(found.id||found.name||raw).trim().toLowerCase();
+      const tm=id.replace(/[^a-z0-9]+/g,"").match(/^(?:team|t)0*(\d+)$/);
+      return tm?`t${Number(tm[1])}`:id;
+    }
+    return raw.replace(/\s+/g," ");
+  }
+
+  function playerTeamFromFixtureCell(value){
+    const raw=String(value??"").trim().toLowerCase();
+    if(!raw)return "";
+    const players=Array.isArray(window.__SRGF_PLAYERS)?window.__SRGF_PLAYERS:[];
+    const p=players.find(x=>{
+      const id=String(x?.id??"").trim().toLowerCase();
+      const name=String(x?.name??"").trim().toLowerCase();
+      return raw===id || raw===name || (id && raw.includes(id)) || (name && raw.includes(name));
+    });
+    return p ? String(p.team||p.teamName||p.teamId||"") : "";
+  }
+
   function rowMatchesTeam(r,selected){
     if(!selected)return true;
-    const wanted=norm(selected);
-    return teamIndexes().some(i=>norm(r[i])===wanted);
+    const wanted=teamKey(selected);
+    if(!wanted)return true;
+    const headersLocal=headers||[];
+
+    // 1) Check every Team-related column. This includes Team 1, Team 2,
+    // Team A/B and Winning Team, so a team is found in both wins and losses.
+    for(let i=0;i<headersLocal.length;i++){
+      const h=String(headersLocal[i]??"").trim().toLowerCase();
+      const cell=String(r[i]??"").trim();
+      if(h.includes("team") && cell && teamKey(cell)===wanted)return true;
+    }
+
+    // 2) Some fixture sheets store the two teams in a Match/Fixture column,
+    // e.g. "T1 vs T2". Check both sides.
+    for(let i=0;i<headersLocal.length;i++){
+      const h=String(headersLocal[i]??"").trim().toLowerCase();
+      const raw=String(r[i]??"").trim();
+      if(!raw || !/^(match|fixture|game)$/.test(h))continue;
+      const parts=raw.split(/\s+(?:vs|v)\s+|\s*-\s*/i).map(x=>x.trim()).filter(Boolean);
+      if(parts.some(part=>teamKey(part)===wanted))return true;
+    }
+
+    // 3) Final fallback: resolve Player 1 / Player 2 to their team.
+    for(const i of playerIndexes()){
+      const pteam=playerTeamFromFixtureCell(r[i]);
+      if(pteam && teamKey(pteam)===wanted)return true;
+    }
+    return false;
   }
 
   function rowMatchesPlayer(r,selected){
@@ -306,6 +368,14 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const f=d.data||[];
       headers=d.headers||Object.keys(f[0]||{});
       rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+      try{
+        const td=await SRGF.loadJsonDataset("teams");
+        window.__SRGF_TEAMS=(td.data||[]).map(x=>({id:x.id??x["Team ID"]??x.TeamID??x.ID,name:x.name??x["Team Name"]??x.TeamName??x.Name}));
+      }catch(_){}
+      try{
+        const pd=await SRGF.loadJsonDataset("players");
+        window.__SRGF_PLAYERS=(pd.data||[]).map(x=>({id:x.id??x["Player ID"]??x.PlayerID??x.ID,name:x.name??x.Name??x["Player Name"]??x.PlayerName,team:x.team??x["Team ID"]??x.TeamID??x["Team Name"]??x.TeamName}));
+      }catch(_){}
       render();
       await loadJsonFreshness();
       setStatus("JSON data");
@@ -318,6 +388,14 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const f=d.fixtures||[];
       if(f.length){headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
       else {headers=[];rows=[];}
+      try{
+        const td=await SRGF.loadJsonDataset("teams");
+        window.__SRGF_TEAMS=(td.data||[]).map(x=>({id:x.id??x["Team ID"]??x.TeamID??x.ID,name:x.name??x["Team Name"]??x.TeamName??x.Name}));
+      }catch(_){}
+      try{
+        const pd=await SRGF.loadJsonDataset("players");
+        window.__SRGF_PLAYERS=(pd.data||[]).map(x=>({id:x.id??x["Player ID"]??x.PlayerID??x.ID,name:x.name??x.Name??x["Player Name"]??x.PlayerName,team:x.team??x["Team ID"]??x.TeamID??x["Team Name"]??x.TeamName}));
+      }catch(_){}
       render();
       setStatus(roleCanEdit()?"LIVE editor data":"LIVE · Google Sheet");
     }catch(e){
