@@ -1,0 +1,38 @@
+name: Check SRGF data freshness
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check last successful JSON sync
+        run: |
+          python - <<'PY'
+          import json, pathlib, datetime, sys
+          p = pathlib.Path("data/last-update.json")
+          if not p.exists():
+              print("ERROR: data/last-update.json does not exist")
+              sys.exit(1)
+          d = json.loads(p.read_text(encoding="utf-8"))
+          if not d.get("success") or not d.get("syncedAt"):
+              print("WARNING: No successful JSON sync has completed yet.")
+              sys.exit(1)
+          synced = datetime.datetime.fromisoformat(d["syncedAt"].replace("Z", "+00:00"))
+          age = (datetime.datetime.now(datetime.timezone.utc) - synced).total_seconds()
+          print(f"Last successful JSON sync: {d['syncedAt']} ({age:.0f}s ago)")
+          if age > 600:
+              print("ERROR: JSON data is more than 10 minutes old.")
+              sys.exit(1)
+          if age > 300:
+              print("WARNING: JSON data is more than 5 minutes old.")
+          else:
+              print("OK: JSON data is fresh.")
+          PY

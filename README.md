@@ -44,9 +44,9 @@ Public visitors do not need to log in. Admin/Writer users use the Login button.
 1. Deploy the Apps Script as a web app.
 2. Replace the Apps Script URL in `js/config.js` if the deployment URL changes.
 3. Add the GitHub Pages origin to the Google OAuth client's authorized JavaScript origins.
-4. Enable the GitHub Action after pushing the repository.
-5. The JSON files are fallback/public snapshots; live Apps Script data is authoritative whenever it can be read.
-
-
-### Loading strategy
-Public pages load the latest GitHub JSON snapshot first so users immediately see the last good data. A live Apps Script refresh then runs in the background. Automatic refresh is every 30 minutes; the manual refresh button can still be used at any time. If the live request fails, the displayed JSON data is kept and is never replaced with blank data. GitHub Actions continues to update the JSON snapshots independently.
+4. Enable the GitHub Action after pushing the repository. The workflow runs in GitHub's cloud, so your laptop does not need to be on.
+5. The workflow writes `data/last-update.json` only after a successful Apps Script data read and successful JSON generation.
+6. Public/report pages read the JSON snapshots directly. If a later sync fails, the last successful JSON remains in place.
+7. The website shows the age of the last successful JSON update: green when fresh, orange after 2 minutes, and red after 5 minutes.
+8. GitHub's scheduler is configured for every 5 minutes, but scheduled jobs can be delayed; the on-screen timestamp is the authoritative freshness indicator.
+9. The JSON files are the public data snapshots. Apps Script remains the secure live backend for login and Admin/Writer writes.

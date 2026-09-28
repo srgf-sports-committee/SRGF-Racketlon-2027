@@ -22,9 +22,19 @@ function doGet(e){
       const user=authorize_(e.parameter.token||'', false);
       return json_({ok:true,email:user.email,role:user.role});
     }
+
+    // Small, page-specific reads. These avoid loading the entire workbook when
+    // a page only needs one dataset.
+    if(a==='players') return json_({ok:true,players:sheetObjectsCached_(SHEETS.players)});
+    if(a==='teams') return json_({ok:true,teams:sheetObjectsCached_(SHEETS.teams)});
+    if(a==='auction') return json_({ok:true,auction:sheetObjectsCached_(SHEETS.auction)});
+    if(a==='fixtures') return json_({ok:true,fixtures:sheetObjectsCached_(SHEETS.fixtures)});
+    if(a==='results') return json_({ok:true,results:sheetObjectsCached_(SHEETS.results)});
+    if(a==='config') return json_({ok:true,config:sheetObjectsCached_(SHEETS.config)});
+
+    // Kept for compatibility with the current HTML pages. The combined read
+    // is optimized and cached so older pages do not suddenly stop working.
     if(a==='data') return json_(exportData_());
-    if(a==='fixtures') return json_({ok:true,fixtures:sheetObjects_(SHEETS.fixtures)});
-    if(a==='results') return json_({ok:true,results:sheetObjects_(SHEETS.results)});
     return json_(exportData_());
   }catch(err){return json_({ok:false,error:String(err.message||err)})}
 }
@@ -50,23 +60,50 @@ function doPost(e){
 }
 
 function exportData_(){
+  // One spreadsheet open per combined request instead of one open per sheet.
+  // This is a major reduction in Apps Script latency on cold requests.
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
   return {
     ok:true,
     updatedAt:new Date().toISOString(),
-    players:sheetObjects_(SHEETS.players),
-    teams:sheetObjects_(SHEETS.teams),
-    auction:sheetObjects_(SHEETS.auction),
-    fixtures:sheetObjects_(SHEETS.fixtures),
-    results:sheetObjects_(SHEETS.results),
-    config:sheetObjects_(SHEETS.config)
+    players:sheetObjectsCached_(SHEETS.players,ss),
+    teams:sheetObjectsCached_(SHEETS.teams,ss),
+    auction:sheetObjectsCached_(SHEETS.auction,ss),
+    fixtures:sheetObjectsCached_(SHEETS.fixtures,ss),
+    results:sheetObjectsCached_(SHEETS.results,ss),
+    config:sheetObjectsCached_(SHEETS.config,ss)
   };
 }
 
-function sheetObjects_(name){
-  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+// Cache is deliberately short-lived. It prevents several visitors/refreshes
+// from making Google Sheets perform the same expensive read at the same time,
+// while still checking the master Sheet frequently.
+const READ_CACHE_SECONDS = 5;
+
+function sheetObjectsCached_(name,ss){
+  const cache=CacheService.getScriptCache();
+  const key='SRGF_READ_V3_'+name;
+  const hit=cache.get(key);
+  if(hit!==null){
+    try{return JSON.parse(hit)}catch(_){/* ignore corrupt cache */}
+  }
+  const rows=sheetObjects_(name,ss);
+  try{
+    const text=JSON.stringify(rows);
+    // Apps Script CacheService has a per-value size limit. Only cache values
+    // that fit; large sheets simply bypass the cache and remain fully live.
+    if(text.length < 95000) cache.put(key,text,READ_CACHE_SECONDS);
+  }catch(_){/* cache is an optimization only */}
+  return rows;
+}
+
+function sheetObjects_(name,ss){
+  ss=ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh=ss.getSheetByName(name);
   if(!sh) return [];
-  const values=sh.getDataRange().getDisplayValues();
-  if(values.length<2) return [];
+  const lastRow=sh.getLastRow(), lastCol=sh.getLastColumn();
+  if(lastRow<2 || lastCol<1) return [];
+  const values=sh.getRange(1,1,lastRow,lastCol).getDisplayValues();
   const headers=values[0].map(String);
   return values.slice(1).filter(r=>r.some(v=>String(v).trim()!=='')).map(r=>{
     const o={}; headers.forEach((h,i)=>o[h]=r[i]??''); return o;
@@ -145,6 +182,7 @@ function sellPlayer_(p){
   if(required.amount>0) row[required.amount-1]=amount;
   if(required.timestamp>0) row[required.timestamp-1]=new Date();
   sh.appendRow(row);
+  CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
   return {ok:true,saved:true};
 }
 
@@ -156,6 +194,7 @@ function removePlayer_(p){
   if(c<0) throw new Error('AUCTION Player ID header is missing.');
   const vals=sh.getRange(2,c,Math.max(0,sh.getLastRow()-1),1).getDisplayValues();
   for(let i=vals.length-1;i>=0;i--) if(String(vals[i][0])===playerId) sh.deleteRow(i+2);
+  CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
   return {ok:true,removed:true};
 }
 
@@ -178,6 +217,7 @@ function saveFixtureResult_(p){
     if(c<0) throw new Error(`Game ${s.game} column not found.`);
     sh.getRange(rowNumber,c).setValue(`${s.player1} - ${s.player2}`);
   });
+  CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.fixtures);
   return {ok:true,saved:true,rowNumber};
 }
 
