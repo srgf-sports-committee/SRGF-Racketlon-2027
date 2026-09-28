@@ -1,7 +1,7 @@
 {
-  "success": false,
-  "syncedAt": "",
+  "success": true,
+  "syncedAt": "2026-09-28T19:41:45.222316Z",
   "sourceUpdatedAt": "",
   "source": "Google Sheets via Apps Script",
-  "message": "Waiting for the first successful cloud sync."
+  "workflowRun": "36473983270"
 }
