@@ -1398,3 +1398,6 @@ main>section:not(#home){
 .permission-note{margin:12px 0;padding:12px;border-radius:10px;background:rgba(255,180,92,.08);border:1px solid rgba(255,180,92,.25)}
 @media(max-width:1000px){.topbar{flex-wrap:wrap;height:auto;padding:10px 14px}.page-nav{order:3;width:100%;overflow:auto}.page-nav a{white-space:nowrap}}
 @media(max-width:760px){.topbar{gap:8px}.page-nav{gap:4px}.page-nav a{padding:7px 8px;font-size:12px}}
+
+/* Remove duplicate trophy from the newer topbar brand; the visible trophy is .brand-mark. */
+.topbar .brand::before{display:none !important;content:none !important;}
