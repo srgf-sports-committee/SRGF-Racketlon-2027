@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Fixtures</title>
+<link rel="stylesheet" href="css/srgf.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions"><div id="status" class="status">Loading…</div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
+</header>
+<main>
+<section id="fixtures">
+<h1>Fixtures</h1>
+<div class="card">
+<div class="fixture-summary-grid">
+<div class="fixture-summary-card fixture-summary-completed">
+<span>Matches Completed</span>
+<strong id="fixtureCompletedCount">0</strong>
+</div>
+<div class="fixture-summary-card fixture-summary-pending">
+<span>Matches Pending</span>
+<strong id="fixturePendingCount">0</strong>
+</div>
+</div>
+<div class="fixture-filter-row">
+<div>
+<label for="fixtureStatusFilter"><strong>Filter by Status</strong></label>
+<select id="fixtureStatusFilter">
+<option value="">All Matches</option>
+<option value="completed">Completed</option>
+<option value="pending">Pending</option>
+</select>
+</div>
+<div>
+<label for="fixtureTeamFilter"><strong>Filter by Team</strong></label>
+<select id="fixtureTeamFilter">
+<option value="">All Teams</option>
+</select>
+</div>
+<div>
+<label for="fixtureSportFilter"><strong>Filter by Sport</strong></label>
+<select id="fixtureSportFilter">
+<option value="">All Sports</option>
+</select>
+</div>
+<div class="fixture-player-filter-wrap">
+<label for="fixturePlayerFilterButton"><strong>Filter by Player</strong></label>
+<select aria-hidden="true" class="fixture-player-native-select" id="fixturePlayerFilter" tabindex="-1">
+<option value="">All Players</option>
+</select>
+<button aria-expanded="false" aria-haspopup="listbox" class="fixture-player-filter-button" id="fixturePlayerFilterButton" type="button">All Players <span class="fixture-player-chevron">⌄</span></button>
+<div class="fixture-player-dropdown hidden" id="fixturePlayerDropdown">
+<input aria-label="Search fixture player" autocomplete="off" id="fixturePlayerSearch" placeholder="Search player..." type="search"/>
+<div class="fixture-player-options" id="fixturePlayerOptions" role="listbox"></div>
+</div>
+</div>
+<div class="filter-hint" id="fixtureFilterMessage">Showing all fixture matches</div>
+</div>
+<div class="notice" id="fixtureMessage">Loading fixture data …</div>
+<div class="table-wrap">
+<table id="fixturesTable">
+<thead id="fixturesHead"></thead>
+<tbody id="fixturesBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+<div id="resultModal" class="modal hidden"><div class="modal-card"><div class="modal-head"><div><h2 class="modal-title">Enter Result</h2><p>Scores are saved to the shared Google Sheet.</p></div><button id="closeResultBtn" class="close">×</button></div><div class="games"></div><div class="modal-actions"><button id="saveFixtureBtn" class="primary">Save Result</button></div></div></div>
+</main>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/fixtures.js"></script>
+</body>
+</html>

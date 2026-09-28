@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Teams</title>
+<link rel="stylesheet" href="css/srgf.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions"><div id="status" class="status">Loading…</div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
+</header>
+<main>
+<section id="teams">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+<h1 style="margin-bottom:0">Teams</h1>
+<button class="primary" id="exportTeamsBtn">⬇ Export Teams</button>
+</div>
+<div class="card">
+<div class="notice">Players are shown team-wise based on the current auction allocation.</div>
+</div>
+<div class="card">
+<div class="teams-board" id="teamsBoard"></div>
+</div>
+</section>
+
+</main>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/teams.js"></script>
+</body>
+</html>

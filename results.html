@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Results</title>
+<link rel="stylesheet" href="css/srgf.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions"><div id="status" class="status">Loading…</div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
+</header>
+<main>
+<section id="results">
+<h1>Results</h1>
+<div class="card">
+<h2>Team-wise Points</h2>
+<div class="notice" id="teamPointsMessage">Results will appear here after fixture scores are entered.</div>
+<div class="table-wrap result-table-wrap">
+<table id="teamPointsTable">
+<thead><tr><th>Team</th><th>Total Score</th><th>Match Won</th><th>Games Lost</th><th>Point Difference</th></tr></thead>
+<tbody id="teamPointsBody"></tbody>
+</table>
+</div>
+<div class="notice tie-break-note">* If all above tie breakers are equal, the difference of points will be calculated to arrive at the ultimate winning team.</div>
+</div>
+<div class="card">
+<h2>Player Scores</h2>
+<div aria-label="Player score type" class="player-score-tabs" role="tablist">
+<button aria-selected="true" class="player-score-tab active" id="playerScoresRacketlonTab" role="tab" type="button">
+<span class="player-score-tab-icon">🏆</span>
+<span>Racketlon</span>
+</button>
+<button aria-selected="false" class="player-score-tab" id="playerScoresNonRacketlonTab" role="tab" type="button">
+<span class="player-score-tab-icon">🎯</span>
+<span>Non Racketlon</span>
+</button>
+</div>
+<div class="player-score-filters player-score-filters-racketlon" id="playerScoreFilters">
+<div class="player-score-filter-field" id="playerScoreSportFilterWrap">
+<label for="resultPlayerSportFilter"><strong>Filter by Sport</strong></label>
+<select id="resultPlayerSportFilter">
+<option value="">All Sports</option>
+</select>
+</div>
+<div class="player-score-filter-field">
+<label for="resultPlayerTierFilter"><strong>Filter by Tier</strong></label>
+<select id="resultPlayerTierFilter">
+<option value="">All Tiers</option>
+</select>
+</div>
+</div>
+<div class="notice" id="playerScoresMessage">Racketlon Player Scores are calculated from the sum of points.</div>
+<div class="notice tie-break-note"></div>
+<div class="table-wrap result-table-wrap">
+<table id="playerScoresTable">
+<thead id="playerScoresHead"><tr><th>Tier</th><th>Player Name</th><th>Sum Points</th></tr></thead>
+<tbody id="playerScoresBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+</main>
+<script src="js/config.js"></script>
+<script src="js/common.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/results.js"></script>
+</body>
+</html>

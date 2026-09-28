@@ -1,0 +1,186 @@
+/*******************************************************
+ SRGF RACKETLON 2027 - PROTECTED APPS SCRIPT BACKEND
+ Master data remains in Google Sheets.
+ Public GET reads are read-only.
+ Writes require a Google ID token and ACCESS-sheet role.
+
+ Sheets:
+ PLAYERS, TEAMS, AUCTION, FIXTURES, RESULTS, CONFIG, ACCESS
+*******************************************************/
+const SPREADSHEET_ID = '1RtyxyB3ZPjxD1uAw6mhOrcyjCWtGr0NnELyn_0kGlX4';
+
+const SHEETS = {
+  players:'PLAYERS', teams:'TEAMS', auction:'AUCTION',
+  fixtures:'FIXTURES', results:'RESULTS', config:'CONFIG', access:'ACCESS'
+};
+
+function doGet(e){
+  try{
+    const a=String(e?.parameter?.action||'data').toLowerCase();
+    if(a==='ping') return json_({ok:true,now:new Date().toISOString()});
+    if(a==='whoami'){
+      const user=authorize_(e.parameter.token||'', false);
+      return json_({ok:true,email:user.email,role:user.role});
+    }
+    if(a==='data') return json_(exportData_());
+    if(a==='fixtures') return json_({ok:true,fixtures:sheetObjects_(SHEETS.fixtures)});
+    if(a==='results') return json_({ok:true,results:sheetObjects_(SHEETS.results)});
+    return json_(exportData_());
+  }catch(err){return json_({ok:false,error:String(err.message||err)})}
+}
+
+function doPost(e){
+  try{
+    const a=String(e?.parameter?.action||'').toLowerCase();
+    const token=String(e?.parameter?.token||'');
+    if(a==='sellplayer' || a==='removeplayer' || a==='syncchanges'){
+      const user=authorize_(token,true);
+      if(user.role!=='ADMIN') throw new Error('Admin access required for Auction changes.');
+    }
+    if(a==='savefixtureresult'){
+      const user=authorize_(token,true);
+      if(user.role!=='ADMIN' && user.role!=='WRITER') throw new Error('Admin or Writer access required.');
+      return json_(saveFixtureResult_(e.parameter));
+    }
+    if(a==='sellplayer') return json_(sellPlayer_(e.parameter));
+    if(a==='removeplayer') return json_(removePlayer_(e.parameter));
+    if(a==='syncchanges') return json_(syncChanges_(e.parameter));
+    throw new Error('Unknown POST action.');
+  }catch(err){return json_({ok:false,error:String(err.message||err)})}
+}
+
+function exportData_(){
+  return {
+    ok:true,
+    updatedAt:new Date().toISOString(),
+    players:sheetObjects_(SHEETS.players),
+    teams:sheetObjects_(SHEETS.teams),
+    auction:sheetObjects_(SHEETS.auction),
+    fixtures:sheetObjects_(SHEETS.fixtures),
+    results:sheetObjects_(SHEETS.results),
+    config:sheetObjects_(SHEETS.config)
+  };
+}
+
+function sheetObjects_(name){
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(name);
+  if(!sh) return [];
+  const values=sh.getDataRange().getDisplayValues();
+  if(values.length<2) return [];
+  const headers=values[0].map(String);
+  return values.slice(1).filter(r=>r.some(v=>String(v).trim()!=='')).map(r=>{
+    const o={}; headers.forEach((h,i)=>o[h]=r[i]??''); return o;
+  });
+}
+
+function headers_(sh){
+  const last=sh.getLastColumn();
+  return last ? sh.getRange(1,1,1,last).getDisplayValues()[0] : [];
+}
+function header_(headers,names){
+  const wanted=names.map(x=>String(x).trim().toLowerCase());
+  for(let i=0;i<headers.length;i++) if(wanted.includes(String(headers[i]).trim().toLowerCase())) return i+1;
+  return -1;
+}
+function rowIndex_(headers,names){
+  return header_(headers,names);
+}
+
+function accessMap_(){
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.access);
+  if(!sh) throw new Error('ACCESS sheet is missing.');
+  const values=sh.getDataRange().getDisplayValues();
+  const map={};
+  if(values.length<2) return map;
+  const h=values[0].map(x=>String(x).trim().toLowerCase());
+  const ei=h.indexOf('email'), ri=h.indexOf('role'), ai=h.indexOf('active');
+  for(let i=1;i<values.length;i++){
+    const email=String(values[i][ei]||'').trim().toLowerCase();
+    const role=String(values[i][ri]||'USER').trim().toUpperCase();
+    const active=ai<0 || String(values[i][ai]||'TRUE').trim().toUpperCase()!=='FALSE';
+    if(email && active) map[email]=role;
+  }
+  return map;
+}
+
+/*
+ For initial deployment this uses Google's tokeninfo endpoint to validate
+ the ID token. Once the Google OAuth client is configured, this gives the
+ backend the verified email/subject before ACCESS-sheet authorization.
+ For higher-security production deployment, replace this function with
+ local RS256 signature verification against Google's rotating certificates.
+*/
+function authorize_(token, write){
+  if(!token) throw new Error('Google login required.');
+  const r=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(token),{muteHttpExceptions:true});
+  if(r.getResponseCode()!==200) throw new Error('Google login token is invalid or expired.');
+  const j=JSON.parse(r.getContentText());
+  if(!j.email || String(j.email_verified).toLowerCase()!=='true') throw new Error('Verified Google email required.');
+  const role=(accessMap_()[String(j.email).toLowerCase()]||'USER').toUpperCase();
+  if(write && role==='USER') throw new Error('This Google account is not authorized to edit.');
+  return {email:String(j.email).toLowerCase(),role,sub:j.sub||''};
+}
+
+function sellPlayer_(p){
+  const playerId=String(p.playerId||'').trim(), teamId=String(p.teamId||'').trim(), amount=Number(p.amount||0);
+  if(!playerId||!teamId||!Number.isFinite(amount)||amount<=0) throw new Error('Invalid auction data.');
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.auction);
+  if(!sh) throw new Error('AUCTION sheet is missing.');
+  const h=headers_(sh);
+  const required={auctionId:header_(h,['Auction ID']),playerId:header_(h,['Player ID']),playerName:header_(h,['Player Name']),teamId:header_(h,['Team ID']),teamName:header_(h,['Team Name']),amount:header_(h,['Amount']),timestamp:header_(h,['Timestamp'])};
+  if(required.playerId<0||required.teamId<0||required.amount<0) throw new Error('AUCTION headers are incomplete.');
+  const players=sheetObjects_(SHEETS.players),teams=sheetObjects_(SHEETS.teams);
+  const player=players.find(x=>String(x['Player ID']||'')===playerId);
+  const team=teams.find(x=>String(x['Team ID']||'')===teamId);
+  if(!player) throw new Error('Player not found.');
+  if(!team) throw new Error('Team not found.');
+  const existing=sheetObjects_(SHEETS.auction).some(x=>String(x['Player ID']||'')===playerId);
+  if(existing) return {ok:true,alreadySaved:true};
+  const row=new Array(h.length).fill('');
+  if(required.auctionId>0) row[required.auctionId-1]='A'+Date.now();
+  if(required.playerId>0) row[required.playerId-1]=playerId;
+  if(required.playerName>0) row[required.playerName-1]=player['Name']||player['Player Name']||playerId;
+  if(required.teamId>0) row[required.teamId-1]=teamId;
+  if(required.teamName>0) row[required.teamName-1]=team['Team Name']||teamId;
+  if(required.amount>0) row[required.amount-1]=amount;
+  if(required.timestamp>0) row[required.timestamp-1]=new Date();
+  sh.appendRow(row);
+  return {ok:true,saved:true};
+}
+
+function removePlayer_(p){
+  const playerId=String(p.playerId||'').trim();
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.auction);
+  if(!sh) throw new Error('AUCTION sheet is missing.');
+  const h=headers_(sh), c=header_(h,['Player ID']);
+  if(c<0) throw new Error('AUCTION Player ID header is missing.');
+  const vals=sh.getRange(2,c,Math.max(0,sh.getLastRow()-1),1).getDisplayValues();
+  for(let i=vals.length-1;i>=0;i--) if(String(vals[i][0])===playerId) sh.deleteRow(i+2);
+  return {ok:true,removed:true};
+}
+
+function syncChanges_(p){
+  const sales=JSON.parse(p.sales||'[]'), deletes=JSON.parse(p.deletes||'[]');
+  let saved=0,removed=0;
+  sales.forEach(x=>{sellPlayer_(x);saved++});
+  deletes.forEach(id=>{removePlayer_({playerId:id});removed++});
+  return {ok:true,saved,removed};
+}
+
+function saveFixtureResult_(p){
+  const rowNumber=Number(p.rowNumber), scores=JSON.parse(p.scores||'[]');
+  if(!rowNumber || rowNumber<2) throw new Error('Invalid fixture row.');
+  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(String(p.sheet||SHEETS.fixtures));
+  if(!sh) throw new Error('FIXTURES sheet is missing.');
+  const h=headers_(sh);
+  scores.forEach(s=>{
+    const c=header_(h,[`Game ${s.game}`,`Game${s.game}`]);
+    if(c<0) throw new Error(`Game ${s.game} column not found.`);
+    sh.getRange(rowNumber,c).setValue(`${s.player1} - ${s.player2}`);
+  });
+  return {ok:true,saved:true,rowNumber};
+}
+
+function json_(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}

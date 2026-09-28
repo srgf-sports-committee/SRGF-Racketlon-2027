@@ -1,0 +1,9 @@
+# Local/editor files
+.DS_Store
+.vscode/
+*.log
+
+# Do not commit secrets
+.env
+*.pem
+credentials*.json
