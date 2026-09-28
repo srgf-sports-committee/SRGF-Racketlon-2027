@@ -72,17 +72,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   function matchTeams(row) {
     const match = value(row, ["Match", "Fixture"]);
     if (match) {
-      const parts = match.split(/\s+(?:vs|v)\.?\s+/i).map(cleanTeam).filter(Boolean);
+      const parts = match.split(/\s+(?:vs|v)\.?\s+/i).map(resolveTeamName).filter(Boolean);
       if (parts.length >= 2) return [parts[0], parts[1]];
     }
 
     const team1 = value(row, ["Team 1", "Team1", "Team A", "TeamA"]);
     const team2 = value(row, ["Team 2", "Team2", "Team B", "TeamB"]);
-    if (team1 || team2) return [cleanTeam(team1), cleanTeam(team2)];
+    if (team1 || team2) return [resolveTeamName(team1), resolveTeamName(team2)];
 
     return [
-      cleanTeam(playerTeam(value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]))),
-      cleanTeam(playerTeam(value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"])))
+      resolveTeamName(playerTeam(value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]))),
+      resolveTeamName(playerTeam(value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"])))
     ];
   }
 
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const stats = {};
     const ensure = name => {
-      const clean = cleanTeam(name);
+      const clean = resolveTeamName(name);
       if (!clean) return null;
       const key = teamKey(clean);
       if (!stats[key]) stats[key] = { name: clean, score: 0, wins: 0, losses: 0, pd: 0 };
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (a) ensure(a);
       if (b) ensure(b);
 
-      const winner = cleanTeam(value(row, ["Winning Team", "Winner Team", "Winner"]));
+      const winner = resolveTeamName(value(row, ["Winning Team", "Winner Team", "Winner"]));
       const winnerKey = teamKey(winner);
       if (winnerKey) {
         if (a && teamKey(a) === winnerKey) ensure(a).wins++;
@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     teamsData.forEach(t => {
-      const name = cleanTeam(t.name || t["Team Name"] || t.Team || t.id || t["Team ID"]);
+      const name = resolveTeamName(t.name || t["Team Name"] || t.Team || t.id || t["Team ID"]);
       if (name) ensure(name);
     });
 
@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const a = p1 ? ensure(sportName, tierName, p1) : null;
       const b = p2 ? ensure(sportName, tierName, p2) : null;
       const [teamA, teamB] = matchTeams(row);
-      const winner = cleanTeam(value(row, ["Winning Team", "Winner Team", "Winner"]));
+      const winner = resolveTeamName(value(row, ["Winning Team", "Winner Team", "Winner"]));
       const winnerKey = teamKey(winner);
 
       fixtureHeaders.forEach((h, i) => {
