@@ -76,18 +76,34 @@ jobs:
 
       - name: Commit updated JSON
         run: |
+          set -e
           git config user.name "SRGF Data Sync"
           git config user.email "actions@users.noreply.github.com"
-          git add data/*.json
-          if git diff --cached --quiet; then
-            echo "No JSON changes to commit."
-          else
+
+          # Build the commit from the latest remote main so manual GitHub
+          # changes made while this job was running are preserved.
+          # The JSON files generated above remain in the working tree.
+          for attempt in 1 2 3; do
+            echo "Push attempt $attempt"
+            git fetch origin main
+            git reset --mixed origin/main
+            git add data/*.json
+
+            if git diff --cached --quiet; then
+              echo "No JSON changes to commit."
+              exit 0
+            fi
+
             git commit -m "Auto-sync tournament data"
 
-            # The repository may have received another commit after this
-            # workflow started (for example a manual GitHub edit). Rebase
-            # our JSON commit onto the current remote main before pushing.
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-          fi
+            if git push origin HEAD:main; then
+              echo "JSON update pushed successfully."
+              exit 0
+            fi
+
+            echo "Remote changed during push; retrying from latest main..."
+            git reset --mixed origin/main
+          done
+
+          echo "Unable to push JSON after 3 attempts."
+          exit 1
