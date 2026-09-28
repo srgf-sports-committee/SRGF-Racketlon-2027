@@ -1,256 +1,343 @@
-document.addEventListener("DOMContentLoaded", async ()=>{
-  const {loadJsonDataset,$,esc,setStatus,loadJsonFreshness,nav,live,C}=SRGF;
+document.addEventListener("DOMContentLoaded", async () => {
+  const { $, esc, setStatus, loadJsonDataset, live, loadJsonFreshness, nav } = SRGF;
   SRGFAuth.init();
   nav("results");
 
-  let fixtureData={headers:[],rows:[]};
-  let teams=[];
-  let players=[];
-  window.activePlayerScoreTab="racketlon";
-  window.playerScoreTierFilters=window.playerScoreTierFilters || {racketlon:"", nonRacketlon:""};
+  let fixtureHeaders = [];
+  let fixtureRows = [];
+  let teamsData = [];
+  let activeTab = "racketlon";
+  const tierFilters = { racketlon: "", nonRacketlon: "" };
 
-  const norm=s=>String(s??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
-  const parseScore=raw=>{
-    const m=String(raw??"").match(/^\s*(-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)\s*$/);
-    return m ? [Number(m[1]),Number(m[2])] : null;
+  const norm = v => String(v ?? "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const number = v => {
+    const m = String(v ?? "").replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+    return m ? Number(m[0]) : 0;
   };
-  const isRacketlon=s=>norm(s)==="racketlon";
+  const isRacketlon = sport => norm(sport) === "racketlon";
+  const teamKey = v => norm(String(v ?? "").replace(/\bteam\s*/i, ""));
+  const cleanTeam = v => String(v ?? "").trim().replace(/^team\s*/i, "").trim();
 
-  function makeFixtureData(data){
-    if(data && Array.isArray(data.headers) && Array.isArray(data.rows)) return {headers:data.headers,rows:data.rows};
-    if(Array.isArray(data) && data.length){
-      const headers=Object.keys(data[0]||{});
-      return {headers,rows:data.map(r=>headers.map(h=>r[h]??""))};
+  function headersFromObjects(rows) {
+    const headers = Object.keys(rows[0] || {});
+    return { headers, rows: rows.map(r => headers.map(h => r[h] ?? "")) };
+  }
+
+  function findIndex(names) {
+    const wanted = names.map(norm);
+    for (const w of wanted) {
+      const exact = fixtureHeaders.findIndex(h => norm(h) === w);
+      if (exact >= 0) return exact;
     }
-    return {headers:[],rows:[]};
-  }
-
-  function headerIndex(headers,name){
-    const wanted=norm(name);
-    let i=headers.findIndex(h=>norm(h)===wanted);
-    if(i>=0) return i;
-    i=headers.findIndex(h=>norm(h).startsWith(wanted));
-    return i;
-  }
-
-  function value(row,headers,name){
-    const i=headerIndex(headers,name);
-    return i<0 ? "" : String(row[i]??"").trim();
-  }
-
-  function fixtureTeamName(v){
-    const s=String(v??"").trim();
-    if(!s) return "";
-    const m=s.match(/^team\s*[-_]?\s*(\d+)$/i);
-    if(m) return `Team ${m[1]}`;
-    const t=s.match(/^t\s*[-_]?\s*(\d+)$/i);
-    if(t) return `T${t[1]}`;
-    return s;
-  }
-
-  function teamKey(v){
-    const s=norm(v);
-    const m=s.match(/(?:team|t)(\d+)$/);
-    return m ? `t${m[1]}` : s;
-  }
-
-  function playerTeam(playerName){
-    const target=norm(playerName);
-    if(!target) return "";
-    const p=players.find(x=>norm(x.name||x["Player Name"]||x.Player||x["Name"])===target);
-    return p ? (p.team||p["Team"]||p["Team Name"]||p.teamName||"") : "";
-  }
-
-  function matchTeams(row,headers){
-    for(let i=0;i<headers.length;i++){
-      if(!/^(match|fixture)$/i.test(String(headers[i]||"").trim())) continue;
-      const raw=String(row[i]??"").trim();
-      if(!raw) continue;
-      let parts=raw.split(/\s+(?:vs|v)\s+/i).map(x=>x.trim()).filter(Boolean);
-      if(parts.length<2) parts=raw.split(/(?:vs|v)/i).map(x=>x.trim()).filter(Boolean);
-      if(parts.length>=2) return [fixtureTeamName(parts[0]),fixtureTeamName(parts[1])];
+    for (const w of wanted) {
+      const prefix = fixtureHeaders.findIndex(h => norm(h).startsWith(w));
+      if (prefix >= 0) return prefix;
     }
-    const team1=value(row,headers,"team 1") || value(row,headers,"team1");
-    const team2=value(row,headers,"team 2") || value(row,headers,"team2");
-    if(team1 || team2) return [fixtureTeamName(team1),fixtureTeamName(team2)];
-    return [fixtureTeamName(playerTeam(value(row,headers,"player 1"))),fixtureTeamName(playerTeam(value(row,headers,"player 2")))];
+    return -1;
   }
 
-  function refreshSportFilter(){
-    const select=$("resultPlayerSportFilter");
-    if(!select) return;
-    const current=select.value;
-    const i=headerIndex(fixtureData.headers,"sport");
-    const sports=i>=0 ? [...new Set(fixtureData.rows.map(r=>String(r[i]??"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b)) : [];
-    select.innerHTML='<option value="">All Sports</option>'+sports.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
-    if(sports.includes(current)) select.value=current;
+  function value(row, names) {
+    const i = findIndex(Array.isArray(names) ? names : [names]);
+    return i < 0 ? "" : String(row[i] ?? "").trim();
   }
 
-  function refreshTierFilter(){
-    const select=$("resultPlayerTierFilter");
-    if(!select) return;
-    const active=window.activePlayerScoreTab;
-    const saved=window.playerScoreTierFilters[active]||"";
-    const i=headerIndex(fixtureData.headers,"tier");
-    const tiers=i>=0 ? [...new Set(fixtureData.rows.map(r=>String(r[i]??"").trim()).filter(Boolean))].sort((a,b)=>{
-      const na=Number((a.match(/\d+(?:\.\d+)?/)||[])[0]);
-      const nb=Number((b.match(/\d+(?:\.\d+)?/)||[])[0]);
-      return Number.isFinite(na)&&Number.isFinite(nb) ? na-nb : a.localeCompare(b);
-    }) : [];
-    select.innerHTML='<option value="">All Tiers</option>'+tiers.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
-    select.value=tiers.includes(saved)?saved:"";
+  function scoreColumns() {
+    const out = [];
+    fixtureHeaders.forEach((h, i) => {
+      const n = norm(h);
+      const m = n.match(/^(?:game|set)([1-4])/);
+      if (m) out[Number(m[1]) - 1] = i;
+    });
+    return out.filter(i => i !== undefined);
   }
 
-  function syncTier(){
-    const select=$("resultPlayerTierFilter");
-    if(select) window.playerScoreTierFilters[window.activePlayerScoreTab]=String(select.value||"");
+  function parseScore(raw) {
+    const m = String(raw ?? "").match(/^\s*(-?\d+(?:\.\d+)?)\s*[-:]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    return m ? [Number(m[1]), Number(m[2])] : null;
   }
 
-  function render(){
-    const rows=fixtureData.rows||[];
-    const headers=fixtureData.headers||[];
-    const teamBody=$("teamPointsBody"), teamTable=$("teamPointsTable"), teamMsg=$("teamPointsMessage");
-    const playerBody=$("playerScoresBody"), playerTable=$("playerScoresTable"), playerMsg=$("playerScoresMessage");
+  function playerTeam(player) {
+    if (!player) return "";
+    const wanted = norm(player);
+    for (const t of teamsData) {
+      const name = String(t.name || t["Team Name"] || t.Team || t.id || "").trim();
+      const members = t.players || t.Players || [];
+      if (Array.isArray(members) && members.some(p => norm(p.name || p["Player Name"] || p) === wanted)) return name;
+      const pList = String(t["Players"] || t["Player Names"] || "").split(/[,;|]/).map(x => x.trim());
+      if (pList.some(p => norm(p) === wanted)) return name;
+    }
+    return "";
+  }
 
-    refreshSportFilter();
-    refreshTierFilter();
-
-    if(!rows.length || !headers.length){
-      teamBody.innerHTML='<tr><td colspan="5" class="notice">No fixture results available.</td></tr>';
-      teamTable.classList.remove("hidden");
-      teamMsg.textContent="Results will appear here after fixture scores are entered.";
-      playerBody.innerHTML='<tr><td colspan="6" class="notice">No player scores available.</td></tr>';
-      playerTable.classList.remove("hidden");
-      playerMsg.textContent=window.activePlayerScoreTab==="racketlon" ? "Racketlon Player Scores are calculated from the sum of points." : "Non Racketlon player scores are calculated from fixture results.";
-      return;
+  function matchTeams(row) {
+    const match = value(row, ["Match", "Fixture"]);
+    if (match) {
+      const parts = match.split(/\s+(?:vs|v)\.?\s+/i).map(cleanTeam).filter(Boolean);
+      if (parts.length >= 2) return [parts[0], parts[1]];
     }
 
-    const teamStats={};
-    const ensureTeam=name=>{
-      const clean=String(name||"").trim();
-      if(!clean) return null;
-      if(!teamStats[clean]) teamStats[clean]={score:0,wins:0,losses:0,pd:0};
-      return teamStats[clean];
+    const team1 = value(row, ["Team 1", "Team1", "Team A", "TeamA"]);
+    const team2 = value(row, ["Team 2", "Team2", "Team B", "TeamB"]);
+    if (team1 || team2) return [cleanTeam(team1), cleanTeam(team2)];
+
+    return [
+      cleanTeam(playerTeam(value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]))),
+      cleanTeam(playerTeam(value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"])))
+    ];
+  }
+
+  function refreshFilters() {
+    const sportSelect = $("resultPlayerSportFilter");
+    const tierSelect = $("resultPlayerTierFilter");
+    const sportWrap = $("playerScoreSportFilterWrap");
+
+    const sports = [...new Set(fixtureRows.map(r => value(r, ["Sport"])).filter(Boolean))]
+      .filter(s => !isRacketlon(s))
+      .sort((a, b) => a.localeCompare(b));
+    const currentSport = sportSelect?.value || "";
+    if (sportSelect) {
+      sportSelect.innerHTML = '<option value="">All Sports</option>' + sports.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+      if (sports.includes(currentSport)) sportSelect.value = currentSport;
+    }
+
+    const tiers = [...new Set(fixtureRows.map(r => value(r, ["Tier"])).filter(Boolean))].sort((a, b) => {
+      const na = Number((a.match(/\d+(?:\.\d+)?/) || [])[0]);
+      const nb = Number((b.match(/\d+(?:\.\d+)?/) || [])[0]);
+      return Number.isFinite(na) && Number.isFinite(nb) ? na - nb : a.localeCompare(b);
+    });
+    if (tierSelect) {
+      const saved = tierFilters[activeTab] || "";
+      tierSelect.innerHTML = '<option value="">All Tiers</option>' + tiers.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+      tierSelect.value = tiers.includes(saved) ? saved : "";
+    }
+
+    if (sportWrap) sportWrap.classList.toggle("hidden", activeTab !== "nonRacketlon");
+    const filters = $("playerScoreFilters");
+    if (filters) {
+      filters.classList.toggle("player-score-filters-racketlon", activeTab === "racketlon");
+      filters.classList.toggle("player-score-filters-non-racketlon", activeTab === "nonRacketlon");
+    }
+  }
+
+  function renderTeamResults() {
+    const body = $("teamPointsBody");
+    const msg = $("teamPointsMessage");
+    const table = $("teamPointsTable");
+    if (!body || !table) return;
+
+    const stats = {};
+    const ensure = name => {
+      const clean = cleanTeam(name);
+      if (!clean) return null;
+      const key = teamKey(clean);
+      if (!stats[key]) stats[key] = { name: clean, score: 0, wins: 0, losses: 0, pd: 0 };
+      return stats[key];
     };
 
-    rows.forEach(row=>{
-      const winner=fixtureTeamName(value(row,headers,"winning team"));
-      const pointsRaw=value(row,headers,"points");
-      const pm=pointsRaw.replace(/,/g,"").match(/-?\d+(?:\.\d+)?/);
-      const points=pm?Number(pm[0]):0;
-      const [a,b]=matchTeams(row,headers);
-      if(a) ensureTeam(a); if(b) ensureTeam(b);
-      if(winner && Number.isFinite(points)) ensureTeam(winner).score+=points;
-      if(winner){
-        const wk=teamKey(winner);
-        if(a && teamKey(a)===wk) ensureTeam(a).wins++;
-        else if(b && teamKey(b)===wk) ensureTeam(b).wins++;
+    fixtureRows.forEach(row => {
+      const [a, b] = matchTeams(row);
+      if (a) ensure(a);
+      if (b) ensure(b);
+
+      const winner = cleanTeam(value(row, ["Winning Team", "Winner Team", "Winner"]));
+      const winnerKey = teamKey(winner);
+      if (winnerKey) {
+        if (a && teamKey(a) === winnerKey) ensure(a).wins++;
+        else if (b && teamKey(b) === winnerKey) ensure(b).wins++;
       }
-      headers.forEach((h,i)=>{
-        if(!/^(game|set)\d+/.test(norm(h))) return;
-        const sc=parseScore(row[i]); if(!sc) return;
-        if(a){ensureTeam(a).pd+=sc[0]-sc[1]; if(sc[0]<sc[1]) ensureTeam(a).losses++;}
-        if(b){ensureTeam(b).pd+=sc[1]-sc[0]; if(sc[1]<sc[0]) ensureTeam(b).losses++;}
+
+      const points = number(value(row, ["Points"]));
+      if (winnerKey && points !== 0) ensure(winner).score += points;
+
+      fixtureHeaders.forEach((h, i) => {
+        if (!/^(?:game|set)\d+/.test(norm(h))) return;
+        const parsed = parseScore(row[i]);
+        if (!parsed) return;
+        if (a) {
+          ensure(a).pd += parsed[0] - parsed[1];
+          if (parsed[0] < parsed[1]) ensure(a).losses++;
+        }
+        if (b) {
+          ensure(b).pd += parsed[1] - parsed[0];
+          if (parsed[1] < parsed[0]) ensure(b).losses++;
+        }
       });
     });
 
-    teams.forEach(t=>{const name=String(t.name||t["Team Name"]||t.Team||t.id||t["Team ID"]||"").trim(); if(name) ensureTeam(name);});
-    const teamEntries=Object.entries(teamStats).sort((a,b)=>b[1].score-a[1].score||b[1].wins-a[1].wins||a[1].losses-b[1].losses||b[1].pd-a[1].pd||a[0].localeCompare(b[0]));
-    teamBody.innerHTML=teamEntries.length ? teamEntries.map(([name,s],i)=>`<tr class="${i===0?"team-top-row":""}"><td>${esc(name)}</td><td class="result-total">${s.score}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.pd>0?"+":""}${s.pd}</td></tr>`).join("") : '<tr><td colspan="5" class="notice">No winning teams recorded yet.</td></tr>';
-    teamTable.classList.remove("hidden");
-    teamMsg.textContent=teamEntries.length?`${teamEntries.length} team(s) shown.`:"Results will appear here after fixture scores are entered.";
+    teamsData.forEach(t => {
+      const name = cleanTeam(t.name || t["Team Name"] || t.Team || t.id || t["Team ID"]);
+      if (name) ensure(name);
+    });
 
-    const active=window.activePlayerScoreTab;
-    const sportWrap=$("playerScoreSportFilterWrap");
-    const filterBox=$("playerScoreFilters");
-    if(sportWrap) sportWrap.classList.toggle("hidden",active!=="nonRacketlon");
-    if(filterBox){filterBox.classList.toggle("player-score-filters-racketlon",active==="racketlon");filterBox.classList.toggle("player-score-filters-non-racketlon",active!=="racketlon");}
-    const sportFilter=active==="nonRacketlon" ? norm($("resultPlayerSportFilter")?.value) : "";
-    const tierFilter=norm($("resultPlayerTierFilter")?.value);
+    const entries = Object.values(stats).sort((a, b) =>
+      b.score - a.score || b.wins - a.wins || a.losses - b.losses || b.pd - a.pd || a.name.localeCompare(b.name)
+    );
 
-    const playerStats={};
-    const ensurePlayer=(sport,tier,name)=>{
-      const key=`${sport}|||${tier}|||${name}`;
-      if(!playerStats[key]) playerStats[key]={sport,tier,name,points:0,wins:0,lost:0,diff:0};
-      return playerStats[key];
+    body.innerHTML = entries.length
+      ? entries.map((x, i) => `<tr class="${i === 0 ? "team-top-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
+      : '<tr><td colspan="5">No team results available.</td></tr>';
+    table.classList.remove("hidden");
+    if (msg) msg.textContent = entries.length ? `${entries.length} team(s) shown.` : "Results will appear here after fixture scores are entered.";
+  }
+
+  function renderPlayerResults() {
+    const sport = activeTab === "nonRacketlon" ? String($("resultPlayerSportFilter")?.value || "").trim().toLowerCase() : "";
+    const tier = String($("resultPlayerTierFilter")?.value || "").trim().toLowerCase();
+    tierFilters[activeTab] = $("resultPlayerTierFilter")?.value || "";
+
+    const playerScores = {};
+    const ensure = (sportName, tierName, player) => {
+      const key = `${norm(sportName)}|||${norm(tierName)}|||${norm(player)}`;
+      if (!playerScores[key]) playerScores[key] = { sport: sportName, tier: tierName, player, points: 0, wins: 0, losses: 0, pd: 0 };
+      return playerScores[key];
     };
 
-    rows.forEach(row=>{
-      const sport=value(row,headers,"sport");
-      const tier=value(row,headers,"tier");
-      const p1=value(row,headers,"player 1");
-      const p2=value(row,headers,"player 2");
-      if(!sport||!tier||(!p1&&!p2)) return;
-      const rack=isRacketlon(sport);
-      if(active==="racketlon" && !rack) return;
-      if(active==="nonRacketlon" && rack) return;
-      if(sportFilter && norm(sport)!==sportFilter) return;
-      if(tierFilter && norm(tier)!==tierFilter) return;
-      const a=p1?ensurePlayer(sport,tier,p1):null, b=p2?ensurePlayer(sport,tier,p2):null;
+    fixtureRows.forEach(row => {
+      const sportName = value(row, ["Sport"]);
+      const tierName = value(row, ["Tier"]);
+      const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+      const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+      if (!sportName || !tierName || (!p1 && !p2)) return;
 
-      for(let n=1;n<=4;n++){
-        const idx=headerIndex(headers,`game ${n}`)>=0?headerIndex(headers,`game ${n}`):headerIndex(headers,`set ${n}`);
-        const sc=idx>=0?parseScore(row[idx]):null;
-        if(!sc) continue;
-        if(rack){ if(a)a.points+=sc[0]; if(b)b.points+=sc[1]; }
-        else { if(sc[0]>sc[1]){if(b)b.lost++;} else if(sc[1]>sc[0]){if(a)a.lost++;} }
-      }
+      const rack = isRacketlon(sportName);
+      if (activeTab === "racketlon" && !rack) return;
+      if (activeTab === "nonRacketlon" && rack) return;
+      if (sport && norm(sportName) !== sport) return;
+      if (tier && norm(tierName) !== tier) return;
 
-      if(!rack){
-        const winner=fixtureTeamName(value(row,headers,"winning team"));
-        const wk=teamKey(winner); const [ta,tb]=matchTeams(row,headers);
-        if(wk){if(a && ta && teamKey(ta)===wk)a.wins++; if(b && tb && teamKey(tb)===wk)b.wins++;}
-        let d1=0,d2=0;
-        headers.forEach((h,i)=>{if(!/^(game|set)\d+/.test(norm(h)))return;const sc=parseScore(row[i]);if(!sc)return;d1+=sc[0]-sc[1];d2+=sc[1]-sc[0];});
-        if(a)a.diff+=d1;if(b)b.diff+=d2;
+      const a = p1 ? ensure(sportName, tierName, p1) : null;
+      const b = p2 ? ensure(sportName, tierName, p2) : null;
+      const [teamA, teamB] = matchTeams(row);
+      const winner = cleanTeam(value(row, ["Winning Team", "Winner Team", "Winner"]));
+      const winnerKey = teamKey(winner);
+
+      fixtureHeaders.forEach((h, i) => {
+        if (!/^(?:game|set)\d+/.test(norm(h))) return;
+        const parsed = parseScore(row[i]);
+        if (!parsed) return;
+
+        if (rack) {
+          if (a) a.points += parsed[0];
+          if (b) b.points += parsed[1];
+        } else {
+          if (parsed[0] < parsed[1] && a) a.losses++;
+          if (parsed[1] < parsed[0] && b) b.losses++;
+          if (a) a.pd += parsed[0] - parsed[1];
+          if (b) b.pd += parsed[1] - parsed[0];
+        }
+      });
+
+      if (!rack && winnerKey) {
+        if (a && teamKey(teamA) === winnerKey) a.wins++;
+        if (b && teamKey(teamB) === winnerKey) b.wins++;
       }
     });
 
-    const entries=Object.values(playerStats);
-    const groups={};
-    entries.forEach(x=>{const key=`${norm(x.sport)}|||${norm(x.tier)}`;(groups[key]??=[]).push(x);});
-    Object.values(groups).forEach(g=>g.sort((a,b)=>active==="racketlon" ? b.points-a.points||a.name.localeCompare(b.name) : b.wins-a.wins||a.lost-b.lost||b.diff-a.diff||a.name.localeCompare(b.name)));
-    const sorted=Object.keys(groups).sort().flatMap(k=>groups[k]);
-    const tops={};Object.entries(groups).forEach(([k,g])=>{if(g[0])tops[k]=g[0].name;});
+    const groups = {};
+    Object.values(playerScores).forEach(x => {
+      const key = `${norm(x.sport)}|||${norm(x.tier)}`;
+      (groups[key] ||= []).push(x);
+    });
 
-    const head=$("playerScoresHead");
-    if(head) head.innerHTML=active==="racketlon" ? '<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Total Points</th></tr>' : '<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Matches Won</th><th>Games Lost</th><th>Point Difference</th></tr>';
-    playerBody.innerHTML=sorted.length ? sorted.map(x=>{const key=`${norm(x.sport)}|||${norm(x.tier)}`,top=tops[key]===x.name;return active==="racketlon"?`<tr class="${top?"racketlon-top-player":""}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.name)}</td><td class="result-total">${x.points}</td></tr>`:`<tr class="${top?"racketlon-top-player":""}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.name)}</td><td class="result-total">${x.wins}</td><td>${x.lost}</td><td>${x.diff>0?"+":""}${x.diff}</td></tr>`;}).join(""):`<tr><td colspan="${active==="racketlon"?4:6}" class="notice">No player scores entered yet.</td></tr>`;
-    playerTable.classList.remove("hidden");
-    playerMsg.textContent=active==="racketlon" ? `${sorted.length} Racketlon player result(s) shown. Ranking: Sum Points.` : `${sorted.length} non-Racketlon player result(s) shown. Ranking: Matches Won → fewer Games Lost → Point Difference.`;
+    Object.values(groups).forEach(group => group.sort((a, b) => activeTab === "racketlon"
+      ? b.points - a.points || a.player.localeCompare(b.player)
+      : b.wins - a.wins || a.losses - b.losses || b.pd - a.pd || a.player.localeCompare(b.player)
+    ));
+
+    const head = $("playerScoresHead");
+    if (head) {
+      head.innerHTML = activeTab === "racketlon"
+        ? "<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Total Points</th></tr>"
+        : "<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Matches Won</th><th>Games Lost</th><th>Point Difference</th></tr>";
+    }
+
+    const body = $("playerScoresBody");
+    const rows = Object.keys(groups).sort((a, b) => a.localeCompare(b)).flatMap(k => groups[k]);
+    const top = new Set(Object.values(groups).map(g => g[0]?.player).filter(Boolean));
+    body.innerHTML = rows.length ? rows.map(x => {
+      const cls = top.has(x.player) ? "racketlon-top-player" : "";
+      return activeTab === "racketlon"
+        ? `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.points}</td></tr>`
+        : `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.wins}</td><td>${x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
+    }).join("") : `<tr><td colspan="${activeTab === "racketlon" ? 4 : 6}">No player scores available.</td></tr>`;
+
+    $("playerScoresTable")?.classList.remove("hidden");
+    const msg = $("playerScoresMessage");
+    if (msg) msg.textContent = activeTab === "racketlon"
+      ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points.`
+      : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → fewer Games Lost → Point Difference.`;
   }
 
-  async function load(){
-    let haveJson=false;
-    try{
-      const [f,t,p]=await Promise.all([loadJsonDataset("fixtures"),loadJsonDataset("teams"),loadJsonDataset("players")]);
-      fixtureData=makeFixtureData(f); teams=t.data||[]; players=p.data||[]; render(); haveJson=fixtureData.rows.length>0; await loadJsonFreshness(); setStatus("JSON data");
-    }catch(_){ }
+  function render() {
+    refreshFilters();
+    renderTeamResults();
+    renderPlayerResults();
+  }
 
-    try{
-      const d=await live("data");
-      if(Array.isArray(d.fixtures)) fixtureData=makeFixtureData(d.fixtures);
-      if(Array.isArray(d.teams)) teams=d.teams;
-      if(Array.isArray(d.players)) players=d.players;
-      render(); setStatus("LIVE · Google Sheet");
-    }catch(_){
-      if(!haveJson) setStatus("JSON data unavailable",true);
+  function bindTabs() {
+    const r = $("playerScoresRacketlonTab");
+    const n = $("playerScoresNonRacketlonTab");
+    r?.addEventListener("click", () => {
+      tierFilters[activeTab] = $("resultPlayerTierFilter")?.value || "";
+      activeTab = "racketlon";
+      r.classList.add("active"); r.setAttribute("aria-selected", "true");
+      n?.classList.remove("active"); n?.setAttribute("aria-selected", "false");
+      render();
+    });
+    n?.addEventListener("click", () => {
+      tierFilters[activeTab] = $("resultPlayerTierFilter")?.value || "";
+      activeTab = "nonRacketlon";
+      n.classList.add("active"); n.setAttribute("aria-selected", "true");
+      r?.classList.remove("active"); r?.setAttribute("aria-selected", "false");
+      render();
+    });
+    $("resultPlayerSportFilter")?.addEventListener("change", render);
+    $("resultPlayerTierFilter")?.addEventListener("change", render);
+  }
+
+  async function load() {
+    let jsonShown = false;
+
+    // 1) JSON FIRST — use the fixture snapshot, because Results are calculated
+    // from FIXTURES in the benchmark file, not from a separate RESULTS table.
+    try {
+      const [fx, tm] = await Promise.all([
+        loadJsonDataset("fixtures"),
+        loadJsonDataset("teams").catch(() => ({ data: [] }))
+      ]);
+      fixtureHeaders = fx.headers || (Array.isArray(fx.data) && fx.data.length ? Object.keys(fx.data[0]) : []);
+      fixtureRows = fx.headers ? (fx.data || []) : headersFromObjects(fx.data || []).rows;
+      if (!fx.headers && Array.isArray(fx.data) && fx.data.length) fixtureHeaders = Object.keys(fx.data[0]);
+      teamsData = tm.data || [];
+      render();
+      await loadJsonFreshness();
+      setStatus("JSON data");
+      jsonShown = true;
+    } catch (_) {}
+
+    // 2) LIVE — replace JSON only when the live response succeeds.
+    try {
+      const d = await live("data");
+      if (Array.isArray(d.fixtures)) {
+        const converted = headersFromObjects(d.fixtures);
+        fixtureHeaders = converted.headers;
+        fixtureRows = converted.rows;
+      } else if (Array.isArray(d.results)) {
+        // Compatibility only. The benchmark calculates from fixtures, so do not
+        // prefer a separate RESULTS table when FIXTURES is available.
+        const converted = headersFromObjects(d.results);
+        fixtureHeaders = converted.headers;
+        fixtureRows = converted.rows;
+      }
+      if (Array.isArray(d.teams)) teamsData = d.teams;
+      render();
+      setStatus("LIVE · Google Sheet");
+    } catch (_) {
+      if (!jsonShown) setStatus("JSON data unavailable", true);
     }
   }
 
-  $("playerScoresRacketlonTab")?.addEventListener("click",()=>{
-    syncTier(); window.activePlayerScoreTab="racketlon";
-    $("playerScoresRacketlonTab").classList.add("active"); $("playerScoresRacketlonTab").setAttribute("aria-selected","true");
-    $("playerScoresNonRacketlonTab").classList.remove("active"); $("playerScoresNonRacketlonTab").setAttribute("aria-selected","false"); render();
-  });
-  $("playerScoresNonRacketlonTab")?.addEventListener("click",()=>{
-    syncTier(); window.activePlayerScoreTab="nonRacketlon";
-    $("playerScoresNonRacketlonTab").classList.add("active"); $("playerScoresNonRacketlonTab").setAttribute("aria-selected","true");
-    $("playerScoresRacketlonTab").classList.remove("active"); $("playerScoresRacketlonTab").setAttribute("aria-selected","false"); render();
-  });
-  $("resultPlayerSportFilter")?.addEventListener("change",render);
-  $("resultPlayerTierFilter")?.addEventListener("change",()=>{syncTier();render();});
-
+  bindTabs();
   await load();
-  setInterval(()=>{if(!document.hidden)load();},C.REFRESH_MS||30*60*1000);
+  setInterval(() => { if (!document.hidden) load(); }, 30000);
 });
