@@ -340,7 +340,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const body = $("playerScoresBody");
-    const rows = Object.keys(groups).sort((a, b) => a.localeCompare(b)).flatMap(k => groups[k]);
+    const groupKeys = Object.keys(groups).sort((a, b) => {
+      const tierA = groups[a]?.[0]?.tier || "";
+      const tierB = groups[b]?.[0]?.tier || "";
+      const isDblA = norm(tierA) === "dbl";
+      const isDblB = norm(tierB) === "dbl";
+      if (isDblA !== isDblB) return isDblA ? 1 : -1;
+
+      const numA = Number((String(tierA).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
+      const numB = Number((String(tierB).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
+      const hasNumA = Number.isFinite(numA);
+      const hasNumB = Number.isFinite(numB);
+      if (hasNumA && hasNumB && numA !== numB) return numA - numB;
+      if (hasNumA !== hasNumB) return hasNumA ? -1 : 1;
+
+      return a.localeCompare(b);
+    });
+    const rows = groupKeys.flatMap(k => groups[k]);
     const top = new Set(Object.values(groups).map(g => g[0]?.player).filter(Boolean));
     body.innerHTML = rows.length ? rows.map(x => {
       const cls = top.has(x.player) ? "racketlon-top-player" : "";
