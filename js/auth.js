@@ -1,13 +1,14 @@
 (() => {
   const C=window.SRGF_CONFIG;
-  let session={role:"USER",email:"",token:""};
+  const SESSION_TTL=60*60*1000; // 60 minutes
+  let session={role:"USER",email:"",token:"",loginAt:0,expiresAt:0};
 
   function readStored(){
     try { return JSON.parse(localStorage.getItem("SRGF_AUTH")||"null")||{}; } catch(_){ return {}; }
   }
   function save(){ try{localStorage.setItem("SRGF_AUTH",JSON.stringify(session));}catch(_){} }
   function clear(){
-    session={role:"USER",email:"",token:""};
+    session={role:"USER",email:"",token:"",loginAt:0,expiresAt:0};
     try{localStorage.removeItem("SRGF_AUTH")}catch(_){}
     try{window.google?.accounts?.id?.disableAutoSelect()}catch(_){}
     render();
@@ -38,7 +39,8 @@
 
   async function verifyToken(token){
     const j=await window.SRGF.live("whoami",token);
-    session={role:String(j.role||"USER").toUpperCase(),email:j.email||"",token};
+    const now=Date.now();
+    session={role:String(j.role||"USER").toUpperCase(),email:j.email||"",token,loginAt:now,expiresAt:now+SESSION_TTL};
     save(); render(); return session;
   }
 
@@ -89,11 +91,18 @@
     render();
     const s=readStored();
     if(!s.token)return;
-    try{
-      await verifyToken(s.token);
-    }catch(_){
-      clear();
+    const now=Date.now();
+    // Keep the existing browser login across refreshes for 60 minutes.
+    if(s.expiresAt && now < Number(s.expiresAt)){
+      session={role:String(s.role||"USER").toUpperCase(),email:s.email||"",token:s.token,loginAt:Number(s.loginAt||now),expiresAt:Number(s.expiresAt)};
+      render();
+      return;
     }
+    // Upgrade an older saved session (from before the 60-minute expiry was added).
+    if(!s.expiresAt){
+      try{ await verifyToken(s.token); return; }catch(_){ clear(); return; }
+    }
+    clear();
   }
 
   window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
