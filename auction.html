@@ -41,6 +41,21 @@
 <button class="primary" id="sellBtn">SELL PLAYER</button>
 </div>
 <p class="notice" id="auctionMessage">Select a player, team and amount.</p>
+<div class="active-team-reference">
+  <div class="active-team-reference-header">
+    <div>
+      <div class="active-team-reference-title">Current team reference</div>
+      <div class="active-team-reference-name" id="activeTeamName">Select a team</div>
+    </div>
+    <div class="active-team-reference-status" id="activeTeamStatus">For captain reference</div>
+  </div>
+  <div class="active-team-reference-grid">
+    <div class="active-team-reference-stat"><label>Players</label><strong id="activeTeamPlayers">—</strong></div>
+    <div class="active-team-reference-stat"><label>Budget Left</label><strong id="activeTeamBudget">—</strong></div>
+    <div class="active-team-reference-stat"><label>Max Bid</label><strong id="activeTeamMaxBid">—</strong></div>
+  </div>
+  <div class="active-team-roster" id="activeTeamRoster">Choose a team above to see its current auctioned players.</div>
+</div>
 <div class="player-details-empty" id="playerDetails">
       Select a player to view player details.
     </div>
@@ -63,6 +78,6 @@
 <script src="js/config.js?v=20260929-auth1"></script>
 <script src="js/common.js?v=20260929-auth1"></script>
 <script src="js/auth.js?v=20260929-auth1"></script>
-<script src="js/auction.js"></script>
+<script src="js/auction.js?v=20260929-auction1"></script>
 </body>
 </html>
