@@ -223,9 +223,23 @@
     }
   });
 
+  function startPageAutoRefresh(){
+    const path=String(location.pathname||"").toLowerCase();
+    // Never auto-refresh pages where users enter/edit data or run the Auction.
+    if(/(?:^|\\/)auction\\.html$/.test(path))return;
+    if(/(?:^|\\/)(?:fixtures|registration)\\.html$/.test(path))return;
+
+    setInterval(()=>{
+      // Keep any future edit modal safe even if a page is later added to the
+      // automatic-refresh list.
+      if(document.querySelector(".modal:not(.hidden), input:focus, textarea:focus, select:focus"))return;
+      location.reload();
+    },RETRY_MS);
+  }
+
   window.SRGF={
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
     loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,
-    setStatus,removeFreshness,nav
+    setStatus,removeFreshness,nav,startPageAutoRefresh
   };
 })();
