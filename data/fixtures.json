@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-09-29T16:59:04.617Z",
-  "sourceUpdatedAt": "2026-09-29T16:59:04.617Z",
-  "syncedAt": "2026-09-29T17:01:50.560331Z",
+  "updatedAt": "2026-09-29T17:20:14.853Z",
+  "sourceUpdatedAt": "2026-09-29T17:20:14.853Z",
+  "syncedAt": "2026-09-29T17:22:39.782097Z",
   "rows": [
     {
       "Sport": "Racketlon",
@@ -67,7 +67,7 @@
       "Player 1": "Player22",
       "Player 2": "Player64",
       "Winning Team": "",
-      "Game 1 (BD)": "",
+      "Game 1 (BD)": "21 - 10",
       "Game 2(LT)": "",
       "Game 3(TT)": "",
       "Game 4(PB)": "",
@@ -1284,12 +1284,12 @@
       "Schedule": "",
       "Player 1": "Player16",
       "Player 2": "Player58",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
-      "Game 3(TT)": "",
+      "Winning Team": "T1 Team1",
+      "Game 1 (BD)": "15 - 21",
+      "Game 2(LT)": "21 - 18",
+      "Game 3(TT)": "21 - 19",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": "1"
     },
     {
       "Sport": "Badminton",
