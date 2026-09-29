@@ -47,12 +47,22 @@ document.addEventListener("DOMContentLoaded",async()=>{
     return m;
   }
   async function loadStaticProfiles(){
-    try{
-      const r=await fetch(STATIC_PROFILE_URL+"?v="+Date.now(),{cache:"no-store"});
-      if(!r.ok)throw new Error("GitHub player profile backup unavailable");
-      const d=await r.json();
-      return Array.isArray(d?.players)?d.players:[];
-    }catch(_){return [];}
+    const merged=new Map();
+    const urls=[STATIC_PROFILE_URL,"data/players.json"];
+    for(const url of urls){
+      try{
+        const r=await fetch(url+"?v="+Date.now(),{cache:"no-store"});
+        if(!r.ok)continue;
+        const d=await r.json();
+        const rows=Array.isArray(d?.players)?d.players:(Array.isArray(d?.rows)?normalizePlayers(d.rows):[]);
+        rows.forEach(p=>{
+          if(!p||!p.id)return;
+          const old=merged.get(String(p.id))||{};
+          merged.set(String(p.id),{...old,...p,image:String(p.image||old.image||"").trim()});
+        });
+      }catch(_){}
+    }
+    return [...merged.values()];
   }
   function mergeStaticProfiles(staticPlayers,allowAdd){
     const profiles=profileMap(staticPlayers);
@@ -125,8 +135,14 @@ document.addEventListener("DOMContentLoaded",async()=>{
     try{
       let src=v;
       if(v.startsWith("drive:")){
-        const r=await SRGF.fetchTimeout(API+"?action=photo&id="+encodeURIComponent(v.slice(6))+"&t="+Date.now(),{},15000),d=await r.json();
-        if(!d.ok)throw new Error(d.error||"Photo unavailable");src="data:"+d.mimeType+";base64,"+d.base64;
+        const id=v.slice(6);
+        try{
+          const r=await SRGF.fetchTimeout(API+"?action=photo&id="+encodeURIComponent(id)+"&t="+Date.now(),{},15000),d=await r.json();
+          if(d.ok&&d.base64)src="data:"+d.mimeType+";base64,"+d.base64;
+          else throw new Error(d.error||"Photo endpoint unavailable");
+        }catch(_){
+          src="https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1000";
+        }
       }
       img.src=src;img.style.display="block";ph.style.display="none";z.style.display="block";z.dataset.photoSrc=src;z.dataset.photoName=p.name;
       img.onerror=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";};
