@@ -118,7 +118,9 @@
       </div>`;
 
     document.getElementById("srgfLoginCancel")?.addEventListener("click",render);
-    setTimeout(initGoogleButton,0);
+    // Initialize Google Sign-In before rendering the official Google button.
+    // This is required so the button has the account-picker callback attached.
+    setTimeout(startLogin,0);
   }
 
   function render(){
