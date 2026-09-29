@@ -243,18 +243,69 @@ document.addEventListener("DOMContentLoaded",async()=>{
   async function syncChanges(){
     const sales=[...state.pending],deletes=[...new Set((state.pendingDeletes||[]).map(String))];
     if(!sales.length&&!deletes.length)return {synced:0,deleted:0,remainingSales:0,remainingDeletes:0};
-    let last;
-    for(let attempt=1;attempt<=2;attempt++)try{
-      const body=new URLSearchParams({action:"syncChanges",token:SRGFAuth.token(),sales:JSON.stringify(sales.map(s=>({playerId:String(s.playerId),teamId:String(s.teamId),amount:Number(s.amount),notes:s.notes||""}))),deletes:JSON.stringify(deletes)});
-      const r=await SRGF.fetchTimeout(API,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:body},20000),d=await r.json();
-      if(!d.ok)throw new Error(d.error||"Sync failed");
-      const saved=new Set((d.saved||[]).map(String)),already=new Set((d.alreadySaved||[]).map(String)),deleted=new Set((d.deleted||[]).map(String)),deleteAlready=new Set((d.deleteAlready||[]).map(String));
-      state.pending=sales.filter(s=>!saved.has(String(s.playerId))&&!already.has(String(s.playerId)));
-      state.pendingDeletes=deletes.filter(id=>!deleted.has(id)&&!deleteAlready.has(id));saveCache();
-      return {synced:sales.length-state.pending.length,deleted:deletes.length-state.pendingDeletes.length,remainingSales:state.pending.length,remainingDeletes:state.pendingDeletes.length,errors:d.errors||[]};
-    }catch(e){last=e;if(attempt<2)await new Promise(r=>setTimeout(r,1200));}
-    return {synced:0,deleted:0,remainingSales:sales.length,remainingDeletes:deletes.length,errorMessage:last?.message||String(last),errors:[]};
+
+    // Use the protected single-operation endpoints for pending changes.
+    // This avoids depending on the bulk syncChanges action being present in
+    // an older Apps Script deployment.
+    let synced=0,deleted=0,errors=[];
+    const savedSales=[];
+    for(const sale of sales){
+      const r=await saveSaleDirect(sale);
+      if(r.ok){
+        synced++;
+        savedSales.push(String(sale.playerId));
+      }else{
+        errors.push({type:"sellPlayer",playerId:String(sale.playerId),error:r.errorMessage||"Google Sheet save failed."});
+      }
+    }
+
+    const removedIds=[];
+    for(const playerId of deletes){
+      let last="";
+      let ok=false;
+      for(let attempt=1;attempt<=2;attempt++){
+        try{
+          const body=new URLSearchParams({
+            action:"removeplayer",
+            token:SRGFAuth.token(),
+            playerId:String(playerId)
+          });
+          const r=await SRGF.fetchTimeout(API,{
+            method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+            body
+          },20000);
+          const d=await r.json();
+          if(!d.ok)throw new Error(d.error||"Google Sheet removal failed.");
+          ok=true;break;
+        }catch(e){
+          last=e?.message||String(e);
+          if(attempt<2)await new Promise(r=>setTimeout(r,1200));
+        }
+      }
+      if(ok){
+        deleted++;
+        removedIds.push(String(playerId));
+      }else{
+        errors.push({type:"removePlayer",playerId:String(playerId),error:last||"Google Sheet removal failed."});
+      }
+    }
+
+    const savedSet=new Set(savedSales),removedSet=new Set(removedIds);
+    state.pending=sales.filter(s=>!savedSet.has(String(s.playerId)));
+    state.pendingDeletes=deletes.filter(id=>!removedSet.has(String(id)));
+    saveCache();
+
+    return {
+      synced,
+      deleted,
+      remainingSales:state.pending.length,
+      remainingDeletes:state.pendingDeletes.length,
+      errors,
+      errorMessage:errors.length?errors.map(e=>e.error).join(" | "):""
+    };
   }
+
   async function removeSale(pid){
     const sale=state.auction.find(a=>String(a.playerId)===String(pid));if(!sale)return;
     if(!confirm("Remove "+sale.player+" from the auction history?\n\nThis will free the player to be added to the auction again."))return;
