@@ -22,6 +22,7 @@ function doGet(e){
       const user=authorize_(e.parameter.token||'', false);
       return json_({ok:true,email:user.email,role:user.role});
     }
+    if(a==='photo') return json_(getPhoto_(e.parameter.id||''));
 
     // Every successful read carries the timestamp of the latest actual
     // Google-Sheet content change. This lets the website compare live data,
@@ -49,13 +50,27 @@ function doPost(e){
     if(a==='savefixtureresult'){
       const user=authorize_(token,true);
       if(user.role!=='ADMIN' && user.role!=='WRITER') throw new Error('Admin or Writer access required.');
-      return json_(saveFixtureResult_(e.parameter));
+      return json_({ok:true,result:saveFixtureResult_(e.parameter)});
     }
-    if(a==='sellplayer') return json_(sellPlayer_(e.parameter));
-    if(a==='removeplayer') return json_(removePlayer_(e.parameter));
+    if(a==='sellplayer') return json_({ok:true,result:sellPlayer_(e.parameter)});
+    if(a==='removeplayer') return json_({ok:true,result:removePlayer_(e.parameter)});
     if(a==='syncchanges') return json_(syncChanges_(e.parameter));
     throw new Error('Unknown POST action.');
   }catch(err){return json_({ok:false,error:String(err.message||err)})}
+}
+
+function getPhoto_(fileId){
+  fileId=String(fileId||'').trim();
+  if(!fileId) return {ok:false,error:'Photo file ID is required.'};
+  try{
+    const file=DriveApp.getFileById(fileId);
+    const blob=file.getBlob();
+    const contentType=String(blob.getContentType()||'');
+    if(!contentType.startsWith('image/')) return {ok:false,error:'The selected Photo file is not an image.'};
+    return {ok:true,fileId,mimeType:contentType,base64:Utilities.base64Encode(blob.getBytes())};
+  }catch(err){
+    return {ok:false,error:'Unable to read photo from Google Drive: '+String(err.message||err)};
+  }
 }
 
 function exportData_(){
@@ -200,51 +215,208 @@ function authorize_(token, write){
 }
 
 function sellPlayer_(p){
-  const playerId=String(p.playerId||'').trim(), teamId=String(p.teamId||'').trim(), amount=Number(p.amount||0);
-  if(!playerId||!teamId||!Number.isFinite(amount)||amount<=0) throw new Error('Invalid auction data.');
-  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.auction);
-  if(!sh) throw new Error('AUCTION sheet is missing.');
-  const h=headers_(sh);
-  const required={auctionId:header_(h,['Auction ID']),playerId:header_(h,['Player ID']),playerName:header_(h,['Player Name']),teamId:header_(h,['Team ID']),teamName:header_(h,['Team Name']),amount:header_(h,['Amount']),timestamp:header_(h,['Timestamp'])};
-  if(required.playerId<0||required.teamId<0||required.amount<0) throw new Error('AUCTION headers are incomplete.');
-  const players=sheetObjects_(SHEETS.players),teams=sheetObjects_(SHEETS.teams);
-  const player=players.find(x=>String(x['Player ID']||'')===playerId);
-  const team=teams.find(x=>String(x['Team ID']||'')===teamId);
-  if(!player) throw new Error('Player not found.');
-  if(!team) throw new Error('Team not found.');
-  const existing=sheetObjects_(SHEETS.auction).some(x=>String(x['Player ID']||'')===playerId);
-  if(existing) return {ok:true,alreadySaved:true};
-  const row=new Array(h.length).fill('');
-  if(required.auctionId>0) row[required.auctionId-1]='A'+Date.now();
-  if(required.playerId>0) row[required.playerId-1]=playerId;
-  if(required.playerName>0) row[required.playerName-1]=player['Name']||player['Player Name']||playerId;
-  if(required.teamId>0) row[required.teamId-1]=teamId;
-  if(required.teamName>0) row[required.teamName-1]=team['Team Name']||teamId;
-  if(required.amount>0) row[required.amount-1]=amount;
-  if(required.timestamp>0) row[required.timestamp-1]=new Date();
-  sh.appendRow(row);
-  CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
-  return {ok:true,saved:true};
+  const playerId=String(p.playerId||'').trim();
+  const teamId=String(p.teamId||'').trim();
+  const amount=Number(p.amount||0);
+  if(!playerId||!teamId||!Number.isFinite(amount)||amount<=0) throw new Error('Player, team and a positive amount are required.');
+
+  const lock=LockService.getScriptLock();
+  lock.waitLock(15000);
+  try{
+    const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+    const playersSheet=requireSheet_(ss,SHEETS.players);
+    const teamsSheet=requireSheet_(ss,SHEETS.teams);
+    const auctionSheet=requireSheet_(ss,SHEETS.auction);
+    const players=readSheet_(ss,SHEETS.players);
+    const teams=readSheet_(ss,SHEETS.teams);
+    const auction=readSheet_(ss,SHEETS.auction);
+
+    const player=players.find(r=>String(r['Player ID']||'')===playerId);
+    const team=teams.find(r=>String(r['Team ID']||'')===teamId);
+    if(!player) throw new Error('Player not found: '+playerId);
+    if(!team) throw new Error('Team not found: '+teamId);
+    if(String(player['Active']||'TRUE').toUpperCase()==='FALSE') throw new Error('Player is inactive.');
+
+    const existing=auction.find(r=>String(r['Player ID']||'')===playerId);
+    if(existing){
+      const existingTeam=String(existing['Team ID']||'');
+      const existingAmount=Number(existing['Amount']||0);
+      if(existingTeam===teamId && existingAmount===amount){
+        return {playerId,teamId,amount,alreadyExists:true};
+      }
+      throw new Error('Player has already been auctioned to '+existingTeam+' for ₹'+Math.round(existingAmount).toLocaleString('en-IN')+'.');
+    }
+
+    const initialBudget=getConfigNumber_(ss,'Initial Budget',Number(team['Initial Budget']||5000000));
+    const minPlayers=getConfigNumber_(ss,'Minimum Players',15);
+    const reserve=getConfigNumber_(ss,'Reserve Per Slot',100000);
+    const teamSales=auction.filter(r=>String(r['Team ID']||'')===teamId);
+    const spent=teamSales.reduce((s,r)=>s+Number(r['Amount']||0),0);
+    const currentPlayers=teamSales.length;
+    const left=initialBudget-spent;
+    const remaining=Math.max(0,minPlayers-currentPlayers);
+    const maxBid=Math.max(0,left-Math.max(0,remaining-1)*reserve);
+    if(amount>maxBid) throw new Error('Bid exceeds the team max bid of ₹'+Math.round(maxBid).toLocaleString('en-IN')+'.');
+
+    const auctionId='A'+Utilities.getUuid().replace(/-/g,'').slice(0,20);
+    appendAuctionRow_(auctionSheet,{
+      'Auction ID':auctionId,
+      'Player ID':playerId,
+      'Player Name':player['Name']||'',
+      'Team ID':teamId,
+      'Team Name':team['Team Name']||teamId,
+      'Amount':amount,
+      'Timestamp':new Date(),
+      'Notes':p.notes||''
+    });
+    updatePlayerAssignment_(playersSheet,playerId,teamId,amount);
+    SpreadsheetApp.flush();
+    CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
+    return {playerId,teamId,amount,auctionId,alreadyExists:false};
+  }finally{lock.releaseLock();}
 }
 
 function removePlayer_(p){
   const playerId=String(p.playerId||'').trim();
-  const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEETS.auction);
-  if(!sh) throw new Error('AUCTION sheet is missing.');
-  const h=headers_(sh), c=header_(h,['Player ID']);
-  if(c<0) throw new Error('AUCTION Player ID header is missing.');
-  const vals=sh.getRange(2,c,Math.max(0,sh.getLastRow()-1),1).getDisplayValues();
-  for(let i=vals.length-1;i>=0;i--) if(String(vals[i][0])===playerId) sh.deleteRow(i+2);
-  CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
-  return {ok:true,removed:true};
+  if(!playerId) throw new Error('Player ID is required.');
+  const lock=LockService.getScriptLock();
+  lock.waitLock(15000);
+  try{
+    const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+    const playersSheet=requireSheet_(ss,SHEETS.players);
+    const auctionSheet=requireSheet_(ss,SHEETS.auction);
+    const removedCount=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
+    clearPlayerAssignment_(playersSheet,playerId);
+    CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
+    return {playerId,removedCount,availableAgain:true};
+  }finally{lock.releaseLock();}
 }
 
 function syncChanges_(p){
-  const sales=JSON.parse(p.sales||'[]'), deletes=JSON.parse(p.deletes||'[]');
-  let saved=0,removed=0;
-  sales.forEach(x=>{sellPlayer_(x);saved++});
-  deletes.forEach(id=>{removePlayer_({playerId:id});removed++});
-  return {ok:true,saved,removed};
+  const sales=parseArrayPayload_(p.sales);
+  const deletes=parseArrayPayload_(p.deletes!==undefined?p.deletes:p.removals);
+  const results={saved:[],alreadySaved:[],deleted:[],deleteAlready:[],conflicts:[],errors:[]};
+
+  // Removals first so a remove + re-auction sequence can be replayed safely.
+  for(const raw of deletes){
+    const playerId=String(typeof raw==='object'&&raw!==null?(raw.playerId||''):raw).trim();
+    if(!playerId) continue;
+    try{
+      const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+      const auctionSheet=requireSheet_(ss,SHEETS.auction);
+      const playersSheet=requireSheet_(ss,SHEETS.players);
+      const exists=readSheet_(ss,SHEETS.auction).some(r=>String(r['Player ID']||'')===playerId);
+      if(!exists){
+        clearPlayerAssignment_(playersSheet,playerId);
+        results.deleteAlready.push(playerId);
+      }else{
+        const removed=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
+        clearPlayerAssignment_(playersSheet,playerId);
+        if(removed>0) results.deleted.push(playerId); else results.deleteAlready.push(playerId);
+        CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
+      }
+    }catch(err){
+      results.errors.push({type:'removePlayer',playerId,error:String(err.message||err)});
+    }
+  }
+
+  for(const s of sales){
+    try{
+      const playerId=String(s.playerId||'').trim();
+      const teamId=String(s.teamId||'').trim();
+      const amount=Number(s.amount||0);
+      if(!playerId||!teamId||!Number.isFinite(amount)||amount<=0) throw new Error('Player, team and a positive amount are required.');
+      const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+      const existing=readSheet_(ss,SHEETS.auction).find(r=>String(r['Player ID']||'')===playerId);
+      if(existing){
+        const existingTeam=String(existing['Team ID']||'');
+        const existingAmount=Number(existing['Amount']||0);
+        if(existingTeam===teamId&&existingAmount===amount){results.alreadySaved.push(playerId);continue;}
+        throw new Error('Player has already been auctioned to '+existingTeam+' for ₹'+Math.round(existingAmount).toLocaleString('en-IN')+'.');
+      }
+      const result=sellPlayer_({playerId,teamId,amount,notes:s.notes||''});
+      if(result.alreadyExists) results.alreadySaved.push(playerId); else results.saved.push(playerId);
+    }catch(err){
+      results.errors.push({type:'sellPlayer',playerId:s&&s.playerId?String(s.playerId):'',error:String(err.message||err)});
+    }
+  }
+
+  results.ok=results.errors.length===0;
+  if(results.errors.length) results.error=results.errors.map(x=>x.error).join(' | ');
+  return results;
+}
+
+function parseArrayPayload_(value){
+  if(Array.isArray(value)) return value;
+  if(value===undefined||value===null||value==='') return [];
+  if(typeof value==='string'){try{const parsed=JSON.parse(value);return Array.isArray(parsed)?parsed:[];}catch(_){return [];}}
+  return [];
+}
+
+function updatePlayerAssignment_(sheet,playerId,teamId,amount){
+  const headers=getHeaders_(sheet);
+  const idCol=headers.indexOf('Player ID')+1;
+  const teamCol=headers.indexOf('Team ID')+1;
+  const amountCol=headers.indexOf('Auction Amount')+1;
+  if(!idCol) throw new Error('PLAYERS is missing the "Player ID" column.');
+  const values=sheet.getDataRange().getValues();
+  for(let i=1;i<values.length;i++){
+    if(String(values[i][idCol-1])===playerId){
+      if(teamCol) sheet.getRange(i+1,teamCol).setValue(teamId);
+      if(amountCol) sheet.getRange(i+1,amountCol).setValue(amount);
+      return;
+    }
+  }
+  throw new Error('Player ID not found in PLAYERS: '+playerId);
+}
+
+function clearPlayerAssignment_(sheet,playerId){
+  const headers=getHeaders_(sheet);
+  const idCol=headers.indexOf('Player ID')+1;
+  const teamCol=headers.indexOf('Team ID')+1;
+  const amountCol=headers.indexOf('Auction Amount')+1;
+  if(!idCol) throw new Error('PLAYERS is missing the "Player ID" column.');
+  const values=sheet.getDataRange().getValues();
+  for(let i=1;i<values.length;i++){
+    if(String(values[i][idCol-1])===playerId){
+      if(teamCol) sheet.getRange(i+1,teamCol).clearContent();
+      if(amountCol) sheet.getRange(i+1,amountCol).clearContent();
+      return;
+    }
+  }
+  throw new Error('Player ID not found in PLAYERS: '+playerId);
+}
+
+function deleteAuctionRowsForPlayer_(sheet,playerId){
+  const values=sheet.getDataRange().getValues();
+  if(values.length<=1) return 0;
+  const headers=values[0].map(String);
+  const playerCol=headers.indexOf('Player ID');
+  if(playerCol<0) throw new Error('AUCTION is missing the "Player ID" column.');
+  let count=0;
+  for(let i=values.length-1;i>=1;i--){
+    if(String(values[i][playerCol])===playerId){sheet.deleteRow(i+1);count++;}
+  }
+  return count;
+}
+
+function appendAuctionRow_(sheet,obj){
+  const headers=getHeaders_(sheet);
+  const row=headers.map(h=>obj[h]!==undefined?obj[h]:'');
+  sheet.appendRow(row);
+}
+
+function getConfigNumber_(ss,key,fallback){
+  const rows=readSheet_(ss,SHEETS.config);
+  const r=rows.find(x=>String(x['Parameter']||'').trim()===key);
+  const n=r?Number(r['Value']):NaN;
+  return Number.isFinite(n)?n:fallback;
+}
+
+function requireSheet_(ss,name){
+  const sh=findSheet_(ss,name);
+  if(!sh) throw new Error('Required sheet tab is missing: '+name);
+  return sh;
 }
 
 function saveFixtureResult_(p){
