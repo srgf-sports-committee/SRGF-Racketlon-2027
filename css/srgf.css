@@ -97,7 +97,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 input,select{width:100%;background:#0c2a20;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:10px;font-size:14px}
 label.field{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
  .player-select-wrap{min-width:0;position:relative}
-.player-combobox{position:relative}
+#playerSelect{display:none!important}.player-combobox{position:relative}
 .player-combobox-display{width:100%;padding:11px 38px 11px 12px;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.05);color:var(--text);font:inherit;text-align:left;cursor:pointer;position:relative}
 .player-combobox-display::after{content:"⌄";position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
 .player-combobox-display:focus{outline:2px solid rgba(217,238,99,.35);border-color:var(--accent)}
