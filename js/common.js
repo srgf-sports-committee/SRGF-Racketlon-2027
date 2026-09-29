@@ -201,12 +201,14 @@
       ["fixtures.html","Fixtures","fixtures"],
       ["results.html","Results","results"],
       ["important-links.html","Important Links","importantLinks"],
-      ["auction.html","Auction","auction"]
+      ["auction.html","Auction","auction"],
+      ["logs.html","Logs","logs"]
     ];
     const n=document.querySelector(".page-nav");
     if(!n)return;
     n.innerHTML=items.map(([href,label,key])=>{
       if(key==="auction"&&!window.SRGFAuth?.canAuction())return "";
+      if(key==="logs"&&!window.SRGFAuth?.canViewLogs())return "";
       return `<a href="${href}" class="${active===key?"active":""}">${label}</a>`;
     }).join("");
   }
