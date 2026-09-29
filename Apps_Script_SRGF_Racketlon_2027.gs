@@ -23,17 +23,16 @@ function doGet(e){
       return json_({ok:true,email:user.email,role:user.role});
     }
 
-    // Small, page-specific reads. These avoid loading the entire workbook when
-    // a page only needs one dataset.
-    if(a==='players') return json_({ok:true,players:sheetObjectsCached_(SHEETS.players)});
-    if(a==='teams') return json_({ok:true,teams:sheetObjectsCached_(SHEETS.teams)});
-    if(a==='auction') return json_({ok:true,auction:sheetObjectsCached_(SHEETS.auction)});
-    if(a==='fixtures') return json_({ok:true,fixtures:sheetObjectsCached_(SHEETS.fixtures)});
-    if(a==='results') return json_({ok:true,results:sheetObjectsCached_(SHEETS.results)});
-    if(a==='config') return json_({ok:true,config:sheetObjectsCached_(SHEETS.config)});
+    // Every successful read carries the timestamp of the latest actual
+    // Google-Sheet content change. This lets the website compare live data,
+    // browser cache and GitHub JSON without ever going backwards.
+    if(a==='players') return json_(datasetResponse_('players'));
+    if(a==='teams') return json_(datasetResponse_('teams'));
+    if(a==='auction') return json_(datasetResponse_('auction'));
+    if(a==='fixtures') return json_(datasetResponse_('fixtures'));
+    if(a==='results') return json_(datasetResponse_('results'));
+    if(a==='config') return json_(datasetResponse_('config'));
 
-    // Kept for compatibility with the current HTML pages. The combined read
-    // is optimized and cached so older pages do not suddenly stop working.
     if(a==='data') return json_(exportData_());
     return json_(exportData_());
   }catch(err){return json_({ok:false,error:String(err.message||err)})}
@@ -63,9 +62,7 @@ function exportData_(){
   // One spreadsheet open per combined request instead of one open per sheet.
   // This is a major reduction in Apps Script latency on cold requests.
   const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
-  return {
-    ok:true,
-    updatedAt:new Date().toISOString(),
+  const data={
     players:sheetObjectsCached_(SHEETS.players,ss),
     teams:sheetObjectsCached_(SHEETS.teams,ss),
     auction:sheetObjectsCached_(SHEETS.auction,ss),
@@ -73,6 +70,47 @@ function exportData_(){
     results:sheetObjectsCached_(SHEETS.results,ss),
     config:sheetObjectsCached_(SHEETS.config,ss)
   };
+  const sourceUpdatedAt=updateSourceVersion_(data,'combined');
+  return {ok:true,sourceUpdatedAt,updatedAt:sourceUpdatedAt,...data};
+}
+
+function datasetResponse_(name){
+  const data=sheetObjectsCached_(SHEETS[name]);
+  const all={}; all[name]=data;
+  const sourceUpdatedAt=updateSourceVersion_(all,name);
+  const out={ok:true,sourceUpdatedAt,updatedAt:sourceUpdatedAt};
+  out[name]=data;
+  return out;
+}
+
+// This is the important version marker. Apps Script request time is NOT used
+// as the data timestamp because a failed/stale read must never look newer
+// than a successful read already stored in a browser or in GitHub.
+const SOURCE_VERSION_PREFIX='SRGF_SOURCE_VERSION_V2_';
+const SOURCE_UPDATED_AT_PREFIX='SRGF_SOURCE_UPDATED_AT_V2_';
+
+function updateSourceVersion_(data,scope){
+  const serialized=JSON.stringify(data||{});
+  const digest=Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, serialized);
+  const fingerprint=digest.map(b=>('0'+((b+256)%256).toString(16)).slice(-2)).join('');
+  const safeScope=String(scope||'combined').replace(/[^A-Za-z0-9_-]/g,'_');
+  const versionKey=SOURCE_VERSION_PREFIX+safeScope;
+  const updatedKey=SOURCE_UPDATED_AT_PREFIX+safeScope;
+  const props=PropertiesService.getScriptProperties();
+  const lock=LockService.getScriptLock();
+  try{lock.waitLock(3000);}catch(_){/* continue; version is still best-effort */}
+  try{
+    const oldFingerprint=props.getProperty(versionKey)||'';
+    let updatedAt=props.getProperty(updatedKey)||'';
+    if(!oldFingerprint || oldFingerprint!==fingerprint){
+      updatedAt=new Date().toISOString();
+      props.setProperty(versionKey,fingerprint);
+      props.setProperty(updatedKey,updatedAt);
+    }
+    return updatedAt || new Date().toISOString();
+  }finally{
+    try{lock.releaseLock();}catch(_){ }
+  }
 }
 
 // Cache is deliberately short-lived. It prevents several visitors/refreshes
