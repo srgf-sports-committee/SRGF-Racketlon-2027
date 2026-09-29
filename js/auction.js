@@ -371,7 +371,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     try{
       const r=await syncChanges(),n=r.remainingSales+r.remainingDeletes;
       if(n){
-        $("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced. "+n+" change(s) still pending.";
+        const detail=r.errorMessage || (r.errors&&r.errors.length ? r.errors.map(e=>e.error||String(e)).join(" | ") : "");
+        $("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced. "+n+" change(s) still pending."+(detail?" Reason: "+detail:"");
         SRGF.setStatus("Sheet update failed · retrying every 15s",true);
         render();startRetry();
       }else{
