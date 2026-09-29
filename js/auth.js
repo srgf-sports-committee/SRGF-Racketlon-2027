@@ -2,12 +2,46 @@
   const C=window.SRGF_CONFIG;
   const SESSION_TTL=60*60*1000; // 60 minutes
   let session={role:"USER",email:"",token:"",loginAt:0,expiresAt:0};
+  let expiryTimer=null;
+  let lastActivityWrite=0;
 
   function readStored(){
     try { return JSON.parse(localStorage.getItem("SRGF_AUTH")||"null")||{}; } catch(_){ return {}; }
   }
   function save(){ try{localStorage.setItem("SRGF_AUTH",JSON.stringify(session));}catch(_){} }
+  function armExpiryTimer(){
+    if(expiryTimer) clearTimeout(expiryTimer);
+    if(!session.token || !session.expiresAt) return;
+    const delay=Math.max(0,Number(session.expiresAt)-Date.now());
+    expiryTimer=setTimeout(()=>{
+      if(session.token && Date.now() >= Number(session.expiresAt)){
+        clear();
+      }else{
+        armExpiryTimer();
+      }
+    },delay+50);
+  }
+
+  function resetInactivityTimer(){
+    if(!session.token) return;
+    const now=Date.now();
+    if(session.expiresAt && now >= Number(session.expiresAt)){
+      clear();
+      return;
+    }
+    session.expiresAt=now+SESSION_TTL;
+    if(!session.loginAt) session.loginAt=now;
+    // Avoid unnecessary localStorage writes during rapid typing/clicking.
+    if(now-lastActivityWrite>=1000){
+      save();
+      lastActivityWrite=now;
+    }
+    armExpiryTimer();
+  }
+
   function clear(){
+    if(expiryTimer) clearTimeout(expiryTimer);
+    expiryTimer=null;
     session={role:"USER",email:"",token:"",loginAt:0,expiresAt:0};
     try{localStorage.removeItem("SRGF_AUTH")}catch(_){}
     try{window.google?.accounts?.id?.disableAutoSelect()}catch(_){}
@@ -41,7 +75,8 @@
     const j=await window.SRGF.live("whoami",token);
     const now=Date.now();
     session={role:String(j.role||"USER").toUpperCase(),email:j.email||"",token,loginAt:now,expiresAt:now+SESSION_TTL};
-    save(); render(); return session;
+    lastActivityWrite=now;
+    save(); render(); armExpiryTimer(); return session;
   }
 
   function render(){
@@ -87,7 +122,15 @@
     }
   }
 
+  function bindActivityTracking(){
+    const events=["click","input","change","keydown","touchstart"];
+    events.forEach(eventName=>{
+      document.addEventListener(eventName,resetInactivityTimer,{passive:true});
+    });
+  }
+
   async function init(){
+    bindActivityTracking();
     render();
     const s=readStored();
     if(!s.token)return;
@@ -95,7 +138,9 @@
     // Keep the existing browser login across refreshes for 60 minutes.
     if(s.expiresAt && now < Number(s.expiresAt)){
       session={role:String(s.role||"USER").toUpperCase(),email:s.email||"",token:s.token,loginAt:Number(s.loginAt||now),expiresAt:Number(s.expiresAt)};
+      lastActivityWrite=now;
       render();
+      armExpiryTimer();
       return;
     }
     // Upgrade an older saved session (from before the 60-minute expiry was added).
@@ -105,5 +150,7 @@
     clear();
   }
 
+  // Keep the login alive for 60 minutes from the user's last interaction.
+  // A click, typing/edit, selection change, or touch resets the 60-minute window.
   window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
 })();
