@@ -393,6 +393,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   function openModal(i){
     const r=rows[i], gi=gameIdx();
+    const r=rows[i], gi=gameIdx();
+    const fixtureSport=val(r,["Sport"]);
+    const isRacketlon=norm(fixtureSport)==="racketlon";
+    const gameLabels=isRacketlon?["Badminton","Table Tennis","Lawn Tennis","Pickle Ball"]:["Game 1","Game 2","Game 3"];
+    const gameCount=gameLabels.length;
     const p1=val(r,["Player 1","Player1","Player 1 Name","Player1Name"])||"Player 1";
     const p2=val(r,["Player 2","Player2","Player 2 Name","Player2Name"])||"Player 2";
     const modal=$("resultModal"); if(!modal)return;
@@ -438,13 +443,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
     const games=modal.querySelector(".games");
     const winnerOptions='<option value="">Select winning team</option>'+fixtureTeams.map(v=>'<option value="'+esc(v)+'"'+(norm(v)===norm(currentWinner)?" selected":"")+'>'+esc(v)+'</option>').join("");
-    const sportNames={1:"BD",2:"LT",3:"TT",4:"PB"};
-    games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><select id="fixtureWinningTeam" class="fixture-winning-team-select">'+winnerOptions+'</select></label><div class="notice">Select the winning team from the two teams in this fixture. You can also update any one game, several games, or all five fields.</div></div>'+
-      [1,2,3,4].map(g=>{const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\d+)\s*[-:]\s*(\d+)/);return '<div class="game"><h3>Game '+g+' ('+sportNames[g]+')</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
+    games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><select id="fixtureWinningTeam" class="fixture-winning-team-select">'+winnerOptions+'</select></label><div class="notice">Select the winning team from the two teams in this fixture. You can also update any one game, several games, or all '+gameCount+' games.</div></div>'+\n      gameLabels.map((label,index)=>{const g=index+1;const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\\d+)\\s*[-:]\\s*(\\d+)/);return '<div class="game"><h3>'+esc(label)+'</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
     modal.classList.remove("hidden");
     saveBtn.onclick=async()=>{
       const scores=[];
-      for(let g=1;g<=4;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for Game "+g+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
+      for(let g=1;g<=gameCount;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for "+gameLabels[g-1]+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
       const winner=modal.querySelector("#fixtureWinningTeam")?.value.trim()||"";
       if(!winner&&!scores.length){alert("Enter at least one field to update.");return;}
       // Show the result immediately. Do not wait for Google Sheets.
