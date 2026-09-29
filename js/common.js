@@ -77,54 +77,107 @@
     return await r.json();
   }
 
-  async function live(action="data",token=""){
+  const PUBLIC_LIVE_ACTIONS = new Set(["data","players","teams","auction","fixtures","results","config"]);
+  let liveRefreshInFlight_ = null;
+
+  async function fetchLiveRaw_(action="data",token="",timeoutMs=15000){
     let url=`${C.API_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`;
     if(token) url += `&token=${encodeURIComponent(token)}`;
-    const r=await fetchTimeout(url,{},15000);
+    const r=await fetchTimeout(url,{},timeoutMs);
     if(!r.ok) throw new Error(`Apps Script HTTP ${r.status}`);
     const j=await r.json();
     if(!j.ok) throw new Error(j.error || "Live data error");
-
-    // Save immediately. If this request is followed by an Apps Script
-    // failure, the next page load will use this copy instead of older JSON.
-    cacheLiveResponse_(j,action);
     return j;
   }
 
-  async function loadJsonDataset(name){
-    // Read both sources and choose the newest valid copy. This is the core
-    // anti-regression rule: an older JSON snapshot can never replace newer
-    // data already observed successfully by this browser.
-    const [jsonResult,cache] = await Promise.allSettled([
-      jsonFile(`${name}.json`),
-      Promise.resolve(readBrowserCache_(name))
-    ]);
+  function cachedDataset_(name){
+    return readBrowserCache_(name);
+  }
 
-    const json = jsonResult.status === "fulfilled" ? jsonResult.value : null;
-    const jsonRows = json ? (json.rows ?? json) : null;
-    const jsonCandidate = Array.isArray(jsonRows) ? {
-      data:jsonRows,
-      sourceUpdatedAt:json.sourceUpdatedAt || json.updatedAt || "",
-      savedAt:json.syncedAt || json.updatedAt || "",
-      source:"GitHub JSON",
-      headers:json.headers || null
-    } : null;
+  function cachedCombined_(){
+    const names=["players","teams","auction","fixtures","results","config"];
+    const out={};
+    let stamp="";
+    let found=false;
+    names.forEach(name=>{
+      const c=cachedDataset_(name);
+      if(c && Array.isArray(c.data)){
+        out[name]=c.data;
+        found=true;
+        const t=c.sourceUpdatedAt||c.savedAt||"";
+        if(Date.parse(t)>Date.parse(stamp||"")) stamp=t;
+      }
+    });
+    return found ? {ok:true,...out,sourceUpdatedAt:stamp,updatedAt:stamp,fromCache:true} : null;
+  }
 
-    const cacheCandidate = cache.status === "fulfilled" ? cache.value : null;
-    const candidates=[jsonCandidate,cacheCandidate].filter(Boolean);
+  async function refreshLiveNow_(action="data",token=""){
+    if(liveRefreshInFlight_) return liveRefreshInFlight_;
+    liveRefreshInFlight_=(async()=>{
+      try{
+        const j=await fetchLiveRaw_(action,token,15000);
+        cacheLiveResponse_(j,action);
+        window.dispatchEvent(new CustomEvent("srgf:data-updated",{detail:j}));
+        return j;
+      }finally{
+        liveRefreshInFlight_=null;
+      }
+    })();
+    return liveRefreshInFlight_;
+  }
+
+  // Public data reads are deliberately cache-first. The browser shows the
+  // fastest known good copy immediately, while Apps Script is refreshed in
+  // the background. A failed refresh therefore never makes the page fall back
+  // to an older GitHub JSON snapshot.
+  async function live(action="data",token=""){
+    if(!PUBLIC_LIVE_ACTIONS.has(action) || token){
+      return fetchLiveRaw_(action,token,15000);
+    }
+
+    const cached = action==="data" ? cachedCombined_() : cachedDataset_(action);
+    if(cached){
+      // Do not wait for Google Sheets. Refresh it in the background and keep
+      // the current cached copy visible while the request is running.
+      refreshLiveNow_("data").catch(()=>{});
+      return action==="data"
+        ? cached
+        : {ok:true,[action]:cached.data,sourceUpdatedAt:cached.sourceUpdatedAt||cached.savedAt||"",updatedAt:cached.sourceUpdatedAt||cached.savedAt||"",fromCache:true};
+    }
+
+    // First visit: there is no browser cache yet. Try the live Sheet once.
+    // If that fails, use the static JSON snapshot so the page still opens.
+    try{
+      return await refreshLiveNow_("data");
+    }catch(liveError){
+      if(action==="data"){
+        const out={ok:true,fromCache:false,source:"GitHub JSON fallback"};
+        for(const name of ["players","teams","auction","fixtures","results","config"]){
+          try{
+            const j=await jsonFile(`${name}.json`);
+            out[name]=j.rows??j;
+            out.sourceUpdatedAt=j.sourceUpdatedAt||j.updatedAt||"";
+          }catch(_){out[name]=[];}
+        }
+        return out;
+      }
+      const j=await jsonFile(`${action}.json`);
+      return {ok:true,[action]:j.rows??j,sourceUpdatedAt:j.sourceUpdatedAt||j.updatedAt||"",fromCache:false,source:"GitHub JSON fallback",liveError};
+    }
+  }
+
+  async function loadJsonDataset(name, options={}){
+    const cache=cachedDataset_(name);
+    const jsonPromise=jsonFile(`${name}.json`).catch(()=>null);
+    const json=await jsonPromise;
+    const candidates=[];
+    if(cache) candidates.push({data:cache.data,sourceUpdatedAt:cache.sourceUpdatedAt||cache.savedAt||"",source:"Browser live cache"});
+    const rows=json ? (json.rows??json) : null;
+    if(Array.isArray(rows)) candidates.push({data:rows,sourceUpdatedAt:json.sourceUpdatedAt||json.updatedAt||json.syncedAt||"",source:"GitHub JSON"});
     if(!candidates.length) throw new Error(`Could not read ${name}`);
-
     candidates.sort((a,b)=>sourceTime_(b)-sourceTime_(a));
     const best=candidates[0];
-
-    return {
-      data:best.data || [],
-      updatedAt:best.sourceUpdatedAt || best.savedAt || "",
-      sourceUpdatedAt:best.sourceUpdatedAt || best.savedAt || "",
-      headers:best.headers || (jsonCandidate?.headers || null),
-      live:best.source === "Browser live cache",
-      source:best.source || "Browser live cache"
-    };
+    return {data:best.data||[],updatedAt:best.sourceUpdatedAt||"",sourceUpdatedAt:best.sourceUpdatedAt||"",headers:json?.headers||null,live:best.source==="Browser live cache",source:best.source};
   }
 
   async function loadJsonFirstDataset(name){
@@ -140,6 +193,19 @@
   }
 
   function loadDataset(name,action){ return loadJsonDataset(name); }
+
+  function startLiveRefreshMonitor(){
+    if(window.__SRGF_LIVE_REFRESH_STARTED__) return;
+    window.__SRGF_LIVE_REFRESH_STARTED__=true;
+    const refresh=()=>{
+      if(document.hidden) return;
+      refreshLiveNow_("data").catch(()=>{});
+    };
+    // Refresh immediately after the page has rendered its cached data, then
+    // every 15 seconds. The first request is background-only and never blocks UI.
+    setTimeout(refresh,250);
+    setInterval(refresh,C.REFRESH_MS || 15000);
+  }
 
   function ensureFreshnessElement(){
     if($("dataFreshness")) return $("dataFreshness");
@@ -219,6 +285,7 @@
 
   document.addEventListener("DOMContentLoaded",()=>{
     startFreshnessMonitor();
+    startLiveRefreshMonitor();
     const brand=document.querySelector(".brand-wrap");
     if(brand){
       brand.style.cursor="pointer";
@@ -231,7 +298,7 @@
 
   window.SRGF={
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
-    loadJsonDataset,loadJsonFirstDataset,loadJsonFirstAll,loadDataset,
+    loadJsonDataset,loadJsonFirstDataset,loadJsonFirstAll,loadDataset,refreshLiveNow_,startLiveRefreshMonitor,
     setStatus,loadJsonFreshness,startFreshnessMonitor,nav
   };
 })();
