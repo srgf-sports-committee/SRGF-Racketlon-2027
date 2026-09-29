@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-29T04:08:03.609381Z",
+  "updatedAt": "2026-09-29T04:24:57.581404Z",
   "rows": [
     {
       "Sport": "Racketlon",
@@ -260,12 +260,12 @@
       "Schedule": "",
       "Player 1": "Player4",
       "Player 2": "Player25",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
+      "Winning Team": "T1",
+      "Game 1 (BD)": "21-19",
+      "Game 2(LT)": "21-19",
       "Game 3(TT)": "",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": 6
     },
     {
       "Sport": "Badminton",
@@ -512,12 +512,12 @@
       "Schedule": "",
       "Player 1": "Player7",
       "Player 2": "Player28",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
+      "Winning Team": "T1",
+      "Game 1 (BD)": "21-19",
+      "Game 2(LT)": "21-19",
       "Game 3(TT)": "",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": 6
     },
     {
       "Sport": "Table Tennis",
@@ -596,12 +596,12 @@
       "Schedule": "",
       "Player 1": "Player8",
       "Player 2": "Player29",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
-      "Game 3(TT)": "",
+      "Winning Team": "T1",
+      "Game 1 (BD)": "21-19",
+      "Game 2(LT)": "19-21",
+      "Game 3(TT)": "21-19",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": 4
     },
     {
       "Sport": "Table Tennis",
@@ -1688,12 +1688,12 @@
       "Schedule": "",
       "Player 1": "Player21",
       "Player 2": "Player42",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
-      "Game 3(TT)": "",
+      "Winning Team": "T1",
+      "Game 1 (BD)": "21-19",
+      "Game 2(LT)": "19-21",
+      "Game 3(TT)": "21-19",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": 1
     },
     {
       "Sport": "Table Tennis",
