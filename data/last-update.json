@@ -1,7 +1,7 @@
 {
   "success": true,
-  "syncedAt": "2026-09-29T11:58:15.680024Z",
-  "sourceUpdatedAt": "2026-09-29T11:14:26.363Z",
+  "syncedAt": "2026-09-29T12:26:21.741492Z",
+  "sourceUpdatedAt": "2026-09-29T12:05:04.875Z",
   "source": "Google Sheets via Apps Script",
-  "workflowRun": "36565031905"
+  "workflowRun": "36568083008"
 }
