@@ -191,6 +191,9 @@ function authorize_(token, write){
   if(r.getResponseCode()!==200) throw new Error('Google login token is invalid or expired.');
   const j=JSON.parse(r.getContentText());
   if(!j.email || String(j.email_verified).toLowerCase()!=='true') throw new Error('Verified Google email required.');
+  const clientId='558722597292-0bod7pch3lnjb2j8421922rvtsdmjm1v.apps.googleusercontent.com';
+  if(String(j.aud||'')!==clientId) throw new Error('Google login was issued for a different application.');
+  if(String(j.iss||'')!=='https://accounts.google.com' && String(j.iss||'')!=='accounts.google.com') throw new Error('Invalid Google token issuer.');
   const role=(accessMap_()[String(j.email).toLowerCase()]||'USER').toUpperCase();
   if(write && role==='USER') throw new Error('This Google account is not authorized to edit.');
   return {email:String(j.email).toLowerCase(),role,sub:j.sub||''};
