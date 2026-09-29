@@ -1458,3 +1458,34 @@ main>section:not(#home){
   #resultModal .labels{grid-template-columns:1fr}
   #resultModal .modal-actions button{width:100%}
 }
+
+
+/* Login panel with optional email entry. Authentication remains Google-based. */
+.auth-box{position:relative}
+.srgf-login-panel{
+  position:absolute;
+  top:calc(100% + 10px);
+  right:0;
+  z-index:10000;
+  width:330px;
+  padding:16px;
+  background:#0b2427;
+  border:1px solid rgba(126,220,219,.28);
+  border-radius:12px;
+  box-shadow:0 18px 45px rgba(0,0,0,.45);
+}
+.srgf-login-title{font-size:15px;font-weight:800;margin-bottom:6px}
+.srgf-login-help{font-size:12px;line-height:1.45;color:#b9cbca;margin-bottom:12px}
+.srgf-login-email{width:100%;box-sizing:border-box;margin-bottom:9px}
+.srgf-login-google{width:100%}
+.srgf-login-cancel{width:100%;margin-top:8px}
+.srgf-login-note{margin-top:10px;font-size:10px;line-height:1.4;color:#8fb0a8}
+@media(max-width:760px){
+  .srgf-login-panel{
+    position:fixed;
+    top:70px;
+    left:10px;
+    right:10px;
+    width:auto;
+  }
+}
