@@ -98,8 +98,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
       img.onerror=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";};
     }catch(_){img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";}
   }
-  function renderPlayerDetails(){
-    const p=state.players.find(x=>String(x.id)===String($("playerSelect").value)),box=$("playerDetails");
+  function renderPlayerDetails(selectedPlayer){
+    const p=selectedPlayer||state.players.find(x=>String(x.id)===String($("playerSelect").value)),box=$("playerDetails");
     if(!p){box.className="player-details-empty";box.innerHTML="Select a player to view player details.";return;}
     box.className="player-details";
     box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="margin-bottom:12px">'+esc(p.name)+'</div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
   $("bidInput")?.addEventListener("input",validateBid);$("bidInput")?.addEventListener("blur",validateBid);
   $("playerSelectDisplay")?.addEventListener("click",()=>{const open=$("playerDropdown").classList.contains("hidden");$("playerDropdown").classList.toggle("hidden",!open);$("playerSelectDisplay").setAttribute("aria-expanded",String(open));if(open){playerOptions($("playerDropdownSearch").value);setTimeout(()=>$("playerDropdownSearch").focus(),0);}});
   $("playerDropdownSearch")?.addEventListener("input",()=>playerOptions($("playerDropdownSearch").value));
-  $("playerSelect")?.addEventListener("change",()=>{$("teamSelect").value="";const p=state.players.find(x=>String(x.id)===String($("playerSelect").value));$("playerSelectDisplay").textContent=p?p.name+" — "+p.category:"Select Player";playerOptions("");renderPlayerDetails();});
+  $("playerSelect")?.addEventListener("change",()=>{$("teamSelect").value="";const p=state.players.find(x=>String(x.id)===String($("playerSelect").value));$("playerSelectDisplay").textContent=p?p.name+" — "+p.category:"Select Player";playerOptions("");renderPlayerDetails(p);});
   $("sellBtn")?.addEventListener("click",sell);
   $("refreshBtn")?.addEventListener("click",()=>load());
   $("testSheetBtn")?.addEventListener("click",async()=>{const b=$("testSheetBtn");b.disabled=true;try{await SRGF.live("ping");$("auctionMessage").textContent="Google Apps Script connection is working. Backend is reachable.";SRGF.setStatus("LIVE · Apps Script reachable · "+new Date().toLocaleTimeString());}catch(e){$("auctionMessage").textContent="Apps Script connection failed: "+(e.message||e);SRGF.setStatus("Sheet connection failed",true);}finally{b.disabled=false;}});
