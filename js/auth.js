@@ -107,41 +107,26 @@
   function renderLoginPanel(){
     const box=document.getElementById("authBox");
     if(!box)return;
-
     box.innerHTML=`
       <div class="srgf-login-panel" id="srgfLoginPanel">
         <div class="srgf-login-title">Admin / Writer Login</div>
-        <div class="srgf-login-help">Use your Google account. You can either choose an account already signed in, or use another Google account.</div>
-
-        <div class="srgf-login-section-label">Option 1 — Choose a signed-in account</div>
-        <div id="googleSignInButton" class="srgf-google-button"></div>
-
-        <div class="srgf-login-divider"><span>OR</span></div>
-
-        <div class="srgf-login-section-label">Option 2 — Use another Google account</div>
-        <input class="srgf-login-email" id="srgfLoginEmail" type="email" autocomplete="username" placeholder="Enter Google email address">
-        <button class="primary srgf-login-google" id="srgfLoginOther" type="button">Continue with this Google account</button>
-
+        <div class="srgf-login-help">Enter your Google email address. Google will handle the secure sign-in and account selection.</div>
+        <input class="srgf-login-email" id="srgfLoginEmail" type="email" autocomplete="username" placeholder="Enter email address">
+        <button class="primary srgf-login-google" id="srgfLoginGoogle" type="button">Continue with Google</button>
         <button class="secondary srgf-login-cancel" id="srgfLoginCancel" type="button">Cancel</button>
         <div class="srgf-login-error hidden" id="srgfLoginError"></div>
-        <div class="srgf-login-note">The email address is only used to tell Google which account to use. Your Google password is entered on Google's secure sign-in page, not on this website. Access is still checked against the ACCESS sheet.</div>
+        <div class="srgf-login-note">The email address is only used as a hint for Google. Your Google password is entered on Google's secure sign-in page, not on this website. Access is still checked against the ACCESS sheet.</div>
       </div>`;
-
+    const email=document.getElementById("srgfLoginEmail");
+    document.getElementById("srgfLoginGoogle")?.addEventListener("click",()=>startLogin(email?.value||""));
     document.getElementById("srgfLoginCancel")?.addEventListener("click",render);
-
-    document.getElementById("srgfLoginOther")?.addEventListener("click",()=>{
-      const email=document.getElementById("srgfLoginEmail")?.value||"";
-      startLogin(email);
-    });
-
-    document.getElementById("srgfLoginEmail")?.addEventListener("keydown",e=>{
+    email?.addEventListener("keydown",e=>{
       if(e.key==="Enter"){
         e.preventDefault();
-        startLogin(e.currentTarget.value||"");
+        startLogin(email.value||"");
       }
     });
-
-    setTimeout(initGoogleButton,0);
+    setTimeout(()=>email?.focus(),0);
   }
 
   function render(){
