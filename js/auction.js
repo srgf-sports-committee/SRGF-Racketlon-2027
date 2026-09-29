@@ -65,7 +65,6 @@ document.addEventListener("DOMContentLoaded",async()=>{
       ["name","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
         if(!String(out[k]??"").trim()&&String(s[k]??"").trim())out[k]=s[k];
       });
-      if(!out.active&&s.active===true)out.active=true;
       return out;
     });
     if(allowAdd){
