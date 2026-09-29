@@ -265,3 +265,18 @@ function saveFixtureResult_(p){
 function json_(obj){
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
+
+
+/**
+ * Run this function ONCE from the Apps Script editor after adding/changing
+ * UrlFetchApp usage. It forces Apps Script to request the required
+ * external-request authorization from the script owner.
+ */
+function authorizeServices(){
+  SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+  UrlFetchApp.fetch('https://www.google.com/generate_204', {
+    muteHttpExceptions:true,
+    followRedirects:true
+  });
+  return 'Authorization check completed.';
+}
