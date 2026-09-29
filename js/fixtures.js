@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const a=[];
     headers.forEach((h,i)=>{
       // Accept Game 1 / Game1 as well as Game 1 (BD), Game 2 (LT), etc.
-      const m=norm(h).match(/^(?:game|set)([1-4])/);
+      const m=norm(h).match(/^(?:game|set)([1-4])(?:$|[a-z])/);
       if(m)a[+m[1]-1]=i;
     });
     return a;
