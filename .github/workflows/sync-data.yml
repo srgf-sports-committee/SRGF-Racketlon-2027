@@ -59,10 +59,47 @@ jobs:
                   "Apps Script response is missing: " + ", ".join(missing)
               )
 
+          source_updated = str(payload.get("sourceUpdatedAt") or payload.get("updatedAt") or "").strip()
+          if not source_updated:
+              raise RuntimeError("Apps Script did not return sourceUpdatedAt")
+
           out = pathlib.Path("data")
           out.mkdir(exist_ok=True)
 
-          updated = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+          marker_path = out / "last-update.json"
+          existing_marker = {}
+          if marker_path.exists():
+              try:
+                  existing_marker = json.loads(marker_path.read_text(encoding="utf-8"))
+              except Exception:
+                  existing_marker = {}
+
+          existing_source = str(
+              existing_marker.get("sourceUpdatedAt")
+              or existing_marker.get("syncedAt")
+              or ""
+          ).strip()
+
+          def iso_parse(value):
+              if not value:
+                  return None
+              try:
+                  return datetime.fromisoformat(value.replace("Z", "+00:00"))
+              except Exception:
+                  return None
+
+          fetched_dt = iso_parse(source_updated)
+          existing_dt = iso_parse(existing_source)
+
+          # Never let a delayed/stale Apps Script response overwrite newer JSON.
+          if existing_dt and fetched_dt and fetched_dt < existing_dt:
+              print(
+                  f"Apps Script data is older than GitHub JSON: fetched={source_updated}, "
+                  f"existing={existing_source}. Keeping existing JSON."
+              )
+              raise SystemExit(0)
+
+          synced_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
           for key in required:
               rows = payload.get(key)
@@ -70,7 +107,9 @@ jobs:
                   raise RuntimeError(f"{key} is not an array")
 
               obj = {
-                  "updatedAt": updated,
+                  "updatedAt": source_updated,
+                  "sourceUpdatedAt": source_updated,
+                  "syncedAt": synced_at,
                   "rows": rows
               }
 
@@ -88,18 +127,17 @@ jobs:
 
           marker = {
               "success": True,
-              "syncedAt": updated,
-              "sourceUpdatedAt": payload.get("updatedAt", ""),
+              "syncedAt": synced_at,
+              "sourceUpdatedAt": source_updated,
               "source": "Google Sheets via Apps Script",
               "workflowRun": os.environ.get("GITHUB_RUN_ID", "")
           }
 
-          (out / "last-update.json").write_text(
+          marker_path.write_text(
               json.dumps(marker, ensure_ascii=False, indent=2),
               encoding="utf-8"
           )
-
-          print("JSON sync successful:", updated)
+          print("JSON sync successful. Source data version:", source_updated)
           PY
 
       - name: Commit and push updated JSON

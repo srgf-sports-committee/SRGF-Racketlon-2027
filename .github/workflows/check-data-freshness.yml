@@ -3,7 +3,10 @@ name: Check SRGF data freshness
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"
+    # GitHub may delay scheduled workflows. This check must never make the
+    # repository red just because the schedule was delayed or the Sheet has
+    # not changed recently.
+    - cron: "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
 
 permissions:
   contents: read
@@ -12,57 +15,38 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-
-      - name: Check last successful JSON sync
+      - uses: actions/checkout@v4
+      - name: Validate last successful JSON marker
         run: |
           python - <<'PY'
           import json, pathlib, datetime, sys
 
           p = pathlib.Path("data/last-update.json")
-
           if not p.exists():
-              print("WARNING: data/last-update.json does not exist yet.")
-              sys.exit(0)
-
-          try:
-              d = json.loads(p.read_text(encoding="utf-8"))
-          except Exception as e:
-              print(f"ERROR: Could not read data/last-update.json: {e}")
+              print("ERROR: data/last-update.json does not exist")
               sys.exit(1)
 
-          if not d.get("success") or not d.get("syncedAt"):
-              print("WARNING: No successful JSON sync has completed yet.")
-              print("The website can continue using its existing JSON data.")
-              sys.exit(0)
-
-          try:
-              synced = datetime.datetime.fromisoformat(
-                  d["syncedAt"].replace("Z", "+00:00")
-              )
-          except Exception as e:
-              print(f"ERROR: Invalid syncedAt value: {e}")
+          d = json.loads(p.read_text(encoding="utf-8"))
+          if not d.get("success"):
+              print("ERROR: last-update.json is not marked successful")
               sys.exit(1)
 
-          age = (
-              datetime.datetime.now(datetime.timezone.utc) - synced
-          ).total_seconds()
+          source = d.get("sourceUpdatedAt") or d.get("syncedAt")
+          if not source:
+              print("ERROR: last-update.json has no sourceUpdatedAt/syncedAt")
+              sys.exit(1)
 
-          print(
-              f"Last successful JSON sync: "
-              f"{d['syncedAt']} ({age:.0f}s ago)"
-          )
+          try:
+              ts = datetime.datetime.fromisoformat(source.replace("Z", "+00:00"))
+          except Exception:
+              print("ERROR: last-update.json contains an invalid timestamp")
+              sys.exit(1)
 
-          if age > 1800:
-              print("WARNING: JSON data is more than 30 minutes old.")
-              print("This is a warning only; the workflow will still succeed.")
-          elif age > 600:
-              print("WARNING: JSON data is more than 10 minutes old.")
-              print("This is a warning only; the workflow will still succeed.")
-          elif age > 300:
-              print("NOTICE: JSON data is more than 5 minutes old.")
-          else:
-              print("OK: JSON data is fresh.")
+          age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds()
+          print(f"Latest represented Google Sheet data: {source} ({age:.0f}s ago)")
 
-          print("Freshness check completed successfully.")
+          # A dataset can legitimately remain unchanged for hours or days.
+          # Age alone is therefore NOT a sync failure. The sync workflow itself
+          # rejects older source versions and never overwrites newer JSON.
+          print("OK: freshness marker is valid. Old data is not overwritten by age alone.")
           PY
