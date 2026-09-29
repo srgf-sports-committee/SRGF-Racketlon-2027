@@ -219,7 +219,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const current=select.value;
     const sportIndex=idx(["Sport"]);
     const sports=sportIndex<0?[]:[...new Set(rows.map(r=>String(r[sportIndex]??"").trim()).filter(Boolean))]
-      .filter(s=>norm(s)!=="racketlon")
       .sort((a,b)=>a.localeCompare(b));
     select.innerHTML='<option value="">All Sports</option>'+sports.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
     if(sports.some(x=>x===current))select.value=current;
