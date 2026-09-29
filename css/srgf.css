@@ -1418,3 +1418,41 @@ main>section:not(#home){
 .data-freshness.warn{font-weight:700}
 .data-freshness.error{font-weight:800}
 @media(max-width:800px){.data-freshness{font-size:10px;padding:3px 6px}}
+
+/* Fixture result entry */
+#resultModal{
+  position:fixed;inset:0;z-index:5000;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.62);
+}
+#resultModal.hidden{display:none!important}
+#resultModal .modal-card{
+  width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 40px);
+  overflow:auto;background:var(--panel,#151922);border:1px solid var(--line);
+  border-radius:14px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.45);
+}
+#resultModal .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+#resultModal .modal-title{margin:0}
+#resultModal .close{width:38px;height:38px;border:0;border-radius:9px;background:rgba(255,255,255,.08);color:#fff;font-size:24px;cursor:pointer}
+#resultModal .fixture-result-winner{padding:12px;border:1px solid rgba(105,190,210,.25);border-radius:10px;margin-bottom:12px}
+#resultModal .fixture-result-winner label{display:block}
+#resultModal .fixture-result-winner input,
+#resultModal .game input{
+  box-sizing:border-box;width:100%;padding:10px 11px;border-radius:8px;
+  border:1px solid rgba(126,220,219,.25);background:#102b2b;color:#fff;
+  outline:none;font:inherit;margin-top:6px;
+}
+#resultModal .fixture-result-winner input:focus,
+#resultModal .game input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(217,238,99,.12)}
+#resultModal .games{display:grid;gap:10px}
+#resultModal .game{padding:12px;border:1px solid rgba(105,190,210,.18);border-radius:10px}
+#resultModal .game h3{margin:0 0 10px;font-size:14px}
+#resultModal .labels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#resultModal .labels label{font-size:12px;color:#b9d3cd}
+#resultModal .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}
+@media(max-width:600px){
+  #resultModal{padding:10px}
+  #resultModal .modal-card{width:calc(100vw - 20px);padding:12px}
+  #resultModal .labels{grid-template-columns:1fr}
+  #resultModal .modal-actions button{width:100%}
+}
