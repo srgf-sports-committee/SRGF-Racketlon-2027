@@ -1,29 +1,31 @@
 {
-  "updatedAt": "2026-09-29T04:24:57.581404Z",
+  "updatedAt": "2026-09-29T06:52:58.867Z",
+  "sourceUpdatedAt": "2026-09-29T06:52:58.867Z",
+  "syncedAt": "2026-09-29T07:07:23.552527Z",
   "rows": [
     {
       "Team ID": "T1",
       "Team Name": "T1 Team1",
-      "Initial Budget": 990000000,
-      "Active": 1
+      "Initial Budget": "990000000",
+      "Active": "1"
     },
     {
       "Team ID": "T2",
       "Team Name": "T2 Team 2",
-      "Initial Budget": 990000000,
-      "Active": 1
+      "Initial Budget": "990000000",
+      "Active": "1"
     },
     {
       "Team ID": "T3",
       "Team Name": "T3 Team 3",
-      "Initial Budget": 990000000,
-      "Active": 1
+      "Initial Budget": "990000000",
+      "Active": "1"
     },
     {
       "Team ID": "T4",
       "Team Name": "T4 Team 4",
-      "Initial Budget": 990000000,
-      "Active": 1
+      "Initial Budget": "990000000",
+      "Active": "1"
     }
   ]
 }

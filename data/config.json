@@ -1,5 +1,7 @@
 {
-  "updatedAt": "2026-09-29T04:24:57.581404Z",
+  "updatedAt": "2026-09-29T06:52:58.867Z",
+  "sourceUpdatedAt": "2026-09-29T06:52:58.867Z",
+  "syncedAt": "2026-09-29T07:07:23.552527Z",
   "rows": [
     {
       "Parameter": "Tournament Name",
@@ -8,32 +10,32 @@
     },
     {
       "Parameter": "Number of Teams",
-      "Value": 4,
+      "Value": "4",
       "Notes": ""
     },
     {
       "Parameter": "Initial Budget",
-      "Value": 990000000,
+      "Value": "990000000",
       "Notes": "₹50 lakh per team"
     },
     {
       "Parameter": "Minimum Players",
-      "Value": 15,
+      "Value": "15",
       "Notes": "Used for auction max-bid calculation"
     },
     {
       "Parameter": "Reserve Per Slot",
-      "Value": 10000000,
+      "Value": "10000000",
       "Notes": "₹1 lakh reserved per remaining player slot"
     },
     {
       "Parameter": "Number of Sports",
-      "Value": 4,
+      "Value": "4",
       "Notes": "Racketlon + Badminton + Table Tennis + Lawn Tennis + Pickleball"
     },
     {
       "Parameter": "Racketlon Legs",
-      "Value": 4,
+      "Value": "4",
       "Notes": "Badminton, Table Tennis, Lawn Tennis, Pickleball"
     },
     {
