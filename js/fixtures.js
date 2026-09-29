@@ -4,7 +4,28 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   nav("fixtures");
 
   let headers=[], rows=[], filtered=[];
+  const PENDING_KEY="SRGF_PENDING_FIXTURE_RESULTS_V1";
+  let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
+
+  function loadPending(){
+    try{pendingResults=JSON.parse(localStorage.getItem(PENDING_KEY)||"{}")||{};}catch(_){pendingResults={};}
+  }
+  function savePending(){try{localStorage.setItem(PENDING_KEY,JSON.stringify(pendingResults));}catch(_){}}
+  function applyPending(){
+    Object.keys(pendingResults).forEach(key=>{
+      const p=pendingResults[key], i=Number(key);
+      if(!Number.isInteger(i)||!rows[i]||!p)return;
+      if(p.winningTeam!==undefined&&p.winningTeam!==""){
+        const wi=findHeaderIndex([/^winningteam/]);
+        if(wi>=0)rows[i][wi]=p.winningTeam;
+      }
+      (p.scores||[]).forEach(s=>{
+        const gi=gameIdx()[Number(s.game)-1];
+        if(gi!==undefined)rows[i][gi]=`${s.player1} - ${s.player2}`;
+      });
+    });
+  }
 
   // Header lookup is intentionally tolerant because Google Sheets headers may
   // be written as "Team 1", "Team1", "Player 1 Name", etc.
@@ -426,7 +447,40 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       for(let g=1;g<=4;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for Game "+g+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
       const winner=modal.querySelector("#fixtureWinningTeam")?.value.trim()||"";
       if(!winner&&!scores.length){alert("Enter at least one field to update.");return;}
-      try{const body=new URLSearchParams({action:"saveFixtureResult",sheet:"FIXTURES",rowNumber:String(i+2),scores:JSON.stringify(scores),winningTeam:winner,token:SRGFAuth.token()});const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body},20000);const j=await res.json();if(!j.ok)throw new Error(j.error||"Save failed");modal.classList.add("hidden");await load();}catch(e){alert(e.message||e);}
+      // Show the result immediately. Do not wait for Google Sheets.
+      // Keep it as a local pending change until Apps Script confirms the write.
+      pendingResults[String(i)]={scores,winningTeam:winner,savedAt:Date.now()};
+      savePending();
+      applyPending();
+      render();
+      modal.classList.add("hidden");
+      setStatus("Result updated on screen · saving to Google Sheets…",true);
+
+      // Save in the background. The fixture page remains usable while the
+      // Google Sheets request is in progress.
+      try{
+        const body=new URLSearchParams({
+          action:"saveFixtureResult",
+          sheet:"FIXTURES",
+          rowNumber:String(i+2),
+          scores:JSON.stringify(scores),
+          winningTeam:winner,
+          token:SRGFAuth.token()
+        });
+        const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{
+          method:"POST",
+          headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+          body
+        },20000);
+        const j=await res.json();
+        if(!j.ok)throw new Error(j.error||"Save failed");
+        delete pendingResults[String(i)];
+        savePending();
+        setStatus("✓ Result saved to Google Sheets",false);
+        await load();
+      }catch(e){
+        setStatus("Result shown locally · Google Sheets save pending",true);
+      }
     };
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
@@ -440,6 +494,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         const f=d.data||[];
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        applyPending();
+        applyPending();
         try{
           const td=await loadJsonDataset("teams");
           window.__SRGF_TEAMS=(td.data||[]).map(x=>({
@@ -455,6 +511,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
             const f2=latest.data?.fixtures||[];
             headers=Object.keys(f2[0]||{});
             rows=f2.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        applyPending();
+        applyPending();
             render();
             setStatus("LIVE · Google Sheet");
           }).catch(()=>{});
@@ -496,6 +554,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         const f=d.data||[];
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        applyPending();
         render();
         setStatus("Connecting to Google Sheets…",true);
       }catch(_){setStatus("No fixture data available",true);}
@@ -511,6 +570,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     render();
   }));
 
+  loadPending();
   setupPlayerDropdown();
   $("refreshBtn")?.addEventListener("click",load);
   await load();
