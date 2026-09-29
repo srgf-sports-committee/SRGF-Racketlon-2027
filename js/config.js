@@ -5,5 +5,5 @@ window.SRGF_CONFIG = {
   STALE_WARN_MS: 5 * 60 * 1000,
   STALE_ERROR_MS: 10 * 60 * 1000,
   JSON_BASE: "./data/",
-  GOOGLE_CLIENT_ID: "PASTE_YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com"
+  GOOGLE_CLIENT_ID: "558722597292-0bod7pch3lnjb2j8421922rvtsdmjm1v.apps.googleusercontent.com"
 };
