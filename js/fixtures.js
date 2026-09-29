@@ -61,12 +61,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function gameIdx(){
     const a=[];
     headers.forEach((h,i)=>{
+      // Accept Game 1 / Game1 as well as Game 1 (BD), Game 2 (LT), etc.
       const m=norm(h).match(/^(?:game|set)([1-4])/);
       if(m)a[+m[1]-1]=i;
     });
     return a;
   }
-
   function done(r){
     // Match the reference behaviour: a result exists when any Game/Set,
     // Winning Team or Points field contains a value.
@@ -327,38 +327,27 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const r=rows[i], gi=gameIdx();
     const p1=val(r,["Player 1","Player1","Player 1 Name","Player1Name"])||"Player 1";
     const p2=val(r,["Player 2","Player2","Player 2 Name","Player2Name"])||"Player 2";
-    const modal=$("resultModal");
-    if(!modal)return;
-    modal.querySelector(".modal-title").textContent=`${p1} vs ${p2}`;
+    const modal=$("resultModal"); if(!modal)return;
+    modal.querySelector(".modal-title").textContent=p1+" vs "+p2;
+    const winningTeamIndex=findHeaderIndex([/^winningteam/]);
+    const currentWinner=winningTeamIndex>=0?String(r[winningTeamIndex]??"").trim():"";
+    const teamValues=[];
+    for(const ti of teamIndexes()){const v=String(r[ti]??"").trim();if(v&&!teamValues.some(x=>norm(x)===norm(v)))teamValues.push(v);}
     const games=modal.querySelector(".games");
-    games.innerHTML=[1,2,3,4].map(g=>{
-      const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");
-      const m=raw.match(/(\d+)\s*[-:]\s*(\d+)/);
-      return `<div class="game"><h3>Game ${g}</h3><div class="labels"><label>${esc(p1)}<input class="g1" data-g="${g}" type="number" min="0" value="${m?m[1]:""}"></label><label>${esc(p2)}<input class="g2" data-g="${g}" type="number" min="0" value="${m?m[2]:""}"></label></div></div>`;
-    }).join("");
+    const winnerOptions=teamValues.map(v=>'<option value="'+esc(v)+'"'+(norm(v)===norm(currentWinner)?' selected':'')+'>'+esc(v)+'</option>').join("");
+    const sportNames={1:"BD",2:"LT",3:"TT",4:"PB"};
+    games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><select id="fixtureWinningTeam"><option value="">Leave unchanged</option>'+winnerOptions+'</select></label><div class="notice">Update the Winning Team, any one game, several games, or all five fields.</div></div>'+
+      [1,2,3,4].map(g=>{const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\d+)\s*[-:]\s*(\d+)/);return '<div class="game"><h3>Game '+g+' ('+sportNames[g]+')</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
     modal.classList.remove("hidden");
-
     modal.querySelector("#saveFixtureBtn").onclick=async()=>{
       const scores=[];
-      for(let g=1;g<=4;g++){
-        const a=modal.querySelector(`.g1[data-g="${g}"]`).value;
-        const b=modal.querySelector(`.g2[data-g="${g}"]`).value;
-        if((a==="")!==(b==="")){alert(`Enter both scores for Game ${g}.`);return;}
-        if(a!==""&&b!=="")scores.push({game:g,player1:Number(a),player2:Number(b)});
-      }
-      if(!scores.length){alert("Enter at least one game result.");return;}
-      try{
-        const body=new URLSearchParams({action:"saveFixtureResult",sheet:"FIXTURES",rowNumber:String(i+2),scores:JSON.stringify(scores),token:SRGFAuth.token()});
-        const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body},20000);
-        const j=await res.json();
-        if(!j.ok)throw new Error(j.error||"Save failed");
-        modal.classList.add("hidden");
-        await load();
-      }catch(e){alert(e.message||e);}
+      for(let g=1;g<=4;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for Game "+g+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
+      const winner=modal.querySelector("#fixtureWinningTeam")?.value||"";
+      if(!winner&&!scores.length){alert("Enter at least one field to update.");return;}
+      try{const body=new URLSearchParams({action:"saveFixtureResult",sheet:"FIXTURES",rowNumber:String(i+2),scores:JSON.stringify(scores),winningTeam:winner,token:SRGFAuth.token()});const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body},20000);const j=await res.json();if(!j.ok)throw new Error(j.error||"Save failed");modal.classList.add("hidden");await load();}catch(e){alert(e.message||e);}
     };
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
-
   async function load(){
     // Editors must use the live endpoint so result entry/saves are immediate.
     if(roleCanEdit()){
