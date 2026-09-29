@@ -163,6 +163,15 @@ function sheetObjects_(name,ss){
   });
 }
 
+function getHeaders_(sheet){
+  if(sheet.getLastColumn()<1) return [];
+  return sheet.getRange(1,1,1,sheet.getLastColumn()).getValues()[0].map(String);
+}
+
+function readSheet_(ss,name){
+  return sheetObjects_(name,ss);
+}
+
 function headers_(sh){
   const last=sh.getLastColumn();
   return last ? sh.getRange(1,1,1,last).getDisplayValues()[0] : [];
