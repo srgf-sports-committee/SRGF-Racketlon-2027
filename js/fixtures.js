@@ -212,6 +212,17 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(sports.some(x=>x===current))select.value=current;
   }
 
+  function refreshTierFilter(){
+    const select=$("fixtureTierFilter");
+    if(!select)return;
+    const current=select.value;
+    const tierIndex=idx(["Tier"]);
+    const tiers=tierIndex<0?[]:[...new Set(rows.map(r=>String(r[tierIndex]??"").trim()).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:"base"}));
+    select.innerHTML='<option value="">All Tiers</option>'+tiers.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");
+    if(tiers.some(x=>norm(x)===norm(current)))select.value=current;
+  }
+
   function refreshPlayerFilter(){
     const select=$("fixturePlayerFilter");
     if(!select)return;
@@ -351,11 +362,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function render(){
     refreshTeamFilter();
     refreshSportFilter();
+    refreshTierFilter();
     refreshPlayerFilter();
 
     const status=$("fixtureStatusFilter")?.value||"";
     const team=$("fixtureTeamFilter")?.value||"";
     const sport=($("fixtureSportFilter")?.value||"").toLowerCase();
+    const tier=($("fixtureTierFilter")?.value||"").toLowerCase();
     const player=$("fixturePlayerFilter")?.value||"";
 
     filtered=rows.map((r,i)=>({r,i})).filter(x=>{
@@ -363,6 +376,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       if(status==="pending"&&done(x.r))return false;
       if(team&&!rowMatchesTeam(x.r,team))return false;
       if(sport&&val(x.r,["Sport"]).toLowerCase()!==sport)return false;
+      if(tier&&val(x.r,["Tier"]).toLowerCase()!==tier)return false;
       if(player&&!rowMatchesPlayer(x.r,player))return false;
       return true;
     });
@@ -564,7 +578,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     }
   }
 
-  ["fixtureStatusFilter","fixtureTeamFilter","fixtureSportFilter","fixturePlayerFilter"].forEach(id=>$(id)?.addEventListener("change",()=>{
+  ["fixtureStatusFilter","fixtureTeamFilter","fixtureSportFilter","fixtureTierFilter","fixturePlayerFilter"].forEach(id=>$(id)?.addEventListener("change",()=>{
     // Player selection clears Team, matching the working reference.
     if(id==="fixturePlayerFilter"){
       const team=$("fixtureTeamFilter");
