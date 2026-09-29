@@ -229,8 +229,8 @@
   function startPageAutoRefresh(){
     const path=String(location.pathname||"").toLowerCase();
     // Never auto-refresh pages where users enter/edit data or run the Auction.
-    if(/(?:^|\\/)auction\\.html$/.test(path))return;
-    if(/(?:^|\\/)(?:fixtures|registration)\\.html$/.test(path))return;
+    if(/(?:^|\/)auction\.html$/.test(path))return;
+    if(/(?:^|\/)(?:fixtures|registration)\.html$/.test(path))return;
 
     setInterval(()=>{
       // Keep any future edit modal safe even if a page is later added to the
