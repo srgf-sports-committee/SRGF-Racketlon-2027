@@ -164,10 +164,26 @@ document.addEventListener("DOMContentLoaded",async()=>{
     box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="margin-bottom:12px">'+esc(p.name)+'</div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
     playerPhoto(p);
   }
+  function renderTeamsBoard(){
+    const board=$("auctionTeamsBoard");
+    if(!board)return;
+    board.innerHTML=state.teams.map(t=>{
+      const players=state.auction
+        .filter(a=>String(a.teamId)===String(t.id))
+        .sort((a,b)=>String(a.player||"").localeCompare(String(b.player||"")));
+      return '<div class="team-column"><div class="team-title">'+esc(t.name)+'</div>'+
+        (players.length
+          ? players.map(a=>'<div class="team-player">'+esc(a.player)+'</div>').join("")
+          : '<div class="team-player team-empty">No players sold</div>')+
+        '</div>';
+    }).join("");
+  }
+
   function render(){
     refreshBidUI();
     const sp=String($("playerSelect").value||""),st=String($("teamSelect").value||"");
     $("teamMetrics").innerHTML=state.teams.map(t=>{const s=stats(t.id);return '<div class="metric"><label>'+esc(t.name)+'</label><strong>'+money(s.left)+'</strong><div class="notice">'+s.players+' players · max '+money(s.maxBid)+'</div></div>';}).join("");
+    renderTeamsBoard();
     const avail=state.players.filter(p=>p.active&&!state.auction.some(a=>String(a.playerId)===String(p.id)));
     $("playerSelect").innerHTML=avail.length?avail.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' — '+esc(p.category)+'</option>').join(""):'<option value="">No available players</option>';
     if(avail.some(p=>String(p.id)===sp))$("playerSelect").value=sp;else $("playerSelect").value=avail[0]?.id||"";
