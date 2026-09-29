@@ -1437,12 +1437,14 @@ main>section:not(#home){
 #resultModal .fixture-result-winner{padding:12px;border:1px solid rgba(105,190,210,.25);border-radius:10px;margin-bottom:12px}
 #resultModal .fixture-result-winner label{display:block}
 #resultModal .fixture-result-winner input,
+#resultModal .fixture-result-winner select,
 #resultModal .game input{
   box-sizing:border-box;width:100%;padding:10px 11px;border-radius:8px;
   border:1px solid rgba(126,220,219,.25);background:#102b2b;color:#fff;
   outline:none;font:inherit;margin-top:6px;
 }
 #resultModal .fixture-result-winner input:focus,
+#resultModal .fixture-result-winner select:focus,
 #resultModal .game input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(217,238,99,.12)}
 #resultModal .games{display:grid;gap:10px}
 #resultModal .game{padding:12px;border:1px solid rgba(105,190,210,.18);border-radius:10px}
