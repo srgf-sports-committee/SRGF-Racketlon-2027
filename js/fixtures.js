@@ -393,7 +393,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   function openModal(i){
     const r=rows[i], gi=gameIdx();
-    const r=rows[i], gi=gameIdx();
     const fixtureSport=val(r,["Sport"]);
     const isRacketlon=norm(fixtureSport)==="racketlon";
     const gameLabels=isRacketlon?["Badminton","Table Tennis","Lawn Tennis","Pickle Ball"]:["Game 1","Game 2","Game 3"];
