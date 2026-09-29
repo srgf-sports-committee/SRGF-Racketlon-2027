@@ -18,6 +18,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     return m ? Number(m[0]) : 0;
   };
   const isRacketlon = sport => norm(sport) === "racketlon";
+  // For non-Racketlon results, DBL1/DBL2/DBL3 are one combined doubles category.
+  // Racketlon tiers remain unchanged.
+  const displayTier = (sport, tier) => {
+    const raw = String(tier ?? "").trim();
+    return !isRacketlon(sport) && /^dbl\\d*$/i.test(raw) ? "DBL" : raw;
+  };
   const teamKey = v => norm(String(v ?? ""));
   const cleanTeam = v => String(v ?? "").trim();
 
@@ -187,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       restoreSelectValue(sportSelect, sports, savedState.sport);
     }
 
-    const tiers = [...new Set(fixtureRows.map(r => value(r, ["Tier"]).trim()).filter(Boolean))].sort((a, b) => {
+    const tiers = [...new Set(fixtureRows.map(r => displayTier(value(r, ["Sport"]), value(r, ["Tier"])).trim()).filter(Boolean))].sort((a, b) => {
       const na = Number((a.match(/\d+(?:\.\d+)?/) || [])[0]);
       const nb = Number((b.match(/\d+(?:\.\d+)?/) || [])[0]);
       return Number.isFinite(na) && Number.isFinite(nb) ? na - nb : a.localeCompare(b);
@@ -291,10 +297,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (activeTab === "racketlon" && !rack) return;
       if (activeTab === "nonRacketlon" && rack) return;
       if (sport && norm(sportName) !== norm(sport)) return;
-      if (tier && norm(tierName) !== norm(tier)) return;
-
-      const a = p1 ? ensure(sportName, tierName, p1) : null;
-      const b = p2 ? ensure(sportName, tierName, p2) : null;
+      const resultTier = displayTier(sportName, tierName);
+      if (tier && norm(resultTier) !== norm(tier)) return;
+      const a = p1 ? ensure(sportName, resultTier, p1) : null;
+      const b = p2 ? ensure(sportName, resultTier, p2) : null;
       const [teamA, teamB] = matchTeams(row);
       const winner = resolveTeamName(value(row, ["Winning Team", "Winner Team", "Winner"]));
       const winnerKey = teamKey(winner);
@@ -340,10 +346,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const body = $("playerScoresBody");
-    const rows = Object.keys(groups).sort((a, b) => a.localeCompare(b)).flatMap(k => groups[k]);
+    // For a combined DBL category, only the overall winner and runner-up
+    // for each sport are displayed. All other categories keep the existing
+    // player ranking behaviour.
+    const visibleGroups = Object.values(groups).map(group => {
+      if (group[0] && norm(group[0].tier) === "dbl") return group.slice(0, 2);
+      return group;
+    });
+    const rows = visibleGroups.flat();
     const top = new Set(Object.values(groups).map(g => g[0]?.player).filter(Boolean));
+    const runner = new Set(Object.values(groups)
+      .filter(g => g[0] && norm(g[0].tier) === "dbl" && g[1])
+      .map(g => g[1].player));
     body.innerHTML = rows.length ? rows.map(x => {
-      const cls = top.has(x.player) ? "racketlon-top-player" : "";
+      const isDbl = norm(x.tier) === "dbl";
+      const cls = top.has(x.player) ? "racketlon-top-player" : (isDbl && runner.has(x.player) ? "doubles-runner-player" : "");
       return activeTab === "racketlon"
         ? `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.points}</td></tr>`
         : `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.wins}</td><td>${x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
@@ -353,7 +370,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const msg = $("playerScoresMessage");
     if (msg) msg.textContent = activeTab === "racketlon"
       ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points.`
-      : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → fewer Games Lost → Point Difference.`;
+      : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → fewer Games Lost → Point Difference. DBL1, DBL2 and DBL3 are combined into one DBL category per sport, with one winner and one runner-up.`;
   }
 
   function render() {
