@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     tt:first(r,["Table Tennis Level"]),tennis:first(r,["Lawn Tennis Level"]),
     pickle:first(r,["Pickle Ball Level"]),team:first(r,["Team ID"]),amount:Number(first(r,["Auction Amount"])||0),
     active:String(first(r,["Active"])||"TRUE").toUpperCase()!=="FALSE",
-    image:first(r,["Photo","Photo URL","Image URL","Profile Photo","Player Photo","Image","Profile Image","Picture","Photo Link","Image Link"])
+    image:(()=>{const v=first(r,["Photo","Photo URL","Image URL","Profile Photo","Player Photo","Image","Profile Image","Picture","Photo Link","Image Link"]);if(!v)return "";if(v.startsWith("drive:"))return v;const m=v.match(/(?:id=|\/d\/|file\/d\/)([A-Za-z0-9_-]{20,})/);if(m)return "drive:"+m[1];if(/^[A-Za-z0-9_-]{25,}$/.test(v))return "drive:"+v;return v;})()
   }));
   const normalizeTeams=rows=>{
     const a=(Array.isArray(rows)?rows:[]).map(r=>({id:first(r,["Team ID"]),name:first(r,["Team Name"])||first(r,["Team ID"]),budget:Number(first(r,["Initial Budget"])||5000000)})).filter(x=>x.id);
