@@ -148,10 +148,11 @@
     document.body?.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
   }
 
-  function configureGoogle(callback){
+  function configureGoogle(callback,emailHint=""){
     window.google.accounts.id.initialize({
       client_id:C.GOOGLE_CLIENT_ID,
-      callback
+      callback,
+      ...(emailHint ? {login_hint:emailHint} : {})
     });
   }
 
@@ -175,7 +176,7 @@
           showLoginError("Login was not authorized: "+(e.message||e));
           clear();
         }
-      });
+      },hint);
 
       // Clear Google's remembered auto-selection so the user can deliberately
       // choose another account. If an email was entered, Google uses it as a
