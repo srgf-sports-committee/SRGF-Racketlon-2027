@@ -120,8 +120,8 @@
       rejectRetry=reject;
     });
 
-    // Start Google Sheets only after the current page has had a chance
-    // to render the browser cache.
+    // IMPORTANT: let the page render the browser cache first.
+    // Google Sheets starts only after the current call stack has returned.
     const run=async()=>{
       while(!stopped){
         try{
@@ -142,9 +142,8 @@
   async function loadLiveFirstAll(){
     removeFreshness();
 
-    // CACHE-FIRST: return the cached snapshot before starting Google Sheets.
-    // The network request is scheduled for the next event-loop turn so the
-    // caller can render the cached data first.
+    // Cache-first: immediately show the last known-good Sheet snapshot.
+    // Then keep trying Google Sheets in the background every 15 seconds.
     const cached=readBrowserData();
     if(cached){
       const retry=startRetryUntilSuccess();
@@ -227,6 +226,6 @@
   window.SRGF={
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
     loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,
-    setStatus,removeFreshness
+    setStatus,removeFreshness,nav
   };
 })();
