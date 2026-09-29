@@ -212,6 +212,34 @@ document.addEventListener("DOMContentLoaded",async()=>{
   async function apiData(){
     let last;for(let i=0;i<2;i++){try{return await SRGF.live("data");}catch(e){last=e;if(i===0)await new Promise(r=>setTimeout(r,1200));}}throw last||new Error("Could not read live Google Sheet data");
   }
+  async function saveSaleDirect(sale){
+    let last;
+    for(let attempt=1;attempt<=2;attempt++){
+      try{
+        const body=new URLSearchParams({
+          action:"sellplayer",
+          token:SRGFAuth.token(),
+          playerId:String(sale.playerId),
+          teamId:String(sale.teamId),
+          amount:String(Number(sale.amount)),
+          notes:sale.notes||""
+        });
+        const r=await SRGF.fetchTimeout(API,{
+          method:"POST",
+          headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+          body
+        },20000);
+        const d=await r.json();
+        if(!d.ok)throw new Error(d.error||"Google Sheet save failed.");
+        return {ok:true,result:d.result||{}};
+      }catch(e){
+        last=e;
+        if(attempt<2)await new Promise(r=>setTimeout(r,1200));
+      }
+    }
+    return {ok:false,errorMessage:last?.message||String(last)};
+  }
+
   async function syncChanges(){
     const sales=[...state.pending],deletes=[...new Set((state.pendingDeletes||[]).map(String))];
     if(!sales.length&&!deletes.length)return {synced:0,deleted:0,remainingSales:0,remainingDeletes:0};
@@ -245,10 +273,22 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const sale={id:"LOCAL-"+Date.now(),playerId:pid,player:p.name,teamId:tid,team:t.name,amount:amount,time:new Date().toISOString(),notes:""};
     state.auction.push(sale);state.pending.push(sale);p.team=tid;p.amount=amount;saveCache();render();$("bidInput").value="";
     $("auctionMessage").textContent="Sold locally: "+p.name+" → "+t.name+" for "+money(amount)+". Saving to Google Sheet…";$("sellBtn").disabled=false;
-    const r=await syncChanges();
-    if(r.remainingSales===0){
-      stopRetry();$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Data saved to Google Sheet.";SRGF.setStatus("LIVE · Google Sheet · "+new Date().toLocaleTimeString());await load();}
-    else{$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Sheet sync is pending. The sale is safely kept in this browser and will retry until saved.";SRGF.setStatus("Sheet save failed · retrying every 15s",true);render();startRetry();}
+    // Save the sale directly through the protected sellplayer endpoint.
+    // This avoids depending on the bulk sync endpoint for the normal sale flow.
+    const r=await saveSaleDirect(sale);
+    if(r.ok){
+      state.pending=state.pending.filter(x=>String(x.playerId)!==String(sale.playerId));
+      saveCache();
+      stopRetry();
+      $("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Data saved to Google Sheet.";
+      SRGF.setStatus("LIVE · Google Sheet · "+new Date().toLocaleTimeString());
+      await load();
+    }else{
+      $("auctionMessage").textContent="Sold locally: "+p.name+" → "+t.name+" for "+money(amount)+". Google Sheet save failed: "+r.errorMessage+" — retrying every 15s.";
+      SRGF.setStatus("Sheet save failed · retrying every 15s",true);
+      render();
+      startRetry();
+    }
   }
   async function load(){
     if(loadPromise)return loadPromise;
