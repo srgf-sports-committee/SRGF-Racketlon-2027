@@ -234,25 +234,32 @@ function ensureLogsSheet_(ss){
   ss=ss || SpreadsheetApp.openById(SPREADSHEET_ID);
   let sh=ss.getSheetByName(SHEETS.logs);
   if(!sh) sh=ss.insertSheet(SHEETS.logs);
+  const headers=['Timestamp','User Name','Email','Role','Action','Target','Details'];
   if(sh.getLastRow()===0){
-    sh.getRange(1,1,1,5).setValues([['Timestamp','User','Role','Action','Details']]);
+    sh.getRange(1,1,1,headers.length).setValues([headers]);
     sh.setFrozenRows(1);
-  }else if(sh.getLastColumn()<5){
-    sh.getRange(1,1,1,5).setValues([['Timestamp','User','Role','Action','Details']]);
+  }else{
+    // Upgrade an older 5-column LOGS sheet without deleting its history.
+    if(sh.getLastColumn()<headers.length){
+      sh.insertColumnsAfter(sh.getLastColumn(),headers.length-sh.getLastColumn());
+    }
+    sh.getRange(1,1,1,headers.length).setValues([headers]);
     sh.setFrozenRows(1);
   }
   return sh;
 }
 
-function logWrite_(user,action,details,ss){
+function logWrite_(user,action,target,details,ss){
   // Logging must never block the underlying data write.
   try{
     const sh=ensureLogsSheet_(ss);
     sh.appendRow([
       new Date(),
       String(user?.name||user?.email||'Unknown user'),
+      String(user?.email||''),
       String(user?.role||''),
       String(action||''),
+      String(target||''),
       String(details||'')
     ]);
   }catch(err){
@@ -263,17 +270,23 @@ function logWrite_(user,action,details,ss){
 function getLogs_(limit){
   const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
   const sh=ss.getSheetByName(SHEETS.logs);
-  if(!sh || sh.getLastRow()<2) return {ok:true,logs:[],count:0};
+  if(!sh || sh.getLastRow()<2) return {ok:true,logs:[],count:0,total:0};
   const values=sh.getDataRange().getDisplayValues();
-  const headers=values[0].map(String);
+  const headers=values[0].map(x=>String(x).trim());
+  const index={};
+  headers.forEach((h,i)=>index[h.toLowerCase()]=i);
   const rows=values.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));
   const max=Math.max(1,Number(limit)||500);
   const selected=rows.slice(Math.max(0,rows.length-max)).reverse();
-  const logs=selected.map(r=>{
-    const o={};
-    headers.forEach((h,i)=>o[h]=r[i]??'');
-    return o;
-  });
+  const logs=selected.map(r=>({
+    timestamp:r[index['timestamp']]||'',
+    userName:r[index['user name']]||r[index['user']]||'',
+    email:r[index['email']]||'',
+    role:r[index['role']]||'',
+    action:r[index['action']]||'',
+    target:r[index['target']]||'',
+    details:r[index['details']]||''
+  }));
   return {ok:true,logs,count:logs.length,total:rows.length};
 }
 
@@ -335,7 +348,7 @@ function sellPlayer_(p,user){
     updatePlayerAssignment_(playersSheet,playerId,teamId,amount);
     SpreadsheetApp.flush();
     CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
-    logWrite_(user,'SELL_PLAYER',
+    logWrite_(user,'SELL_PLAYER',playerId,
       'Player '+playerId+' ('+(player['Name']||'')+') sold to '+teamId+' ('+(team['Team Name']||teamId)+') for ₹'+Math.round(amount).toLocaleString('en-IN')+'. Auction ID '+auctionId+'.',
       ss);
     return {playerId,teamId,amount,auctionId,alreadyExists:false};
@@ -354,7 +367,7 @@ function removePlayer_(p,user){
     const removedCount=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
     clearPlayerAssignment_(playersSheet,playerId);
     CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
-    logWrite_(user,'REMOVE_PLAYER',
+    logWrite_(user,'REMOVE_PLAYER',playerId,
       'Player '+playerId+' removed from Auction. '+removedCount+' auction row(s) deleted; player made available again.',
       ss);
     return {playerId,removedCount,availableAgain:true};
@@ -377,16 +390,16 @@ function syncChanges_(p,user){
       const exists=readSheet_(ss,SHEETS.auction).some(r=>String(r['Player ID']||'')===playerId);
       if(!exists){
         clearPlayerAssignment_(playersSheet,playerId);
-        logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. No existing AUCTION row was found; player assignment was cleared.',ss);
+        logWrite_(user,'REMOVE_PLAYER',playerId,'Player '+playerId+' removed from Auction during sync. No existing AUCTION row was found; player assignment was cleared.',ss);
         results.deleteAlready.push(playerId);
       }else{
         const removed=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
         clearPlayerAssignment_(playersSheet,playerId);
         if(removed>0){
-          logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. '+removed+' auction row(s) deleted; player made available again.',ss);
+          logWrite_(user,'REMOVE_PLAYER',playerId,'Player '+playerId+' removed from Auction during sync. '+removed+' auction row(s) deleted; player made available again.',ss);
           results.deleted.push(playerId);
         }else{
-          logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. No AUCTION row remained; player assignment was cleared.',ss);
+          logWrite_(user,'REMOVE_PLAYER',playerId,'Player '+playerId+' removed from Auction during sync. No AUCTION row remained; player assignment was cleared.',ss);
           results.deleteAlready.push(playerId);
         }
         CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
@@ -514,7 +527,7 @@ function saveFixtureResult_(p,user){
   scores.forEach(s=>{const game=Number(s.game);if(!Number.isInteger(game)||game<1||game>4)throw new Error('Invalid game number.');const c=headerIndexByPattern_(h,new RegExp('^(?:game|set)'+game));if(c<0)throw new Error('Game '+game+' column not found.');const p1=Number(s.player1),p2=Number(s.player2);if(!Number.isFinite(p1)||!Number.isFinite(p2)||p1<0||p2<0)throw new Error('Invalid scores for Game '+game+'.');sh.getRange(rowNumber,c).setValue(p1+' - '+p2);});
   CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.fixtures);
   const gameDetails=scores.map(s=>'Game '+Number(s.game)+': '+Number(s.player1)+' - '+Number(s.player2)).join('; ');
-  logWrite_(user,'UPDATE_FIXTURE_RESULT',
+  logWrite_(user,'UPDATE_FIXTURE_RESULT','FIXTURES row '+rowNumber,
     'FIXTURES row '+rowNumber+' updated. '+(winningTeam?'Winning Team: '+winningTeam+'. ':'')+(gameDetails||'No game scores supplied.') ,
     sh.getParent());
   return {ok:true,saved:true,rowNumber,winnerSaved:!!winningTeam,gamesSaved:scores.map(s=>Number(s.game))};
