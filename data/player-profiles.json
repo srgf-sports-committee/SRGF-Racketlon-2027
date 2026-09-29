@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-29T08:00:06.385685+00:00",
+  "generatedAt": "2026-09-29T08:21:29.722666+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -12,7 +12,7 @@
       "tennis": "Beginer",
       "pickle": "Never Played",
       "active": true,
-      "image": ""
+      "image": "assets/player-photos/P001.png"
     }
   ]
 }
