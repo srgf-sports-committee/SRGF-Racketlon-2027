@@ -429,20 +429,24 @@ function requireSheet_(ss,name){
 }
 
 function saveFixtureResult_(p){
-  const rowNumber=Number(p.rowNumber), scores=JSON.parse(p.scores||'[]');
-  if(!rowNumber || rowNumber<2) throw new Error('Invalid fixture row.');
+  const rowNumber=Number(p.rowNumber);
+  let scores=[];try{scores=JSON.parse(p.scores||'[]');}catch(_){throw new Error('Invalid game result data.');}
+  if(!Array.isArray(scores)) throw new Error('Invalid game result data.');
+  if(!rowNumber||rowNumber<2) throw new Error('Invalid fixture row.');
   const sh=SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(String(p.sheet||SHEETS.fixtures));
   if(!sh) throw new Error('FIXTURES sheet is missing.');
   const h=headers_(sh);
-  scores.forEach(s=>{
-    const c=header_(h,[`Game ${s.game}`,`Game${s.game}`]);
-    if(c<0) throw new Error(`Game ${s.game} column not found.`);
-    sh.getRange(rowNumber,c).setValue(`${s.player1} - ${s.player2}`);
-  });
+  const winningTeam=String(p.winningTeam||'').trim();
+  if(winningTeam){const c=headerIndexByPattern_(h,/^winningteam/);if(c<0)throw new Error('Winning Team column not found.');sh.getRange(rowNumber,c).setValue(winningTeam);}
+  scores.forEach(s=>{const game=Number(s.game);if(!Number.isInteger(game)||game<1||game>4)throw new Error('Invalid game number.');const c=headerIndexByPattern_(h,new RegExp('^(?:game|set)'+game));if(c<0)throw new Error('Game '+game+' column not found.');const p1=Number(s.player1),p2=Number(s.player2);if(!Number.isFinite(p1)||!Number.isFinite(p2)||p1<0||p2<0)throw new Error('Invalid scores for Game '+game+'.');sh.getRange(rowNumber,c).setValue(p1+' - '+p2);});
   CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.fixtures);
-  return {ok:true,saved:true,rowNumber};
+  return {ok:true,saved:true,rowNumber,winnerSaved:!!winningTeam,gamesSaved:scores.map(s=>Number(s.game))};
 }
 
+function headerIndexByPattern_(headers,pattern){
+  for(let i=0;i<headers.length;i++){const normalized=String(headers[i]||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'');if(pattern.test(normalized))return i+1;}
+  return -1;
+}
 function json_(obj){
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
