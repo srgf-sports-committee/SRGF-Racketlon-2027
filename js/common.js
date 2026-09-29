@@ -213,6 +213,7 @@
 
   document.addEventListener("DOMContentLoaded",()=>{
     removeFreshness();
+    startPageAutoRefresh();
     const brand=document.querySelector(".brand-wrap");
     if(brand){
       brand.style.cursor="pointer";
