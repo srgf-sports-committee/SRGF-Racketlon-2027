@@ -328,7 +328,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       render();
     });
     $("resultPlayerSportFilter")?.addEventListener("change", render);
-    $("resultPlayerTierFilter")?.addEventListener("change", render);
+    $("resultPlayerTierFilter")?.addEventListener("change", () => {
+      tierFilters[activeTab] = $("resultPlayerTierFilter")?.value || "";
+      render();
+    });
   }
 
   async function load() {
