@@ -82,11 +82,20 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function gameIdx(){
     const a=[];
     headers.forEach((h,i)=>{
-      // Accept Game 1 / Game1 as well as Game 1 (BD), Game 2 (LT), etc.
-      const m=norm(h).match(/^(?:game|set)([1-4])(?:$|[a-z])/);
-      if(m)a[+m[1]-1]=i;
+      // Match the actual Sheet headers, e.g. "Game 1 (BD)",
+      // "Game 2(LT)", "Game 3(TT)" and "Game 4(PB)".
+      const raw=String(h??"").trim();
+      const m=raw.match(/^(?:game|set)\\s*([1-4])(?:\\s|\\(|$)/i) || norm(h).match(/^(?:game|set)([1-4])/);
+      if(m)a[Number(m[1])-1]=i;
     });
     return a;
+  }
+
+  function parseScore(raw){
+    const s=String(raw??"").trim();
+    if(!s)return null;
+    const m=s.match(/^(\\d+)\\s*[-:–—]\\s*(\\d+)$/);
+    return m ? [m[1],m[2]] : null;
   }
   function done(r){
     // Match the reference behaviour: a result exists when any Game/Set,
@@ -456,7 +465,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const games=modal.querySelector(".games");
     const winnerOptions='<option value="">Select winning team</option>'+fixtureTeams.map(v=>'<option value="'+esc(v)+'"'+(norm(v)===norm(currentWinner)?" selected":"")+'>'+esc(v)+'</option>').join("");
     games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><select id="fixtureWinningTeam" class="fixture-winning-team-select">'+winnerOptions+'</select></label><div class="notice">Select the winning team from the two teams in this fixture. You can also update any one game, several games, or all '+gameCount+' games.</div></div>'+
-      gameLabels.map((label,index)=>{const g=index+1;const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\\d+)\\s*[-:]\\s*(\\d+)/);return '<div class="game"><h3>'+esc(label)+'</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
+      gameLabels.map((label,index)=>{const g=index+1;const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]??"").trim();const m=parseScore(raw);return '<div class="game"><h3>'+esc(label)+'</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[0]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label></div></div>';}).join("");
     modal.classList.remove("hidden");
     saveBtn.onclick=async()=>{
       if(saveBtn.disabled)return;
