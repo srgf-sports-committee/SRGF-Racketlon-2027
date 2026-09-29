@@ -228,9 +228,10 @@
 
   function startPageAutoRefresh(){
     const path=String(location.pathname||"").toLowerCase();
-    // Never auto-refresh pages where users enter/edit data or run the Auction.
-    if(/(?:^|\/)auction\.html$/.test(path))return;
-    if(/(?:^|\/)(?:fixtures|registration)\.html$/.test(path))return;
+    // Never auto-refresh pages where users enter/edit data, run the Auction,
+    // or are intentionally kept stable (Home, Important Links, Registration).
+    if(path === "/" || /(?:^|\/)index\.html$/.test(path))return;
+    if(/(?:^|\/)(?:auction|fixtures|registration|important-links)\.html$/.test(path))return;
 
     setInterval(()=>{
       // Keep any future edit modal safe even if a page is later added to the
