@@ -352,17 +352,29 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
   async function load(){
-    // Editors must use the live endpoint so result entry/saves are immediate.
+    // Editors use the same cache-first/live-retry loader as viewers.
+    // This prevents a temporary Google Sheets/API failure from blanking the
+    // fixture page. Saving a result still goes directly to Apps Script.
     if(roleCanEdit()){
       try{
-        const d=await live("fixtures");
-        const f=d.fixtures||[];
-        if(f.length){headers=Object.keys(f[0]);rows=f.map(o=>headers.map(h=>o[h]??""));}
-        else {headers=[];rows=[];}
+        const d=await loadLiveFirstDataset("fixtures");
+        const f=d.data||[];
+        headers=d.headers||Object.keys(f[0]||{});
+        rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
         render();
-        setStatus("LIVE editor data");
+        setStatus(d.live?"LIVE · Google Sheet":(d.source==="Browser cache"?"CACHED · retrying Google Sheet":"GitHub backup · retrying Google Sheet"),!d.live);
+
+        if(d.retryPromise){
+          d.retryPromise.then(latest=>{
+            const f2=latest.data?.fixtures||[];
+            headers=Object.keys(f2[0]||{});
+            rows=f2.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+            render();
+            setStatus("LIVE · Google Sheet");
+          }).catch(()=>{});
+        }
       }catch(e){
-        setStatus("Google Sheets unavailable",true);
+        setStatus("No fixture data available",true);
       }
       return;
     }
