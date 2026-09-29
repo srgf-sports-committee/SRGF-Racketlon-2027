@@ -79,23 +79,69 @@
     save(); render(); armExpiryTimer(); return session;
   }
 
+  function initGoogleButton(){
+    const holder=document.getElementById("googleSignInButton");
+    if(!holder || !window.google?.accounts?.id)return;
+    holder.innerHTML="";
+    window.google.accounts.id.renderButton(holder,{
+      type:"standard",
+      theme:"outline",
+      size:"large",
+      text:"signin_with",
+      shape:"rectangular",
+      width:260,
+      logo_alignment:"left"
+    });
+  }
+
+  function showLoginError(message){
+    const el=document.getElementById("srgfLoginError");
+    if(el){
+      el.textContent=message||"Login could not be started.";
+      el.classList.remove("hidden");
+    }else{
+      alert(message||"Login could not be started.");
+    }
+  }
+
   function renderLoginPanel(){
     const box=document.getElementById("authBox");
     if(!box)return;
+
     box.innerHTML=`
       <div class="srgf-login-panel" id="srgfLoginPanel">
         <div class="srgf-login-title">Admin / Writer Login</div>
-        <div class="srgf-login-help">Choose a Google account, or enter the email address you want to use.</div>
-        <input class="srgf-login-email" id="srgfLoginEmail" type="email" autocomplete="email" placeholder="Enter email address (optional)">
-        <button class="primary srgf-login-google" id="srgfLoginGoogle" type="button">Continue with Google</button>
+        <div class="srgf-login-help">Use your Google account. You can either choose an account already signed in, or use another Google account.</div>
+
+        <div class="srgf-login-section-label">Option 1 — Choose a signed-in account</div>
+        <div id="googleSignInButton" class="srgf-google-button"></div>
+
+        <div class="srgf-login-divider"><span>OR</span></div>
+
+        <div class="srgf-login-section-label">Option 2 — Use another Google account</div>
+        <input class="srgf-login-email" id="srgfLoginEmail" type="email" autocomplete="username" placeholder="Enter Google email address">
+        <button class="primary srgf-login-google" id="srgfLoginOther" type="button">Continue with this Google account</button>
+
         <button class="secondary srgf-login-cancel" id="srgfLoginCancel" type="button">Cancel</button>
-        <div class="srgf-login-note">Your email is only used as a hint. Google authentication still verifies the account, and access is checked against the ACCESS sheet.</div>
+        <div class="srgf-login-error hidden" id="srgfLoginError"></div>
+        <div class="srgf-login-note">The email address is only used to tell Google which account to use. Your Google password is entered on Google's secure sign-in page, not on this website. Access is still checked against the ACCESS sheet.</div>
       </div>`;
-    const email=document.getElementById("srgfLoginEmail");
-    document.getElementById("srgfLoginGoogle")?.addEventListener("click",()=>startLogin(email?.value||""));
+
     document.getElementById("srgfLoginCancel")?.addEventListener("click",render);
-    email?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();startLogin(email.value||"");}});
-    setTimeout(()=>email?.focus(),0);
+
+    document.getElementById("srgfLoginOther")?.addEventListener("click",()=>{
+      const email=document.getElementById("srgfLoginEmail")?.value||"";
+      startLogin(email);
+    });
+
+    document.getElementById("srgfLoginEmail")?.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){
+        e.preventDefault();
+        startLogin(e.currentTarget.value||"");
+      }
+    });
+
+    setTimeout(initGoogleButton,0);
   }
 
   function render(){
@@ -117,6 +163,13 @@
     document.body?.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
   }
 
+  function configureGoogle(callback){
+    window.google.accounts.id.initialize({
+      client_id:C.GOOGLE_CLIENT_ID,
+      callback
+    });
+  }
+
   async function startLogin(emailHint=""){
     try{
       if(!C?.GOOGLE_CLIENT_ID || C.GOOGLE_CLIENT_ID.includes("PASTE_")){
@@ -126,28 +179,40 @@
 
       const hint=String(emailHint||"").trim().toLowerCase();
       if(hint && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(hint)){
-        throw new Error("Please enter a valid email address.");
+        throw new Error("Please enter a valid Google email address.");
       }
 
-      window.google.accounts.id.initialize({
-        client_id:C.GOOGLE_CLIENT_ID,
-        login_hint:hint||undefined,
-        callback:async response=>{
-          try{
-            if(!response?.credential) throw new Error("Google did not return a login credential.");
-            await verifyToken(response.credential);
-          }catch(e){
-            alert("Login was not authorized: "+(e.message||e));
-            clear();
-          }
+      configureGoogle(async response=>{
+        try{
+          if(!response?.credential) throw new Error("Google did not return a login credential.");
+          await verifyToken(response.credential);
+        }catch(e){
+          showLoginError("Login was not authorized: "+(e.message||e));
+          clear();
         }
       });
 
-      // If an email was entered, Google uses it as a sign-in hint. It is
-      // NOT trusted for authorization; the returned Google credential is.
-      window.google.accounts.id.prompt();
+      // Clear Google's remembered auto-selection so the user can deliberately
+      // choose another account. If an email was entered, Google uses it as a
+      // hint; the resulting credential is still the only trusted identity.
+      try{window.google.accounts.id.disableAutoSelect()}catch(_){}
+
+      if(hint){
+        // A login hint directs Google to this email. If that account is not
+        // already signed in, Google can continue to its normal account
+        // authentication flow, including password/verification.
+        window.google.accounts.id.prompt(notification=>{
+          if(notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()){
+            // Fall back to Google's rendered account chooser.
+            const holder=document.getElementById("googleSignInButton");
+            if(holder)holder.scrollIntoView({block:"nearest"});
+          }
+        });
+      }else{
+        window.google.accounts.id.prompt();
+      }
     }catch(e){
-      alert(e.message||String(e));
+      showLoginError(e.message||String(e));
     }
   }
 
