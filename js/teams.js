@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const sales=auction.filter(a=>String(a["Team ID"]||a.teamId)===String(id));
       return `<div class="team-column"><div class="team-title">${esc(name)}</div>${sales.length?sales.map(a=>{
         const pid=a["Player ID"]||a.playerId, p=players.find(x=>String(x["Player ID"]||x.id)===String(pid));
-        return `<div class="team-player">${esc(a["Player Name"]||a.player||p?.Name||p?.name||pid)} <span>${money(a.Amount||a.amount)}</span></div>`;
+        return `<div class="team-player">${esc(a["Player Name"]||a.player||p?.Name||p?.name||pid)}</div>`;
       }).join(""):`<div class="team-player team-empty">No players</div>`}</div>`;
     }).join("") || `<div class="notice">Waiting for data from Google Sheets…</div>`;
   }
