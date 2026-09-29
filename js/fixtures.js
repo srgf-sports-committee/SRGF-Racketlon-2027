@@ -82,10 +82,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function gameIdx(){
     const a=[];
     headers.forEach((h,i)=>{
-      // Match the actual Sheet headers, e.g. "Game 1 (BD)",
-      // "Game 2(LT)", "Game 3(TT)" and "Game 4(PB)".
-      const raw=String(h??"").trim();
-      const m=raw.match(/^(?:game|set)\\s*([1-4])(?:\\s|\\(|$)/i) || norm(h).match(/^(?:game|set)([1-4])/);
+      // Normalize the Sheet header first. Examples:
+      // Game 1 (BD) -> game1bd
+      // Game 2(LT)  -> game2lt
+      // Game 3(TT)  -> game3tt
+      // Game 4(PB)  -> game4pb
+      const n=norm(h);
+      const m=n.match(/^(?:game|set)([1-4])/);
       if(m)a[Number(m[1])-1]=i;
     });
     return a;
@@ -94,9 +97,10 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function parseScore(raw){
     const s=String(raw??"").trim();
     if(!s)return null;
-    const m=s.match(/^(\\d+)\\s*[-:–—]\\s*(\\d+)$/);
+    const m=s.match(/^(\d+)\s*[-:]\s*(\d+)$/);
     return m ? [m[1],m[2]] : null;
   }
+
   function done(r){
     // Match the reference behaviour: a result exists when any Game/Set,
     // Winning Team or Points field contains a value.
