@@ -2,8 +2,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const $=SRGF.$, esc=SRGF.esc, money=SRGF.money;
   await SRGFAuth.init();
   if(!SRGFAuth.canAuction()){
-    SRGF.nav("home");
     $("auctionAccess")?.classList.remove("hidden");
+    $("auctionAccess").textContent="Auction access requires the authorized Admin Google account. If your login session expired, please log in again.";
+    SRGF.setStatus("Admin login required",true);
     return;
   }
   SRGF.nav("auction");

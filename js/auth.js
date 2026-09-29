@@ -96,5 +96,5 @@
     }
   }
 
-  window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear};
+  window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
 })();
