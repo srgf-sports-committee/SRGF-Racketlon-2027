@@ -1,0 +1,149 @@
+name: Sync Auction player profiles
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-player-profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build player profile backup
+        env:
+          API_URL: https://script.google.com/macros/s/AKfycbw_KN0QUEsck_ChkjZ3HAS82Xj9aVb9R6UBYJzoh26MSE-ydTJjVjUzn6vFXG3WQlFJsg/exec
+        run: |
+          python - <<'PY'
+          import base64, json, mimetypes, os, re, urllib.parse, urllib.request
+          from pathlib import Path
+
+          api = os.environ["API_URL"]
+          root = Path(".")
+          data_dir = root / "data"
+          photo_dir = root / "assets" / "player-photos"
+          data_dir.mkdir(parents=True, exist_ok=True)
+          photo_dir.mkdir(parents=True, exist_ok=True)
+
+          def get_json(url):
+              req = urllib.request.Request(url, headers={"User-Agent": "SRGF-Racketlon-Profile-Sync"})
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  return json.loads(r.read().decode("utf-8"))
+
+          def first(row, names):
+              for name in names:
+                  value = row.get(name)
+                  if value is not None and str(value).strip():
+                      return str(value).strip()
+              return ""
+
+          def drive_id(value):
+              value = str(value or "").strip()
+              if value.startswith("drive:"):
+                  return value[6:]
+              m = re.search(r"(?:id=|/d/|file/d/)([A-Za-z0-9_-]{20,})", value)
+              if m:
+                  return m.group(1)
+              if re.fullmatch(r"[A-Za-z0-9_-]{25,}", value):
+                  return value
+              return ""
+
+          def extension(mime):
+              return {
+                  "image/jpeg": ".jpg",
+                  "image/png": ".png",
+                  "image/webp": ".webp",
+                  "image/gif": ".gif",
+                  "image/bmp": ".bmp"
+              }.get(mime, ".jpg")
+
+          live = get_json(api + "?action=data")
+          rows = live.get("players") or []
+          profiles = []
+
+          for i, row in enumerate(rows):
+              pid = first(row, ["Player ID"]) or ("P" + str(i + 1).zfill(3))
+              name = first(row, ["Name"])
+              if not name:
+                  continue
+
+              profile = {
+                  "id": pid,
+                  "name": name,
+                  "category": first(row, ["Preferred Category"]),
+                  "badminton": first(row, ["Badminton Level"]),
+                  "tt": first(row, ["Table Tennis Level"]),
+                  "tennis": first(row, ["Lawn Tennis Level"]),
+                  "pickle": first(row, ["Pickle Ball Level"]),
+                  "active": first(row, ["Active"]).upper() != "FALSE",
+                  "image": ""
+              }
+
+              photo_value = first(row, [
+                  "Photo", "Photo URL", "Image URL", "Profile Photo",
+                  "Player Photo", "Image", "Profile Image", "Picture",
+                  "Photo Link", "Image Link"
+              ])
+              did = drive_id(photo_value)
+
+              if did:
+                  try:
+                      photo = get_json(api + "?action=photo&id=" + urllib.parse.quote(did))
+                      if photo.get("ok") and photo.get("base64"):
+                          mime = photo.get("mimeType") or "image/jpeg"
+                          ext = extension(mime)
+                          out = photo_dir / (pid + ext)
+                          out.write_bytes(base64.b64decode(photo["base64"]))
+                          profile["image"] = "assets/player-photos/" + out.name
+                  except Exception as exc:
+                      print("Photo sync failed for", pid, ":", exc)
+
+              elif photo_value.startswith(("http://", "https://")):
+                  try:
+                      req = urllib.request.Request(photo_value, headers={"User-Agent": "SRGF-Racketlon-Profile-Sync"})
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          mime = (r.headers.get_content_type() or "image/jpeg")
+                          ext = extension(mime)
+                          out = photo_dir / (pid + ext)
+                          out.write_bytes(r.read())
+                          profile["image"] = "assets/player-photos/" + out.name
+                  except Exception as exc:
+                      print("Direct photo sync failed for", pid, ":", exc)
+
+              if not profile["image"]:
+                  existing = sorted(photo_dir.glob(pid + ".*"))
+                  if existing:
+                      profile["image"] = "assets/player-photos/" + existing[0].name
+
+              profiles.append(profile)
+
+          output = {
+              "version": 1,
+              "generatedAt": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+              "source": "Google Sheet via Apps Script",
+              "players": profiles
+          }
+
+          (data_dir / "player-profiles.json").write_text(
+              json.dumps(output, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8"
+          )
+          print("Synced", len(profiles), "player profiles")
+          PY
+
+      - name: Commit profile backup when changed
+        run: |
+          git config user.name "SRGF Racketlon profile sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/player-profiles.json assets/player-photos
+          if git diff --cached --quiet; then
+            echo "No player profile changes."
+            exit 0
+          fi
+          git commit -m "Auto-sync Auction player profiles"
+          git push
