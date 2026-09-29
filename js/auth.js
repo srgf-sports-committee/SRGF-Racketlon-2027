@@ -79,6 +79,25 @@
     save(); render(); armExpiryTimer(); return session;
   }
 
+  function renderLoginPanel(){
+    const box=document.getElementById("authBox");
+    if(!box)return;
+    box.innerHTML=`
+      <div class="srgf-login-panel" id="srgfLoginPanel">
+        <div class="srgf-login-title">Admin / Writer Login</div>
+        <div class="srgf-login-help">Choose a Google account, or enter the email address you want to use.</div>
+        <input class="srgf-login-email" id="srgfLoginEmail" type="email" autocomplete="email" placeholder="Enter email address (optional)">
+        <button class="primary srgf-login-google" id="srgfLoginGoogle" type="button">Continue with Google</button>
+        <button class="secondary srgf-login-cancel" id="srgfLoginCancel" type="button">Cancel</button>
+        <div class="srgf-login-note">Your email is only used as a hint. Google authentication still verifies the account, and access is checked against the ACCESS sheet.</div>
+      </div>`;
+    const email=document.getElementById("srgfLoginEmail");
+    document.getElementById("srgfLoginGoogle")?.addEventListener("click",()=>startLogin(email?.value||""));
+    document.getElementById("srgfLoginCancel")?.addEventListener("click",render);
+    email?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();startLogin(email.value||"");}});
+    setTimeout(()=>email?.focus(),0);
+  }
+
   function render(){
     const box=document.getElementById("authBox");
     if(box){
@@ -87,7 +106,7 @@
         document.getElementById("logoutBtn")?.addEventListener("click",clear);
       }else{
         box.innerHTML=`<button class="secondary" id="loginBtn">Admin / Writer Login</button>`;
-        document.getElementById("loginBtn")?.addEventListener("click",startLogin);
+        document.getElementById("loginBtn")?.addEventListener("click",renderLoginPanel);
       }
     }
 
@@ -98,14 +117,21 @@
     document.body?.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
   }
 
-  async function startLogin(){
+  async function startLogin(emailHint=""){
     try{
       if(!C?.GOOGLE_CLIENT_ID || C.GOOGLE_CLIENT_ID.includes("PASTE_")){
         throw new Error("Google login is not configured yet.");
       }
       await loadGoogleIdentityServices();
+
+      const hint=String(emailHint||"").trim().toLowerCase();
+      if(hint && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(hint)){
+        throw new Error("Please enter a valid email address.");
+      }
+
       window.google.accounts.id.initialize({
         client_id:C.GOOGLE_CLIENT_ID,
+        login_hint:hint||undefined,
         callback:async response=>{
           try{
             if(!response?.credential) throw new Error("Google did not return a login credential.");
@@ -116,6 +142,9 @@
           }
         }
       });
+
+      // If an email was entered, Google uses it as a sign-in hint. It is
+      // NOT trusted for authorization; the returned Google credential is.
       window.google.accounts.id.prompt();
     }catch(e){
       alert(e.message||String(e));
