@@ -228,14 +228,17 @@
 
   function startPageAutoRefresh(){
     const path=String(location.pathname||"").toLowerCase();
-    // Never auto-refresh pages where users enter/edit data, run the Auction,
-    // or are intentionally kept stable (Home, Important Links, Registration).
-    if(path === "/" || /(?:^|\/)index\.html$/.test(path))return;
-    if(/(?:^|\/)(?:auction|fixtures|registration|important-links)\.html$/.test(path))return;
+
+    // Auto-refresh ONLY these three public pages.
+    const allowed =
+      /(?:^|\/)players\.html$/.test(path) ||
+      /(?:^|\/)results\.html$/.test(path) ||
+      /(?:^|\/)teams\.html$/.test(path);
+
+    if(!allowed)return;
 
     setInterval(()=>{
-      // Keep any future edit modal safe even if a page is later added to the
-      // automatic-refresh list.
+      // Do not interrupt an active edit/modal interaction.
       if(document.querySelector(".modal:not(.hidden), input:focus, textarea:focus, select:focus"))return;
       location.reload();
     },RETRY_MS);
