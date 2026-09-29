@@ -119,8 +119,27 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     // temporarily unavailable.
     let teams=uniqueValuesFromColumns(teamIndexes());
 
-    // If the fixture sheet uses one generic Team column, the code above still
-    // catches it. If there is no team column at all, fall back to TEAMS JSON.
+    // Many fixture sheets store the two teams in a Match column
+    // (for example "T1 Vs T2") rather than separate Team 1 / Team 2 columns.
+    // Extract both sides so every team present in the fixtures appears.
+    if(!teams.length){
+      const matchIndexes=[];
+      headers.forEach((h,i)=>{
+        const n=norm(h);
+        if(n==="match" || n==="fixture")matchIndexes.push(i);
+      });
+      const found=new Map();
+      rows.forEach(r=>matchIndexes.forEach(i=>{
+        const raw=String(r[i]??"").trim();
+        raw.split(/\s+(?:vs|v)\s+|\s+-\s+/i).map(x=>x.trim()).filter(Boolean).forEach(t=>{
+          const key=norm(t);
+          if(key&&!found.has(key))found.set(key,t);
+        });
+      }));
+      teams=[...found.values()];
+    }
+
+    // If the fixture sheet has no team names/IDs, fall back to TEAMS JSON.
     if(!teams.length && Array.isArray(window.__SRGF_TEAMS)){
       teams=window.__SRGF_TEAMS.map(t=>String(t.name||t.id||"").trim()).filter(Boolean);
     }
@@ -367,6 +386,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         const f=d.data||[];
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
+        try{
+          const td=await loadJsonDataset("teams");
+          window.__SRGF_TEAMS=(td.data||[]).map(x=>({
+            id:x.id??x["Team ID"]??x.TeamID??x.ID,
+            name:x.name??x["Team Name"]??x.TeamName??x.Name
+          }));
+        }catch(_){ }
         render();
         setStatus(d.live?"LIVE · Google Sheet":(d.source==="Browser cache"?"CACHED · retrying Google Sheet":"GitHub backup · retrying Google Sheet"),!d.live);
 
