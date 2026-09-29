@@ -5,13 +5,13 @@
  Writes require a Google ID token and ACCESS-sheet role.
 
  Sheets:
- PLAYERS, TEAMS, AUCTION, FIXTURES, RESULTS, CONFIG, ACCESS
+ PLAYERS, TEAMS, AUCTION, FIXTURES, RESULTS, CONFIG, ACCESS, LOGS
 *******************************************************/
 const SPREADSHEET_ID = '1RtyxyB3ZPjxD1uAw6mhOrcyjCWtGr0NnELyn_0kGlX4';
 
 const SHEETS = {
   players:'PLAYERS', teams:'TEAMS', auction:'AUCTION',
-  fixtures:'FIXTURES', results:'RESULTS', config:'CONFIG', access:'ACCESS'
+  fixtures:'FIXTURES', results:'RESULTS', config:'CONFIG', access:'ACCESS', logs:'LOGS'
 };
 
 function doGet(e){
@@ -23,6 +23,11 @@ function doGet(e){
       return json_({ok:true,email:user.email,role:user.role});
     }
     if(a==='photo') return json_(getPhoto_(e.parameter.id||''));
+    if(a==='logs'){
+      const user=authorize_(e.parameter.token||'', false);
+      if(user.role!=='ADMIN') throw new Error('Admin access required for Logs.');
+      return json_(getLogs_(500));
+    }
 
     // Every successful read carries the timestamp of the latest actual
     // Google-Sheet content change. This lets the website compare live data,
@@ -50,11 +55,11 @@ function doPost(e){
     if(a==='savefixtureresult'){
       const user=authorize_(token,true);
       if(user.role!=='ADMIN' && user.role!=='WRITER') throw new Error('Admin or Writer access required.');
-      return json_({ok:true,result:saveFixtureResult_(e.parameter)});
+      return json_({ok:true,result:saveFixtureResult_(e.parameter,user)});
     }
-    if(a==='sellplayer') return json_({ok:true,result:sellPlayer_(e.parameter)});
-    if(a==='removeplayer') return json_({ok:true,result:removePlayer_(e.parameter)});
-    if(a==='syncchanges') return json_(syncChanges_(e.parameter));
+    if(a==='sellplayer') return json_({ok:true,result:sellPlayer_(e.parameter,user)});
+    if(a==='removeplayer') return json_({ok:true,result:removePlayer_(e.parameter,user)});
+    if(a==='syncchanges') return json_(syncChanges_(e.parameter,user));
     throw new Error('Unknown POST action.');
   }catch(err){return json_({ok:false,error:String(err.message||err)})}
 }
@@ -220,10 +225,57 @@ function authorize_(token, write){
   if(String(j.iss||'')!=='https://accounts.google.com' && String(j.iss||'')!=='accounts.google.com') throw new Error('Invalid Google token issuer.');
   const role=(accessMap_()[String(j.email).toLowerCase()]||'USER').toUpperCase();
   if(write && role==='USER') throw new Error('This Google account is not authorized to edit.');
-  return {email:String(j.email).toLowerCase(),role,sub:j.sub||''};
+  return {email:String(j.email).toLowerCase(),name:String(j.name||j.given_name||j.email).trim(),role,sub:j.sub||''};
 }
 
-function sellPlayer_(p){
+function ensureLogsSheet_(ss){
+  ss=ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sh=ss.getSheetByName(SHEETS.logs);
+  if(!sh) sh=ss.insertSheet(SHEETS.logs);
+  if(sh.getLastRow()===0){
+    sh.getRange(1,1,1,5).setValues([['Timestamp','User','Role','Action','Details']]);
+    sh.setFrozenRows(1);
+  }else if(sh.getLastColumn()<5){
+    sh.getRange(1,1,1,5).setValues([['Timestamp','User','Role','Action','Details']]);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function logWrite_(user,action,details,ss){
+  // Logging must never block the underlying data write.
+  try{
+    const sh=ensureLogsSheet_(ss);
+    sh.appendRow([
+      new Date(),
+      String(user?.name||user?.email||'Unknown user'),
+      String(user?.role||''),
+      String(action||''),
+      String(details||'')
+    ]);
+  }catch(err){
+    console.error('Audit log write failed: '+String(err.message||err));
+  }
+}
+
+function getLogs_(limit){
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh=ss.getSheetByName(SHEETS.logs);
+  if(!sh || sh.getLastRow()<2) return {ok:true,logs:[],count:0};
+  const values=sh.getDataRange().getDisplayValues();
+  const headers=values[0].map(String);
+  const rows=values.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));
+  const max=Math.max(1,Number(limit)||500);
+  const selected=rows.slice(Math.max(0,rows.length-max)).reverse();
+  const logs=selected.map(r=>{
+    const o={};
+    headers.forEach((h,i)=>o[h]=r[i]??'');
+    return o;
+  });
+  return {ok:true,logs,count:logs.length,total:rows.length};
+}
+
+function sellPlayer_(p,user){
   const playerId=String(p.playerId||'').trim();
   const teamId=String(p.teamId||'').trim();
   const amount=Number(p.amount||0);
@@ -281,11 +333,14 @@ function sellPlayer_(p){
     updatePlayerAssignment_(playersSheet,playerId,teamId,amount);
     SpreadsheetApp.flush();
     CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
+    logWrite_(user,'SELL_PLAYER',
+      'Player '+playerId+' ('+(player['Name']||'')+') sold to '+teamId+' ('+(team['Team Name']||teamId)+') for ₹'+Math.round(amount).toLocaleString('en-IN')+'. Auction ID '+auctionId+'.',
+      ss);
     return {playerId,teamId,amount,auctionId,alreadyExists:false};
   }finally{lock.releaseLock();}
 }
 
-function removePlayer_(p){
+function removePlayer_(p,user){
   const playerId=String(p.playerId||'').trim();
   if(!playerId) throw new Error('Player ID is required.');
   const lock=LockService.getScriptLock();
@@ -297,11 +352,14 @@ function removePlayer_(p){
     const removedCount=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
     clearPlayerAssignment_(playersSheet,playerId);
     CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
+    logWrite_(user,'REMOVE_PLAYER',
+      'Player '+playerId+' removed from Auction. '+removedCount+' auction row(s) deleted; player made available again.',
+      ss);
     return {playerId,removedCount,availableAgain:true};
   }finally{lock.releaseLock();}
 }
 
-function syncChanges_(p){
+function syncChanges_(p,user){
   const sales=parseArrayPayload_(p.sales);
   const deletes=parseArrayPayload_(p.deletes!==undefined?p.deletes:p.removals);
   const results={saved:[],alreadySaved:[],deleted:[],deleteAlready:[],conflicts:[],errors:[]};
@@ -317,11 +375,18 @@ function syncChanges_(p){
       const exists=readSheet_(ss,SHEETS.auction).some(r=>String(r['Player ID']||'')===playerId);
       if(!exists){
         clearPlayerAssignment_(playersSheet,playerId);
+        logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. No existing AUCTION row was found; player assignment was cleared.',ss);
         results.deleteAlready.push(playerId);
       }else{
         const removed=deleteAuctionRowsForPlayer_(auctionSheet,playerId);
         clearPlayerAssignment_(playersSheet,playerId);
-        if(removed>0) results.deleted.push(playerId); else results.deleteAlready.push(playerId);
+        if(removed>0){
+          logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. '+removed+' auction row(s) deleted; player made available again.',ss);
+          results.deleted.push(playerId);
+        }else{
+          logWrite_(user,'REMOVE_PLAYER','Player '+playerId+' removed from Auction during sync. No AUCTION row remained; player assignment was cleared.',ss);
+          results.deleteAlready.push(playerId);
+        }
         CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.auction);
       }
     }catch(err){
@@ -343,7 +408,7 @@ function syncChanges_(p){
         if(existingTeam===teamId&&existingAmount===amount){results.alreadySaved.push(playerId);continue;}
         throw new Error('Player has already been auctioned to '+existingTeam+' for ₹'+Math.round(existingAmount).toLocaleString('en-IN')+'.');
       }
-      const result=sellPlayer_({playerId,teamId,amount,notes:s.notes||''});
+      const result=sellPlayer_({playerId,teamId,amount,notes:s.notes||''},user);
       if(result.alreadyExists) results.alreadySaved.push(playerId); else results.saved.push(playerId);
     }catch(err){
       results.errors.push({type:'sellPlayer',playerId:s&&s.playerId?String(s.playerId):'',error:String(err.message||err)});
@@ -434,7 +499,7 @@ function requireSheet_(ss,name){
   return sh;
 }
 
-function saveFixtureResult_(p){
+function saveFixtureResult_(p,user){
   const rowNumber=Number(p.rowNumber);
   let scores=[];try{scores=JSON.parse(p.scores||'[]');}catch(_){throw new Error('Invalid game result data.');}
   if(!Array.isArray(scores)) throw new Error('Invalid game result data.');
@@ -446,6 +511,10 @@ function saveFixtureResult_(p){
   if(winningTeam){const c=headerIndexByPattern_(h,/^winningteam/);if(c<0)throw new Error('Winning Team column not found.');sh.getRange(rowNumber,c).setValue(winningTeam);}
   scores.forEach(s=>{const game=Number(s.game);if(!Number.isInteger(game)||game<1||game>4)throw new Error('Invalid game number.');const c=headerIndexByPattern_(h,new RegExp('^(?:game|set)'+game));if(c<0)throw new Error('Game '+game+' column not found.');const p1=Number(s.player1),p2=Number(s.player2);if(!Number.isFinite(p1)||!Number.isFinite(p2)||p1<0||p2<0)throw new Error('Invalid scores for Game '+game+'.');sh.getRange(rowNumber,c).setValue(p1+' - '+p2);});
   CacheService.getScriptCache().remove('SRGF_READ_V3_'+SHEETS.fixtures);
+  const gameDetails=scores.map(s=>'Game '+Number(s.game)+': '+Number(s.player1)+' - '+Number(s.player2)).join('; ');
+  logWrite_(user,'UPDATE_FIXTURE_RESULT',
+    'FIXTURES row '+rowNumber+' updated. '+(winningTeam?'Winning Team: '+winningTeam+'. ':'')+(gameDetails||'No game scores supplied.') ,
+    sh.getParent());
   return {ok:true,saved:true,rowNumber,winnerSaved:!!winningTeam,gamesSaved:scores.map(s=>Number(s.game))};
 }
 
