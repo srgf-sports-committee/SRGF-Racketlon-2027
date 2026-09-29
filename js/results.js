@@ -238,8 +238,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const rack = isRacketlon(sportName);
       if (activeTab === "racketlon" && !rack) return;
       if (activeTab === "nonRacketlon" && rack) return;
-      if (sport && norm(sportName) !== sport) return;
-      if (tier && norm(tierName) !== tier) return;
+      if (sport && norm(sportName) !== norm(sport)) return;
+      if (tier && norm(tierName) !== norm(tier)) return;
 
       const a = p1 ? ensure(sportName, tierName, p1) : null;
       const b = p2 ? ensure(sportName, tierName, p2) : null;
