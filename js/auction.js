@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
 
   const CACHE_KEY="SRGF_RACKETLON_2027_AUCTION_STATE_V2";
   const API=SRGF_CONFIG.API_URL;
+  const STATIC_PROFILE_URL="data/player-profiles.json";
   const REFRESH_MS=15000;
   let state={players:[],teams:[],auction:[],config:{},pending:[],pendingDeletes:[]};
   let loadPromise=null,autoBusy=false,timer=null;
@@ -40,6 +41,40 @@ document.addEventListener("DOMContentLoaded",async()=>{
 
   function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({...state,savedAt:new Date().toISOString()}));}catch(_){}}
   function readCache(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||"null");return c&&Array.isArray(c.auction)?c:null;}catch(_){return null;}}
+  function profileMap(rows){
+    const m=new Map();
+    (Array.isArray(rows)?rows:[]).forEach(p=>{if(p&&p.id)m.set(String(p.id),p);});
+    return m;
+  }
+  async function loadStaticProfiles(){
+    try{
+      const r=await fetch(STATIC_PROFILE_URL+"?v="+Date.now(),{cache:"no-store"});
+      if(!r.ok)throw new Error("GitHub player profile backup unavailable");
+      const d=await r.json();
+      return Array.isArray(d?.players)?d.players:[];
+    }catch(_){return [];}
+  }
+  function mergeStaticProfiles(staticPlayers,allowAdd){
+    const profiles=profileMap(staticPlayers);
+    if(!profiles.size)return false;
+    const existing=profileMap(state.players);
+    state.players=state.players.map(p=>{
+      const s=profiles.get(String(p.id));
+      if(!s)return p;
+      const out={...p};
+      ["name","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
+        if(!String(out[k]??"").trim()&&String(s[k]??"").trim())out[k]=s[k];
+      });
+      if(!out.active&&s.active===true)out.active=true;
+      return out;
+    });
+    if(allowAdd){
+      profiles.forEach((s,id)=>{
+        if(!existing.has(id)&&s.name)state.players.push({...s});
+      });
+    }
+    return true;
+  }
   function applyCache(){
     const c=readCache();if(!c)return false;
     state={players:Array.isArray(c.players)?c.players:[],teams:Array.isArray(c.teams)?c.teams:[],auction:Array.isArray(c.auction)?c.auction:[],config:c.config||{},pending:Array.isArray(c.pending)?c.pending:[],pendingDeletes:Array.isArray(c.pendingDeletes)?c.pendingDeletes:[]};
@@ -120,9 +155,19 @@ document.addEventListener("DOMContentLoaded",async()=>{
     document.querySelectorAll(".remove-sale").forEach(b=>b.addEventListener("click",()=>removeSale(b.dataset.playerId)));
   }
   function mergeLive(players,teams,auction){
+    const oldPlayers=state.players||[];
+    const oldMap=profileMap(oldPlayers);
     const deleted=new Set((state.pendingDeletes||[]).map(String)),remote=auction.filter(a=>!deleted.has(String(a.playerId))),keys=new Set(remote.map(key));
     const pending=(state.pending||[]).filter(a=>!keys.has(key(a)));
-    state.players=players;state.teams=teams;state.auction=remote.concat(pending);state.pending=pending;
+    state.players=players.map(p=>{
+      const old=oldMap.get(String(p.id));
+      const out={...p};
+      ["name","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
+        if(!String(out[k]??"").trim()&&String(old?.[k]??"").trim())out[k]=old[k];
+      });
+      return out;
+    });
+    state.teams=teams;state.auction=remote.concat(pending);state.pending=pending;
   }
   async function apiData(){
     let last;for(let i=0;i<2;i++){try{return await SRGF.live("data");}catch(e){last=e;if(i===0)await new Promise(r=>setTimeout(r,1200));}}throw last||new Error("Could not read live Google Sheet data");
@@ -168,14 +213,29 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(loadPromise)return loadPromise;
     loadPromise=(async()=>{
       const hadCache=applyCache();if(hadCache)SRGF.setStatus("Refreshing… showing saved auction data");
+      const staticProfiles=await loadStaticProfiles();
+      if(staticProfiles.length){
+        mergeStaticProfiles(staticProfiles,!hadCache);
+        saveCache();
+        render();
+        if(hadCache)SRGF.setStatus("Refreshing… saved data + GitHub profile backup");
+      }
       try{
         SRGF.setStatus("Refreshing from Google Sheet…");
         const d=await apiData();state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
         mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction));render();saveCache();
         const pending=state.pending.length+state.pendingDeletes.length;SRGF.setStatus(pending?"LIVE · Sheet + "+pending+" pending":"LIVE · Google Sheet · "+new Date().toLocaleTimeString(),!!pending);
       }catch(e){
-        if(hadCache){render();SRGF.setStatus("OFFLINE · using current saved state",true);$("auctionMessage").textContent="Live Sheet refresh failed. Showing the latest saved auction state. Nothing has been reset.";}
-        else{SRGF.setStatus(e.message||String(e),true);$("auctionMessage").textContent=(e.message||String(e))+" — no saved auction state is available yet.";}
+        if(staticProfiles.length){
+          mergeStaticProfiles(staticProfiles,!hadCache);
+          render();
+          saveCache();
+        }
+        if(hadCache||staticProfiles.length){
+          SRGF.setStatus("OFFLINE · using saved + GitHub profile data",true);
+          $("auctionMessage").textContent="Live Sheet refresh failed. Existing auction data was preserved; player profile information is being served from the browser cache/GitHub backup. Background sync will retry every 15 seconds.";
+        }
+        else{SRGF.setStatus(e.message||String(e),true);$("auctionMessage").textContent=(e.message||String(e))+" — no saved auction state or GitHub player profile backup is available yet.";}
       }finally{loadPromise=null;}
     })();return loadPromise;
   }
