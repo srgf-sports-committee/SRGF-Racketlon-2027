@@ -401,7 +401,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       : `<tr><td colspan="${headers.length+(roleCanEdit()?1:0)||1}">No fixtures found.</td></tr>`;
 
     $("fixtureMessage").textContent=`Showing ${filtered.length} of ${rows.length} fixture(s).`;
-    document.querySelectorAll(".edit-result").forEach(b=>b.onclick=()=>openModal(+b.dataset.i));
+    document.querySelectorAll(".edit-result").forEach(b=>b.onclick=()=>openModal(Number(b.dataset.i)));
   }
 
   function openModal(i){
@@ -459,12 +459,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       gameLabels.map((label,index)=>{const g=index+1;const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\\d+)\\s*[-:]\\s*(\\d+)/);return '<div class="game"><h3>'+esc(label)+'</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
     modal.classList.remove("hidden");
     saveBtn.onclick=async()=>{
+      if(saveBtn.disabled)return;
       const scores=[];
       for(let g=1;g<=gameCount;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for "+gameLabels[g-1]+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
       const winner=modal.querySelector("#fixtureWinningTeam")?.value.trim()||"";
       if(!winner&&!scores.length){alert("Enter at least one field to update.");return;}
       // Show the result immediately. Do not wait for Google Sheets.
       // Keep it as a local pending change until Apps Script confirms the write.
+      saveBtn.disabled=true;
+      saveBtn.textContent="Saving...";
       pendingResults[String(i)]={scores,winningTeam:winner,savedAt:Date.now()};
       savePending();
       applyPending();
@@ -495,6 +498,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         setStatus("✓ Result saved to Google Sheets",false);
         await load();
       }catch(e){
+        saveBtn.disabled=false;
+        saveBtn.textContent=editing?"Update Result":"Save Result";
         setStatus("Result shown locally · Google Sheets save pending",true);
       }
     };
