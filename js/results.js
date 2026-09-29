@@ -122,6 +122,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     ];
   }
 
+  // Convert live/cached Apps Script data into the row format used by Results.
+  // A successful empty Fixtures response remains empty; it is not treated as failure.
+  function applyLiveData_(data) {
+    const rawFixtures = data?.fixtures ?? [];
+    const rawTeams = data?.teams ?? [];
+
+    if (Array.isArray(rawFixtures)) {
+      if (rawFixtures.length && Array.isArray(rawFixtures[0])) {
+        fixtureHeaders = Array.isArray(data?.fixturesHeaders) ? data.fixturesHeaders.map(String) : [];
+        fixtureRows = rawFixtures.map(r => Array.isArray(r) ? r : []);
+      } else {
+        const converted = headersFromObjects(rawFixtures);
+        fixtureHeaders = converted.headers.map(String);
+        fixtureRows = converted.rows;
+      }
+    } else if (rawFixtures && typeof rawFixtures === 'object') {
+      const headers = Array.isArray(rawFixtures.headers) ? rawFixtures.headers.map(String) : [];
+      const rows = Array.isArray(rawFixtures.rows) ? rawFixtures.rows : [];
+      if (headers.length) {
+        fixtureHeaders = headers;
+        fixtureRows = rows.map(r => Array.isArray(r) ? r : []);
+      } else if (rows.length) {
+        const converted = headersFromObjects(rows);
+        fixtureHeaders = converted.headers.map(String);
+        fixtureRows = converted.rows;
+      } else {
+        fixtureHeaders = [];
+        fixtureRows = [];
+      }
+    } else {
+      fixtureHeaders = [];
+      fixtureRows = [];
+    }
+
+    teamsData = Array.isArray(rawTeams) ? rawTeams : [];
+  }
+
   function capturePlayerScoreFilterState() {
     const sport = String($("resultPlayerSportFilter")?.value || "").trim();
     const tier = String($("resultPlayerTierFilter")?.value || "").trim();
