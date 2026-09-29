@@ -429,7 +429,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const editing=done(r);
     modal.querySelector(".modal-title").textContent=p1+" vs "+p2;
     const saveBtn=modal.querySelector("#saveFixtureBtn");
-    if(saveBtn)saveBtn.textContent=editing?"Update Result":"Save Result";
+    if(saveBtn){
+      // Reset the button every time the modal is opened. A previous save
+      // temporarily disables it while the Google Sheets request is running;
+      // that disabled state must not carry over to the next edit.
+      saveBtn.disabled=false;
+      saveBtn.textContent=editing?"Update Result":"Save Result";
+    }
     const winningTeamIndex=findHeaderIndex([/^winningteam/]);
     const currentWinner=winningTeamIndex>=0?String(r[winningTeamIndex]??"").trim():"";
     let teamValues=[];
