@@ -219,7 +219,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const p=state.players.find(x=>String(x.id)===String(pid));if(p){p.team="";p.amount=0;}
     saveCache();render();$("auctionMessage").textContent=sale.player+" removed locally. Saving the change to Google Sheet…";
     const r=await syncChanges();if(r.remainingDeletes===0){$("auctionMessage").textContent=sale.player+" removed successfully. The player is available to auction again.";SRGF.setStatus("LIVE · Google Sheet · "+new Date().toLocaleTimeString());}
-    else{$("auctionMessage").textContent=sale.player+" removed locally. Sheet unavailable — the removal is safely queued and will retry automatically.";SRGF.setStatus("LIVE · Sheet + "+r.remainingDeletes+" pending delete",true);}render();
+    else{$("auctionMessage").textContent=sale.player+" removed locally. Sheet unavailable — the removal is safely queued and will retry until saved.";SRGF.setStatus("Sheet update failed · retrying every 15s",true);startRetry();}render();
   }
   async function sell(){
     const pid=$("playerSelect").value,tid=$("teamSelect").value;validateBid();const amount=bidAmount();
@@ -230,8 +230,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
     state.auction.push(sale);state.pending.push(sale);p.team=tid;p.amount=amount;saveCache();render();$("bidInput").value="";
     $("auctionMessage").textContent="Sold locally: "+p.name+" → "+t.name+" for "+money(amount)+". Saving to Google Sheet…";$("sellBtn").disabled=false;
     const r=await syncChanges();
-    if(r.remainingSales===0){$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Data saved to Google Sheet.";SRGF.setStatus("LIVE · Google Sheet · "+new Date().toLocaleTimeString());await load();}
-    else{$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Sheet sync is pending. The sale is safely kept in this browser and will retry automatically.";SRGF.setStatus("LIVE · Sheet sync pending · auto-retrying every 15s",true);render();}
+    if(r.remainingSales===0){
+      stopRetry();$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Data saved to Google Sheet.";SRGF.setStatus("LIVE · Google Sheet · "+new Date().toLocaleTimeString());await load();}
+    else{$("auctionMessage").textContent="Sold: "+p.name+" → "+t.name+" for "+money(amount)+". Sheet sync is pending. The sale is safely kept in this browser and will retry until saved.";SRGF.setStatus("Sheet save failed · retrying every 15s",true);render();startRetry();}
   }
   async function load(){
     if(loadPromise)return loadPromise;
@@ -254,6 +255,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
         render();saveCache();
         const pending=state.pending.length+state.pendingDeletes.length;SRGF.setStatus(pending?"LIVE · Sheet + "+pending+" pending":"LIVE · Google Sheet · "+new Date().toLocaleTimeString(),!!pending);
       }catch(e){
+        startRetry();
         if(staticProfiles.length){
           mergeStaticProfiles(staticProfiles,!hadCache);
           render();
@@ -267,20 +269,62 @@ document.addEventListener("DOMContentLoaded",async()=>{
       }finally{loadPromise=null;}
     })();return loadPromise;
   }
-  async function auto(){
-    if(autoBusy)return;autoBusy=true;
-    try{if(state.pending.length||state.pendingDeletes.length){const r=await syncChanges();const n=r.remainingSales+r.remainingDeletes;if(n)SRGF.setStatus("AUTO-SYNC · "+n+" pending · retrying",true);}await load();}finally{autoBusy=false;}
+  function stopRetry(){
+    if(retryTimer){clearInterval(retryTimer);retryTimer=null;}
+    retryBusy=false;
   }
-  function startAuto(){if(timer)clearInterval(timer);timer=setInterval(()=>{if(!document.hidden)auto();},REFRESH_MS);}
+  function startRetry(){
+    if(retryTimer)return;
+    retryTimer=setInterval(async()=>{
+      if(document.hidden||retryBusy)return;
+      retryBusy=true;
+      try{
+        if(state.pending.length||state.pendingDeletes.length){
+          const r=await syncChanges();
+          const n=r.remainingSales+r.remainingDeletes;
+          if(n){
+            SRGF.setStatus("RETRYING · "+n+" pending change(s)",true);
+            return;
+          }
+        }
+        await load();
+        stopRetry();
+      }finally{retryBusy=false;}
+    },15000);
+  }
+  function startAuto(){if(timer){clearInterval(timer);timer=null;}}
+
 
   $("bidInput")?.addEventListener("input",validateBid);$("bidInput")?.addEventListener("blur",validateBid);
   $("playerSelectDisplay")?.addEventListener("click",()=>{const open=$("playerDropdown").classList.contains("hidden");$("playerDropdown").classList.toggle("hidden",!open);$("playerSelectDisplay").setAttribute("aria-expanded",String(open));if(open){playerOptions($("playerDropdownSearch").value);setTimeout(()=>$("playerDropdownSearch").focus(),0);}});
   $("playerDropdownSearch")?.addEventListener("input",()=>playerOptions($("playerDropdownSearch").value));
-  $("playerSelect")?.addEventListener("change",()=>{$("teamSelect").value="";const p=state.players.find(x=>String(x.id)===String($("playerSelect").value));$("playerSelectDisplay").textContent=p?p.name+" — "+p.category:"Select Player";playerOptions("");renderPlayerDetails(p);});
+  $("playerSelect")?.addEventListener("change",async()=>{
+    $("teamSelect").value="";
+    const p=state.players.find(x=>String(x.id)===String($("playerSelect").value));
+    $("playerSelectDisplay").textContent=p?p.name+" — "+p.category:"Select Player";
+    playerOptions("");renderPlayerDetails(p);
+    // Refresh live data whenever a player is selected, while preserving the
+    // selected player/profile from cache or GitHub if the Sheet is slow.
+    await load();
+  });
   $("sellBtn")?.addEventListener("click",sell);
   $("refreshBtn")?.addEventListener("click",()=>load());
   $("testSheetBtn")?.addEventListener("click",async()=>{const b=$("testSheetBtn");b.disabled=true;try{await SRGF.live("ping");$("auctionMessage").textContent="Google Apps Script connection is working. Backend is reachable.";SRGF.setStatus("LIVE · Apps Script reachable · "+new Date().toLocaleTimeString());}catch(e){$("auctionMessage").textContent="Apps Script connection failed: "+(e.message||e);SRGF.setStatus("Sheet connection failed",true);}finally{b.disabled=false;}});
-  $("syncBtn")?.addEventListener("click",async()=>{const b=$("syncBtn");b.disabled=true;try{const r=await syncChanges(),n=r.remainingSales+r.remainingDeletes;if(n){$("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced. "+n+" change(s) still pending.";SRGF.setStatus("LIVE · Sheet + "+n+" pending · auto-retrying every 15s",true);render();}else{$("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced to Google Sheets successfully. Verifying…";await load();}}finally{b.disabled=false;}});
+  $("syncBtn")?.addEventListener("click",async()=>{
+    const b=$("syncBtn");b.disabled=true;
+    try{
+      const r=await syncChanges(),n=r.remainingSales+r.remainingDeletes;
+      if(n){
+        $("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced. "+n+" change(s) still pending.";
+        SRGF.setStatus("Sheet update failed · retrying every 15s",true);
+        render();startRetry();
+      }else{
+        stopRetry();
+        $("auctionMessage").textContent=r.synced+" sale(s) and "+r.deleted+" removal(s) synced to Google Sheets successfully. Refreshing…";
+        await load();
+      }
+    }finally{b.disabled=false;}
+  });
   document.addEventListener("click",e=>{
     const wrap=$("playerSelectDisplay")?.closest(".player-combobox");if(wrap&&!wrap.contains(e.target)){$("playerDropdown").classList.add("hidden");$("playerSelectDisplay").setAttribute("aria-expanded","false");}
     if(e.target?.id==="photoZoomBtn"){const z=e.target,m=document.createElement("div");m.className="photo-modal";m.innerHTML='<button class="photo-modal-close">×</button><img src="'+esc(z.dataset.photoSrc||"")+'" alt="'+esc(z.dataset.photoName||"Player photo")+'"><div class="photo-modal-caption">'+esc(z.dataset.photoName||"")+"</div>";document.body.appendChild(m);m.addEventListener("click",ev=>{if(ev.target===m||ev.target.classList.contains("photo-modal-close"))m.remove();});}
@@ -291,5 +335,5 @@ document.addEventListener("DOMContentLoaded",async()=>{
     a.href=u;a.download="SRGF_Racketlon_2027_Auction_"+new Date().toISOString().replace(/[:.]/g,"-").slice(0,19)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
   });
 
-  await load();startAuto();
+  await load();
 });
