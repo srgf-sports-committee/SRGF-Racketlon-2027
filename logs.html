@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SRGF Racketlon 2027 — Logs</title>
+<link rel="stylesheet" href="css/srgf.css">
+</head>
+<body data-page="logs">
+<header class="topbar">
+  <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
+  <nav class="page-nav"></nav>
+  <div class="header-actions"><div id="status" class="status">Loading…</div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
+</header>
+<main>
+<section id="logs">
+<h1>Logs</h1>
+<div id="logsAccess" class="permission-note hidden">Logs are restricted to Admin users.</div>
+<div class="card" id="logsCard">
+<div class="logs-toolbar">
+  <div>
+    <label for="logsActionFilter"><strong>Filter by Action</strong></label>
+    <select id="logsActionFilter"><option value="">All Actions</option></select>
+  </div>
+  <div>
+    <label for="logsUserFilter"><strong>Filter by User</strong></label>
+    <select id="logsUserFilter"><option value="">All Users</option></select>
+  </div>
+  <button class="secondary" id="logsRefreshBtn" type="button">↻ Refresh Logs</button>
+</div>
+<div class="notice" id="logsMessage">Loading logs…</div>
+<div class="table-wrap">
+<table id="logsTable">
+<thead><tr><th>Date / Time</th><th>User</th><th>Email</th><th>Role</th><th>Action</th><th>Target</th><th>Details</th></tr></thead>
+<tbody id="logsBody"></tbody>
+</table>
+</div>
+</div>
+</section>
+</main>
+<script src="js/config.js?v=20260929-auth1"></script>
+<script src="js/common.js?v=20260929-auto15"></script>
+<script src="js/auth.js?v=20260929-auth3"></script>
+<script src="js/logs.js?v=20260929-logs1"></script>
+</body>
+</html>
