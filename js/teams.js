@@ -1,10 +1,37 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {loadJsonDataset,live,$,esc,money,setStatus,loadJsonFreshness,nav}=SRGF; SRGFAuth.init(); nav("teams");
-  function render(teams,auction,players,source,error=false){
-    $("teamsBoard").innerHTML=teams.slice(0,4).map(t=>{const id=t["Team ID"]||t.id||"",name=t["Team Name"]||t.name||id,sales=auction.filter(a=>String(a["Team ID"]||a.teamId)===String(id));return `<div class="team-column"><div class="team-title">${esc(name)}</div>${sales.length?sales.map(a=>{const pid=a["Player ID"]||a.playerId,p=players.find(x=>String(x["Player ID"]||x.id)===String(pid));return `<div class="team-player">${esc(a["Player Name"]||a.player||p?.Name||p?.name||pid)} <span>${money(a.Amount||a.amount)}</span></div>`}).join(""):`<div class="team-player team-empty">No players</div>`}</div>`;}).join("")||`<div class="notice">No team data available.</div>`; setStatus(source,error);
-  }
-  let shown=false;
-  try{const [td,ad,pd]=await Promise.all([loadJsonDataset("teams"),loadJsonDataset("auction"),loadJsonDataset("players")]);render(td.data||[],ad.data||[],pd.data||[],"JSON data");await loadJsonFreshness();shown=true;}catch(_){}
-  try{const d=await live("data");render(d.teams||[],d.auction||[],d.players||[],"LIVE · Google Sheet");}catch(e){if(!shown)setStatus("JSON data unavailable",true);}
-  $("refreshBtn")?.addEventListener("click",()=>location.reload()); setInterval(()=>{if(!document.hidden)location.reload()},SRGF_CONFIG.REFRESH_MS);
+  const {loadLiveFirstAll,$,esc,money,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("teams");
+  try{
+    const liveData=await loadLiveFirstAll();
+    let teams=[], auction=[], players=[];
+    if(liveData.live){
+      teams=liveData.data.teams||[]; auction=liveData.data.auction||[]; players=liveData.data.players||[];
+      showLiveFreshness(liveData.updatedAt);
+    }else{
+      const [td,ad,pd]=await Promise.all([SRGF.loadJsonDataset("teams"),SRGF.loadJsonDataset("auction"),SRGF.loadJsonDataset("players")]);
+      teams=td.data||[]; auction=ad.data||[]; players=pd.data||[];
+      await loadJsonFreshness();
+    }
+    $("teamsBoard").innerHTML=teams.slice(0,4).map(t=>{
+      const id=t["Team ID"]||t.id||"", name=t["Team Name"]||t.name||id;
+      const sales=auction.filter(a=>String(a["Team ID"]||a.teamId)===String(id));
+      return `<div class="team-column"><div class="team-title">${esc(name)}</div>${sales.length?sales.map(a=>{
+        const pid=a["Player ID"]||a.playerId, p=players.find(x=>String(x["Player ID"]||x.id)===String(pid));
+        return `<div class="team-player">${esc(a["Player Name"]||a.player||p?.Name||p?.name||pid)} <span>${money(a.Amount||a.amount)}</span></div>`;
+      }).join(""):`<div class="team-player team-empty">No players</div>`}</div>`;
+    }).join("") || `<div class="notice">No team data available.</div>`;
+    $("exportTeamsBtn")?.addEventListener("click",()=>{
+      const rows=[["Team","Player ID","Player Name","Amount"]];
+      auction.forEach(a=>rows.push([a["Team Name"]||a.team||"",a["Player ID"]||a.playerId||"",a["Player Name"]||a.player||"",a.Amount||a.amount||0]));
+      downloadCSV(rows,"SRGF_Racketlon_2027_Teams.csv");
+    });
+    await loadJsonFreshness();
+    setStatus(liveData.live?"LIVE · Google Sheet":"JSON data · live unavailable",!liveData.live);
+  }catch(e){setStatus("JSON data unavailable",true);}
+  if(liveData?.retryPromise && !sessionStorage.getItem("SRGF_RETRY_RELOAD_DONE")){ liveData.retryPromise.then(()=>{ sessionStorage.setItem("SRGF_RETRY_RELOAD_DONE","1"); location.reload(); }).catch(()=>{}); }
+  else if(sessionStorage.getItem("SRGF_RETRY_RELOAD_DONE")){ sessionStorage.removeItem("SRGF_RETRY_RELOAD_DONE"); }
+  $("refreshBtn")?.addEventListener("click",()=>location.reload());
 });
+function downloadCSV(rows,name){
+  const csv="\uFEFF"+rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=name;a.click();
+}

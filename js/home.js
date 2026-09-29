@@ -1,14 +1,26 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {C,$,loadJsonDataset,loadJsonFreshness,live,setStatus,nav}=window.SRGF;
+  const {C,$,loadLiveFirstAll,loadJsonDataset,loadJsonFreshness,showLiveFreshness,setStatus,nav}=window.SRGF;
   window.SRGFAuth.init(); nav("home");
-  let shown=false;
-  function render(players,teams,auction,source,error=false){
+  try{
+    const liveData=await loadLiveFirstAll();
+    let players=[], teams=[], auction=[];
+    if(liveData.live){
+      players=liveData.data.players||[]; teams=liveData.data.teams||[]; auction=liveData.data.auction||[];
+      showLiveFreshness(liveData.updatedAt);
+    }else{
+      const [p,t,a]=await Promise.all([loadJsonDataset("players"),loadJsonDataset("teams"),loadJsonDataset("auction")]);
+      players=p.data||[]; teams=t.data||[]; auction=a.data||[];
+      await loadJsonFreshness();
+    }
     const registeredPlayers=players.filter(x=>x?.["Name"]||x?.name);
-    $("mPlayers").textContent=registeredPlayers.length; $("mTeams").textContent=teams.length;
-    $("mAuctioned").textContent=auction.length; $("mSports").textContent="4"; setStatus(source,error);
-  }
-  try{ const [p,t,a]=await Promise.all([loadJsonDataset("players"),loadJsonDataset("teams"),loadJsonDataset("auction")]); render(p.data||[],t.data||[],a.data||[],"JSON data"); await loadJsonFreshness(); shown=true; }catch(_){}
-  try{ const d=await live("data"); render(d.players||[],d.teams||[],d.auction||[],"LIVE · Google Sheet"); }catch(e){ if(!shown) render([],[],[],"JSON data unavailable",true); }
+    $("mPlayers").textContent=registeredPlayers.length;
+    $("mTeams").textContent=teams.length;
+    $("mAuctioned").textContent=auction.length;
+    $("mSports").textContent="4";
+    await loadJsonFreshness();
+    setStatus(liveData.live?"LIVE · Google Sheet":"JSON data · live unavailable",!liveData.live);
+  }catch(e){setStatus("JSON data unavailable",true);}
+  if(liveData?.retryPromise && !sessionStorage.getItem("SRGF_RETRY_RELOAD_DONE")){ liveData.retryPromise.then(()=>{ sessionStorage.setItem("SRGF_RETRY_RELOAD_DONE","1"); location.reload(); }).catch(()=>{}); }
+  else if(sessionStorage.getItem("SRGF_RETRY_RELOAD_DONE")){ sessionStorage.removeItem("SRGF_RETRY_RELOAD_DONE"); }
   $("refreshBtn")?.addEventListener("click",()=>location.reload());
-  setInterval(()=>{if(!document.hidden)location.reload()},C.REFRESH_MS);
 });
