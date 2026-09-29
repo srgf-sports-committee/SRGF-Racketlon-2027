@@ -73,7 +73,13 @@ document.addEventListener("DOMContentLoaded",async()=>{
       if(!s)return p;
       const out={...p};
       ["name","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
-        if(!String(out[k]??"").trim()&&String(s[k]??"").trim())out[k]=s[k];
+        // GitHub is the static profile/photo backup. Prefer its photo whenever
+        // one exists, even if the live Sheet still contains a Drive reference.
+        if(k==="image"){
+          if(String(s[k]??"").trim())out[k]=s[k];
+        }else if(!String(out[k]??"").trim()&&String(s[k]??"").trim()){
+          out[k]=s[k];
+        }
       });
       return out;
     });
@@ -144,6 +150,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
           src="https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1000";
         }
       }
+      // Bust browser cache for GitHub-hosted profile photos so a newly synced
+      // photo is displayed immediately even when the filename is unchanged.
+      if(/^assets\//i.test(src))src += (src.includes("?")?"&":"?")+"v="+Date.now();
       img.src=src;img.style.display="block";ph.style.display="none";z.style.display="block";z.dataset.photoSrc=src;z.dataset.photoName=p.name;
       img.onerror=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";};
     }catch(_){img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";}
@@ -238,7 +247,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
       try{
         SRGF.setStatus("Refreshing from Google Sheet…");
         const d=await apiData();state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
-        mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction));render();saveCache();
+        mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction));
+        // Re-apply the GitHub static profile after live Sheet data so a Drive
+        // photo value from the Sheet cannot replace the GitHub photo.
+        mergeStaticProfiles(staticProfiles,false);
+        render();saveCache();
         const pending=state.pending.length+state.pendingDeletes.length;SRGF.setStatus(pending?"LIVE · Sheet + "+pending+" pending":"LIVE · Google Sheet · "+new Date().toLocaleTimeString(),!!pending);
       }catch(e){
         if(staticProfiles.length){
