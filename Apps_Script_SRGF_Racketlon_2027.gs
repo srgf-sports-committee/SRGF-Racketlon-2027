@@ -455,6 +455,7 @@ function json_(obj){
  */
 function authorizeServices(){
   SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+  DriveApp.getRootFolder().getName();
   UrlFetchApp.fetch('https://www.google.com/generate_204', {
     muteHttpExceptions:true,
     followRedirects:true
