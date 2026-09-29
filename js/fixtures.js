@@ -401,7 +401,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       : `<tr><td colspan="${headers.length+(roleCanEdit()?1:0)||1}">No fixtures found.</td></tr>`;
 
     $("fixtureMessage").textContent=`Showing ${filtered.length} of ${rows.length} fixture(s).`;
-    $("fixtureFilterMessage").textContent=`Showing ${filtered.length} of ${rows.length} fixture(s)`;
     document.querySelectorAll(".edit-result").forEach(b=>b.onclick=()=>openModal(+b.dataset.i));
   }
 
