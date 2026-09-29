@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-09-29T08:31:54.147Z",
-  "sourceUpdatedAt": "2026-09-29T08:31:54.147Z",
-  "syncedAt": "2026-09-29T09:05:54.733817Z",
+  "updatedAt": "2026-09-29T09:20:41.851Z",
+  "sourceUpdatedAt": "2026-09-29T09:20:41.851Z",
+  "syncedAt": "2026-09-29T09:28:31.507564Z",
   "rows": [
     {
       "Sport": "Racketlon",
@@ -12,8 +12,8 @@
       "Player 2": "Player22",
       "Winning Team": "T1 Team1",
       "Game 1 (BD)": "21 - 15",
-      "Game 2(LT)": "21 - 19",
-      "Game 3(TT)": "",
+      "Game 2(LT)": "19 - 21",
+      "Game 3(TT)": "21 - 19",
       "Game 4(PB)": "",
       "POINTS": "6"
     },
@@ -24,12 +24,12 @@
       "Schedule": "",
       "Player 1": "Player1",
       "Player 2": "Player43",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
-      "Game 3(TT)": "",
+      "Winning Team": "T3 Team 3",
+      "Game 1 (BD)": "21 - 19",
+      "Game 2(LT)": "16 - 21",
+      "Game 3(TT)": "17 - 21",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": "6"
     },
     {
       "Sport": "Racketlon",
@@ -38,12 +38,12 @@
       "Schedule": "",
       "Player 1": "Player1",
       "Player 2": "Player64",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
+      "Winning Team": "T4 Team 4",
+      "Game 1 (BD)": "12 - 21",
+      "Game 2(LT)": "12 - 21",
       "Game 3(TT)": "",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": "6"
     },
     {
       "Sport": "Racketlon",
@@ -52,12 +52,12 @@
       "Schedule": "",
       "Player 1": "Player22",
       "Player 2": "Player43",
-      "Winning Team": "",
-      "Game 1 (BD)": "",
-      "Game 2(LT)": "",
+      "Winning Team": "T2 Team 2",
+      "Game 1 (BD)": "21 - 15",
+      "Game 2(LT)": "21 - 19",
       "Game 3(TT)": "",
       "Game 4(PB)": "",
-      "POINTS": ""
+      "POINTS": "6"
     },
     {
       "Sport": "Racketlon",
