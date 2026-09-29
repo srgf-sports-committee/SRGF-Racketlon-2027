@@ -335,11 +335,17 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const winningTeamIndex=findHeaderIndex([/^winningteam/]);
     const currentWinner=winningTeamIndex>=0?String(r[winningTeamIndex]??"").trim():"";
     const teamValues=[];
-    for(const ti of teamIndexes()){const v=String(r[ti]??"").trim();if(v&&!teamValues.some(x=>norm(x)===norm(v)))teamValues.push(v);}
+    for(const ti of teamIndexes()){
+      const v=String(r[ti]??"").trim();
+      if(v&&!teamValues.some(x=>norm(x)===norm(v)))teamValues.push(v);
+    }
+    const fixtureTeams=teamValues.slice(0,2);
+    if(currentWinner&&!fixtureTeams.some(x=>norm(x)===norm(currentWinner)))fixtureTeams.push(currentWinner);
+
     const games=modal.querySelector(".games");
-    const teamOptions=teamValues.map(v=>'<option value="'+esc(v)+'"></option>').join("");
+    const winnerOptions='<option value="">Select winning team</option>'+fixtureTeams.map(v=>'<option value="'+esc(v)+'"'+(norm(v)===norm(currentWinner)?" selected":"")+'>'+esc(v)+'</option>').join("");
     const sportNames={1:"BD",2:"LT",3:"TT",4:"PB"};
-    games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><input id="fixtureWinningTeam" list="fixtureWinningTeamOptions" type="text" value="'+esc(currentWinner)+'" placeholder="Enter winning team"></label><datalist id="fixtureWinningTeamOptions">'+teamOptions+'</datalist><div class="notice">You can update the Winning Team, any one game, several games, or all five fields.</div></div>'+
+    games.innerHTML='<div class="fixture-result-winner"><label><strong>Winning Team</strong><select id="fixtureWinningTeam" class="fixture-winning-team-select">'+winnerOptions+'</select></label><div class="notice">Select the winning team from the two teams in this fixture. You can also update any one game, several games, or all five fields.</div></div>'+
       [1,2,3,4].map(g=>{const raw=gi[g-1]===undefined?"":String(r[gi[g-1]]||"");const m=raw.match(/(\d+)\s*[-:]\s*(\d+)/);return '<div class="game"><h3>Game '+g+' ('+sportNames[g]+')</h3><div class="labels"><label>'+esc(p1)+'<input class="g1" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[1]:"")+'"></label><label>'+esc(p2)+'<input class="g2" data-g="'+g+'" type="number" min="0" step="1" inputmode="numeric" value="'+(m?m[2]:"")+'"></label></div></div>';}).join("");
     modal.classList.remove("hidden");
     saveBtn.onclick=async()=>{
