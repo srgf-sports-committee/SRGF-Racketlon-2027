@@ -383,5 +383,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   bindTabs();
   await load();
-  setInterval(() => { if (!document.hidden) load(); }, 15000);
 });
