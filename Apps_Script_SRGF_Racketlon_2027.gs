@@ -422,6 +422,12 @@ function getConfigNumber_(ss,key,fallback){
   return Number.isFinite(n)?n:fallback;
 }
 
+function findSheet_(ss,name){
+  const wanted=String(name||'').trim();
+  if(!wanted) return null;
+  return ss.getSheets().find(sh=>String(sh.getName()).trim()===wanted)||null;
+}
+
 function requireSheet_(ss,name){
   const sh=findSheet_(ss,name);
   if(!sh) throw new Error('Required sheet tab is missing: '+name);
