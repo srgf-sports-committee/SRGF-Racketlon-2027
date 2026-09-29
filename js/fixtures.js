@@ -139,16 +139,44 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       teams=[...found.values()];
     }
 
+    // Display the actual Team Name from TEAMS mapping, while keeping the
+    // underlying Team ID/value for filtering. This means the dropdown shows
+    // "T1 Team1", "T2 Team 2", etc. today, and will automatically show the
+    // future names when the TEAMS sheet is renamed.
+    const mappedTeams=[];
+    const teamMap=Array.isArray(window.__SRGF_TEAMS)?window.__SRGF_TEAMS:[];
+    teams.forEach(t=>{
+      const found=teamMap.find(tm=>{
+        const id=String(tm?.id??"").trim();
+        const name=String(tm?.name??"").trim();
+        return norm(id)===norm(t) || norm(name)===norm(t);
+      });
+      const display=found?String(found.name||found.id||t).trim():String(t).trim();
+      const value=found?String(found.id||found.name||t).trim():String(t).trim();
+      if(display&&!mappedTeams.some(x=>norm(x.display)===norm(display))){
+        mappedTeams.push({display,value});
+      }
+    });
+
     // If the fixture sheet has no team names/IDs, fall back to TEAMS JSON.
-    if(!teams.length && Array.isArray(window.__SRGF_TEAMS)){
-      teams=window.__SRGF_TEAMS.map(t=>String(t.name||t.id||"").trim()).filter(Boolean);
+    if(!mappedTeams.length && Array.isArray(window.__SRGF_TEAMS)){
+      window.__SRGF_TEAMS.forEach(t=>{
+        const display=String(t?.name||t?.id||"").trim();
+        const value=String(t?.id||t?.name||"").trim();
+        if(display&&!mappedTeams.some(x=>norm(x.display)===norm(display))){
+          mappedTeams.push({display,value});
+        }
+      });
     }
 
-    select.innerHTML='<option value="">All Teams</option>'+teams.map(t=>
-      `<option value="${esc(t)}">${esc(t)}</option>`
+    mappedTeams.sort((a,b)=>a.display.localeCompare(b.display,undefined,{numeric:true,sensitivity:"base"}));
+
+    select.innerHTML='<option value="">All Teams</option>'+mappedTeams.map(t=>
+      `<option value="${esc(t.value)}">${esc(t.display)}</option>`
     ).join("");
 
-    if(teams.some(t=>norm(t)===norm(current))) select.value=current;
+    const selected=current && mappedTeams.find(t=>norm(t.value)===norm(current) || norm(t.display)===norm(current));
+    if(selected) select.value=selected.value;
   }
 
   function refreshSportFilter(){
@@ -353,13 +381,39 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(saveBtn)saveBtn.textContent=editing?"Update Result":"Save Result";
     const winningTeamIndex=findHeaderIndex([/^winningteam/]);
     const currentWinner=winningTeamIndex>=0?String(r[winningTeamIndex]??"").trim():"";
-    const teamValues=[];
+    let teamValues=[];
     for(const ti of teamIndexes()){
       const v=String(r[ti]??"").trim();
       if(v&&!teamValues.some(x=>norm(x)===norm(v)))teamValues.push(v);
     }
-    const fixtureTeams=teamValues.slice(0,2);
-    if(currentWinner&&!fixtureTeams.some(x=>norm(x)===norm(currentWinner)))fixtureTeams.push(currentWinner);
+
+    // This fixture format stores the two teams in Match (for example
+    // "T1 Vs T2"), so resolve those IDs through the TEAMS mapping.
+    if(!teamValues.length){
+      const matchIndexes=[];
+      headers.forEach((h,idx)=>{
+        const n=norm(h);
+        if(n==="match" || n==="fixture")matchIndexes.push(idx);
+      });
+      for(const mi of matchIndexes){
+        const raw=String(r[mi]??"").trim();
+        raw.split(/\s+(?:vs|v)\s+|\s+-\s+/i).map(x=>x.trim()).filter(Boolean).forEach(v=>{
+          if(v&&!teamValues.some(x=>norm(x)===norm(v)))teamValues.push(v);
+        });
+      }
+    }
+
+    const teamMap=Array.isArray(window.__SRGF_TEAMS)?window.__SRGF_TEAMS:[];
+    const fixtureTeams=[];
+    teamValues.slice(0,2).forEach(v=>{
+      const found=teamMap.find(tm=>norm(tm?.id)===norm(v)||norm(tm?.name)===norm(v));
+      const display=found?String(found.name||found.id||v).trim():String(v).trim();
+      if(display&&!fixtureTeams.some(x=>norm(x)===norm(display)))fixtureTeams.push(display);
+    });
+    if(currentWinner&&!fixtureTeams.some(x=>norm(x)===norm(currentWinner))){
+      const found=teamMap.find(tm=>norm(tm?.id)===norm(currentWinner)||norm(tm?.name)===norm(currentWinner));
+      fixtureTeams.push(found?String(found.name||found.id||currentWinner).trim():currentWinner);
+    }
 
     const games=modal.querySelector(".games");
     const winnerOptions='<option value="">Select winning team</option>'+fixtureTeams.map(v=>'<option value="'+esc(v)+'"'+(norm(v)===norm(currentWinner)?" selected":"")+'>'+esc(v)+'</option>').join("");
