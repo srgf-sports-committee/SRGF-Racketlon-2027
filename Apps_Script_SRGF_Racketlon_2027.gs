@@ -48,12 +48,14 @@ function doPost(e){
   try{
     const a=String(e?.parameter?.action||'').toLowerCase();
     const token=String(e?.parameter?.token||'');
+    let user=null;
+
     if(a==='sellplayer' || a==='removeplayer' || a==='syncchanges'){
-      const user=authorize_(token,true);
+      user=authorize_(token,true);
       if(user.role!=='ADMIN') throw new Error('Admin access required for Auction changes.');
     }
     if(a==='savefixtureresult'){
-      const user=authorize_(token,true);
+      user=authorize_(token,true);
       if(user.role!=='ADMIN' && user.role!=='WRITER') throw new Error('Admin or Writer access required.');
       return json_({ok:true,result:saveFixtureResult_(e.parameter,user)});
     }
