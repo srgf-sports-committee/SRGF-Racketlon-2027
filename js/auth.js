@@ -50,6 +50,7 @@
   function role(){return String(session.role||"USER").toUpperCase();}
   function canAuction(){return role()==="ADMIN";}
   function canEditFixtures(){return role()==="ADMIN"||role()==="WRITER";}
+  function canViewLogs(){return role()==="ADMIN";}
 
   function loadGoogleIdentityServices(){
     return new Promise((resolve,reject)=>{
@@ -226,5 +227,5 @@
 
   // Keep the login alive for 60 minutes from the user's last interaction.
   // A click, typing/edit, selection change, or touch resets the 60-minute window.
-  window.SRGFAuth={init,role,canAuction,canEditFixtures,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
+  window.SRGFAuth={init,role,canAuction,canEditFixtures,canViewLogs,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
 })();
