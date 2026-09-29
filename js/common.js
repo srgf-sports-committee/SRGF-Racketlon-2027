@@ -37,147 +37,41 @@
   // Public/report pages use the cloud-synced JSON snapshot directly.
   async function loadJsonDataset(name){
     const file = await jsonFile(`${name}.json`);
-    return {data:file.rows ?? file, updatedAt:file.updatedAt || "", headers:file.headers || null, live:false, source:"GitHub JSON"};
+    return {data:file.rows ?? file, updatedAt:file.updatedAt || "", headers:file.headers || null, live:false};
   }
 
-  const BROWSER_CACHE_KEY = "SRGF_RACKETLON_2027_LATEST_GOOD_DATA_V2";
-  function readBrowserData(){
-    try{
-      const x=JSON.parse(localStorage.getItem(BROWSER_CACHE_KEY)||"null");
-      return x && x.data ? x : null;
-    }catch(_){ return null; }
-  }
-  function saveBrowserData(data, updatedAt){
-    try{
-      localStorage.setItem(BROWSER_CACHE_KEY, JSON.stringify({savedAt:new Date().toISOString(),updatedAt:updatedAt||new Date().toISOString(),data}));
-    }catch(_){ }
-  }
-
-  async function fetchLiveAllOnce(){
-    const j=await live("data");
-    saveBrowserData(j,j.updatedAt||new Date().toISOString());
-    return {data:j,updatedAt:j.updatedAt||new Date().toISOString(),live:true,source:"Google Sheets"};
-  }
-
-  // Retry only while the current page's initial live refresh is failing.
-  // Once a live request succeeds, the retry loop stops. There is deliberately
-  // no periodic refresh after success; another refresh happens only when the
-  // user refreshes/navigates to the page again.
-  function retryUntilLiveSucceeds_(onSuccess){
-    let stopped=false;
-    const retry=async()=>{
-      while(!stopped){
-        try{
-          const result=await fetchLiveAllOnce();
-          stopped=true;
-          if(onSuccess) await onSuccess(result);
-          return result;
-        }catch(_){
-          await sleep(15000);
-        }
-      }
-    };
-    const promise=retry();
-    return {promise,stop:()=>{stopped=true;}};
-  }
-
-  // Cache-first: return the browser's newest known-good copy immediately.
-  // A background retry then keeps trying Google Sheets until it succeeds.
-  async function loadLiveFirstAll(){
-    const cached=readBrowserData();
-    if(cached){
-      const retry=retryUntilLiveSucceeds_();
-      return {data:cached.data,updatedAt:cached.updatedAt||"",live:false,source:"Browser cache",fromBrowserCache:true,retryPromise:retry.promise};
-    }
-    try{
-      return await fetchLiveAllOnce();
-    }catch(e){
-      return {data:null,updatedAt:"",live:false,source:"GitHub JSON",liveError:e,retryPromise:retryUntilLiveSucceeds_().promise};
-    }
-  }
-
+  // LIVE FIRST: try the Apps Script master data first. If it is slow,
+  // unavailable, or returns an error, immediately fall back to the latest
+  // successful GitHub JSON snapshot. A valid empty array is still treated
+  // as live data and is never replaced by the cache.
   async function loadLiveFirstDataset(name, timeoutMs=10000){
-    const cached=readBrowserData();
-    if(cached && cached.data && Array.isArray(cached.data[name])){
-      const retry=retryUntilLiveSucceeds_();
-      return {data:cached.data[name],updatedAt:cached.updatedAt||"",live:false,source:"Browser cache",fromBrowserCache:true,retryPromise:retry.promise};
-    }
     try{
-      const j=await fetchLiveAllOnce();
-      return {data:Array.isArray(j.data[name])?j.data[name]:[],updatedAt:j.updatedAt,live:true,source:"Google Sheets"};
+      const oldTimeout = fetchTimeout;
+      // The live() helper uses the shared timeout. Keep this call simple and
+      // use the normal live endpoint; the Apps Script cache is only 5 seconds.
+      const j = await live("data");
+      const data = Array.isArray(j[name]) ? j[name] : [];
+      return {data, updatedAt:j.updatedAt || new Date().toISOString(), headers:null, live:true, source:"Google Sheets"};
     }catch(e){
-      const file=await jsonFile(`${name}.json`);
-      const retry=retryUntilLiveSucceeds_();
-      return {data:file.rows??file,updatedAt:file.updatedAt||"",headers:file.headers||null,live:false,source:"GitHub JSON",liveError:e,retryPromise:retry.promise};
+      const file = await jsonFile(`${name}.json`);
+      return {data:file.rows ?? file, updatedAt:file.updatedAt || "", headers:file.headers || null, live:false, source:"GitHub JSON", liveError:e};
     }
   }
 
+  // Same live-first behavior, but returns the complete combined payload.
+  // This lets Home/other pages make only ONE Apps Script request per refresh.
+  async function loadLiveFirstAll(){
+    try{
+      const j = await live("data");
+      return {data:j, updatedAt:j.updatedAt || new Date().toISOString(), live:true, source:"Google Sheets"};
+    }catch(e){
+      return {data:null, updatedAt:"", live:false, source:"GitHub JSON", liveError:e};
+    }
+  }
+
+  // Compatibility helper. New public pages should use loadLiveFirstDataset().
   async function loadDataset(name, action){
     return loadLiveFirstDataset(name);
-  }
-
-  function showLiveFreshness(updatedAt){
-    const el=ensureFreshnessElement();
-    if(!el) return;
-    const t=Date.parse(updatedAt || "");
-    el.className="data-freshness ok";
-    el.textContent="🟢 LIVE · Google Sheet";
-    el.title=Number.isFinite(t) ? `Live data read from Google Sheets: ${new Date(t).toLocaleString("en-IN",{timeZone:"Asia/Kolkata"})} IST` : "Live data read from Google Sheets";
-  }
-
-  function ensureFreshnessElement(){
-    if($( "dataFreshness" )) return $( "dataFreshness" );
-    const host=document.querySelector(".header-actions");
-    if(!host) return null;
-    const el=document.createElement("div");
-    el.id="dataFreshness";
-    el.className="data-freshness";
-    el.title="Last successful JSON update";
-    host.insertBefore(el, host.firstElementChild || null);
-    return el;
-  }
-
-  function formatAge(seconds){
-    if(seconds < 60) return `${Math.floor(seconds)} sec ago`;
-    const mins=Math.floor(seconds/60);
-    if(mins < 60) return `${mins} min ago`;
-    const hrs=Math.floor(mins/60), rem=mins%60;
-    return rem ? `${hrs} hr ${rem} min ago` : `${hrs} hr ago`;
-  }
-
-  async function loadJsonFreshness(){
-    const el=ensureFreshnessElement();
-    if(!el) return null;
-    try{
-      const marker=await jsonFile("last-update.json");
-      const t=Date.parse(marker.syncedAt || "");
-      if(!marker.success || !Number.isFinite(t)) throw new Error("Invalid update marker");
-      const age=Math.max(0,(Date.now()-t)/1000);
-      const exact=new Date(t).toLocaleString("en-IN",{
-        timeZone:"Asia/Kolkata", day:"2-digit", month:"short", year:"numeric",
-        hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true
-      });
-      const staleMs=C.STALE_WARN_MS || 5*60*1000;
-      const errorMs=C.STALE_ERROR_MS || 10*60*1000;
-      const level=age*1000 >= errorMs ? "error" : age*1000 >= staleMs ? "warn" : "ok";
-      el.className=`data-freshness ${level}`;
-      el.textContent=`${level==="error"?"🔴":level==="warn"?"🟠":"🟢"} Data updated ${formatAge(age)}`;
-      el.title=`Last successful JSON update: ${exact} IST`;
-      return marker;
-    }catch(e){
-      el.className="data-freshness error";
-      el.textContent="🔴 JSON update unavailable";
-      el.title="Could not read a successful data/last-update.json marker.";
-      return null;
-    }
-  }
-
-  // Keep the freshness display current even if the page data itself is not
-  // being refreshed at this exact moment.
-  function startFreshnessMonitor(){
-    ensureFreshnessElement();
-    loadJsonFreshness();
-    setInterval(()=>{ if(!document.hidden) loadJsonFreshness(); }, 30000);
   }
 
   function setStatus(text,error=false){
@@ -204,7 +98,6 @@
   }
 
   document.addEventListener("DOMContentLoaded",()=>{
-    startFreshnessMonitor();
     const brand=document.querySelector(".brand-wrap");
     if(brand){
       brand.style.cursor="pointer";
@@ -217,6 +110,6 @@
 
   window.SRGF = {
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
-    loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,showLiveFreshness,setStatus,loadJsonFreshness,startFreshnessMonitor,nav
+    loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,setStatus,nav
   };
 })();

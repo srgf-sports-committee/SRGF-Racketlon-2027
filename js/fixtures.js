@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {live,loadJsonDataset,loadLiveFirstDataset,$,esc,norm,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
+  const {live,loadJsonDataset,loadLiveFirstDataset,$,esc,norm,setStatus,nav}=SRGF; SRGFAuth.init(); nav("fixtures");
   let headers=[], rows=[], filtered=[];
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
 
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
         render();
-        if(d.live){ showLiveFreshness(d.updatedAt); setStatus("LIVE · Google Sheet"); }
+        if(d.live){ setStatus("LIVE · Google Sheet"); }
         else { await loadJsonFreshness(); setStatus("JSON data · live unavailable",true); }
       }
     }catch(e){
@@ -94,12 +94,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
         render();
-        await loadJsonFreshness();
-        setStatus("JSON data · live unavailable",true);
+                setStatus("JSON data · live unavailable",true);
       }catch(_){setStatus("No fixture data available",true)}
     }
   }
 
   ["fixtureStatusFilter","fixtureSportFilter","fixturePlayerFilter"].forEach(id=>$(id)?.addEventListener("change",render));
-  $("refreshBtn")?.addEventListener("click",load); await load();
+  $("refreshBtn")?.addEventListener("click",load); await load(); setInterval(()=>{if(!document.hidden)load()},30000);
 });

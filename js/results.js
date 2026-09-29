@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async ()=>{
-  const {loadLiveFirstAll,$,esc,setStatus,loadJsonFreshness,showLiveFreshness,nav}=SRGF; SRGFAuth.init(); nav("results");
+  const {loadLiveFirstAll,$,esc,setStatus,nav}=SRGF; SRGFAuth.init(); nav("results");
   let results=[];
   function n(v){return Number(v)||0}
   function fields(r){return {team:r["Team"]||r["Winning Team"]||r["Winner Team"]||"",player:r["Player"]||r["Player Name"]||"",sport:r["Sport"]||"",tier:r["Tier"]||"",points:n(r["Points"]||r["Score"]||r["Sum Points"]),gw:n(r["Games Won"]||r["Games won"]),gl:n(r["Games Lost"]||r["Games lost"]),pd:n(r["Point Difference"]||r["Points Difference"])}}
@@ -24,19 +24,18 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const liveData=await loadLiveFirstAll();
       if(liveData.live){
         results=liveData.data.results||[];
-        showLiveFreshness(liveData.updatedAt);
-        render();
+                render();
         setStatus("LIVE · Google Sheet");
       }else{
         const d=await SRGF.loadJsonDataset("results");
         results=d.data||[];
         render();
-        await loadJsonFreshness();
-        setStatus("JSON data · live unavailable",true);
+                setStatus("JSON data · live unavailable",true);
       }
     }catch(_){setStatus("JSON data unavailable",true)}
   }
   await load();
   $("resultPlayerSportFilter")?.addEventListener("change",render);
   $("resultPlayerTierFilter")?.addEventListener("change",render);
+  setInterval(()=>{if(!document.hidden)load()},30000);
 });
