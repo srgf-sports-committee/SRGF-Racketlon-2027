@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-05T08:34:44.333464+00:00",
+  "generatedAt": "2026-10-05T09:06:31.335711+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
       "id": "P001",
-      "name": "Alwin Preetham DMELLO",
+      "name": "Alwin",
       "category": "Racketlon",
       "badminton": "Advanced",
       "tt": "Intermediate",
       "tennis": "Beginer",
       "pickle": "Never Played",
       "active": true,
-      "image": "assets/player-photos/P001.png"
+      "image": "assets/player-photos/P001.jpg"
     }
   ]
 }
