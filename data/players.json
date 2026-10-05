@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-05T08:57:10.286Z",
-  "sourceUpdatedAt": "2026-10-05T08:57:10.286Z",
-  "syncedAt": "2026-10-05T09:00:36.648351Z",
+  "updatedAt": "2026-10-05T09:07:13.059Z",
+  "sourceUpdatedAt": "2026-10-05T09:07:13.059Z",
+  "syncedAt": "2026-10-05T09:27:09.731339Z",
   "rows": [
     {
       "Player ID": "",
@@ -16,7 +16,7 @@
       "Lawn Tennis Level": "",
       "Pickle Ball Level": "",
       "Team ID": "",
-      "Auction Amount": "",
+      "Auction Amount": "0",
       "Active": "1"
     },
     {
