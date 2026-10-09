@@ -54,21 +54,25 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(staticProfilesPromise)return staticProfilesPromise;
     staticProfilesPromise=(async()=>{
       const merged=new Map();
+      // Fetch both static profile sources together; neither should delay the other.
       const urls=[STATIC_PROFILE_URL,"data/players.json"];
-      for(const url of urls){
+      const results=await Promise.all(urls.map(async url=>{
         try{
           const r=await fetch(url+"?v="+Math.floor(Date.now()/300000),{cache:"default"});
-          if(!r.ok)continue;
-          const d=await r.json();
-          if(url===STATIC_PROFILE_URL&&d?.generatedAt)staticProfileVersion=String(d.generatedAt);
-          const rows=Array.isArray(d?.players)?d.players:(Array.isArray(d?.rows)?normalizePlayers(d.rows):[]);
-          rows.forEach(p=>{
-            if(!p||!p.id)return;
-            const old=merged.get(String(p.id))||{};
-            merged.set(String(p.id),{...old,...p,image:String(p.image||old.image||"").trim()});
-          });
-        }catch(_){}
-      }
+          if(!r.ok)return {url,data:null};
+          return {url,data:await r.json()};
+        }catch(_){return {url,data:null};}
+      }));
+      results.forEach(({url,data:d})=>{
+        if(!d)return;
+        if(url===STATIC_PROFILE_URL&&d?.generatedAt)staticProfileVersion=String(d.generatedAt);
+        const rows=Array.isArray(d?.players)?d.players:(Array.isArray(d?.rows)?normalizePlayers(d.rows):[]);
+        rows.forEach(p=>{
+          if(!p||!p.id)return;
+          const old=merged.get(String(p.id))||{};
+          merged.set(String(p.id),{...old,...p,image:String(p.image||old.image||"").trim()});
+        });
+      });
       return [...merged.values()];
     })();
     try{return await staticProfilesPromise;}
@@ -378,7 +382,12 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(loadPromise)return loadPromise;
     loadPromise=(async()=>{
       const hadCache=applyCache();if(hadCache)SRGF.setStatus("Refreshing… showing saved auction data");
-      const staticProfiles=await loadStaticProfiles();
+      // Start the live Sheet request at the same time as the static GitHub
+      // profile requests, so neither network wait is added on top of the other.
+      const profilesRequest=loadStaticProfiles();
+      const liveRequest=apiData();
+      let staticProfiles=[];
+      try{staticProfiles=await profilesRequest;}catch(_){}
       if(staticProfiles.length){
         mergeStaticProfiles(staticProfiles,!hadCache);
         saveCache();
@@ -387,7 +396,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       }
       try{
         SRGF.setStatus("Refreshing from Google Sheet…");
-        const d=await apiData();state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
+        const d=await liveRequest;state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
         mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction),staticProfiles);
         // Re-apply the GitHub static profile after live Sheet data so a Drive
         // photo value from the Sheet cannot replace the GitHub photo.
@@ -443,9 +452,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const p=state.players.find(x=>String(x.id)===String($("playerSelect").value));
     $("playerSelectDisplay").textContent=p?p.name+" — "+p.category:"Select Player";
     playerOptions("");renderPlayerDetails(p);
-    // Refresh live data whenever a player is selected, while preserving the
-    // selected player/profile from cache or GitHub if the Sheet is slow.
-    await load();
+    // Player selection is a local UI action. Do not re-fetch the entire
+    // Google Sheet on every selection; refresh is available via the header button.
   });
   $("sellBtn")?.addEventListener("click",sell);
   $("refreshBtn")?.addEventListener("click",()=>load());
