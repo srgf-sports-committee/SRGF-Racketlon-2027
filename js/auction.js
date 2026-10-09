@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const API=SRGF_CONFIG.API_URL;
   const STATIC_PROFILE_URL="data/player-profiles.json";
   const REFRESH_MS=15000;
+  let staticProfileVersion="1";
+  let staticProfilesPromise=null;
   let state={players:[],teams:[],auction:[],config:{},pending:[],pendingDeletes:[]};
   let loadPromise=null,autoBusy=false,timer=null;
 
@@ -47,22 +49,34 @@ document.addEventListener("DOMContentLoaded",async()=>{
     return m;
   }
   async function loadStaticProfiles(){
-    const merged=new Map();
-    const urls=[STATIC_PROFILE_URL,"data/players.json"];
-    for(const url of urls){
-      try{
-        const r=await fetch(url+"?v="+Date.now(),{cache:"no-store"});
-        if(!r.ok)continue;
-        const d=await r.json();
-        const rows=Array.isArray(d?.players)?d.players:(Array.isArray(d?.rows)?normalizePlayers(d.rows):[]);
-        rows.forEach(p=>{
-          if(!p||!p.id)return;
-          const old=merged.get(String(p.id))||{};
-          merged.set(String(p.id),{...old,...p,image:String(p.image||old.image||"").trim()});
-        });
-      }catch(_){}
+    // Reuse the small profile manifest briefly so selecting different players
+    // does not trigger repeated uncached manifest downloads.
+    if(staticProfilesPromise)return staticProfilesPromise;
+    staticProfilesPromise=(async()=>{
+      const merged=new Map();
+      const urls=[STATIC_PROFILE_URL,"data/players.json"];
+      for(const url of urls){
+        try{
+          const r=await fetch(url+"?v="+Math.floor(Date.now()/300000),{cache:"default"});
+          if(!r.ok)continue;
+          const d=await r.json();
+          if(url===STATIC_PROFILE_URL&&d?.generatedAt)staticProfileVersion=String(d.generatedAt);
+          const rows=Array.isArray(d?.players)?d.players:(Array.isArray(d?.rows)?normalizePlayers(d.rows):[]);
+          rows.forEach(p=>{
+            if(!p||!p.id)return;
+            const old=merged.get(String(p.id))||{};
+            merged.set(String(p.id),{...old,...p,image:String(p.image||old.image||"").trim()});
+          });
+        }catch(_){}
+      }
+      return [...merged.values()];
+    })();
+    try{return await staticProfilesPromise;}
+    finally{
+      // Allow a new manifest check after one minute, without duplicate requests
+      // during the same load.
+      setTimeout(()=>{staticProfilesPromise=null;},60000);
     }
-    return [...merged.values()];
   }
   function mergeStaticProfiles(staticPlayers,allowAdd){
     const profiles=profileMap(staticPlayers);
@@ -162,9 +176,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
           src="https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1000";
         }
       }
-      // Bust browser cache for GitHub-hosted profile photos so a newly synced
-      // photo is displayed immediately even when the filename is unchanged.
-      if(/^assets\//i.test(src))src += (src.includes("?")?"&":"?")+"v="+Date.now();
+      // Keep the image URL stable between renders so the browser can cache it.
+      // Version it by the profile manifest timestamp to refresh after a new sync.
+      if(/^assets\//i.test(src))src += (src.includes("?")?"&":"?")+"v="+encodeURIComponent(staticProfileVersion);
       img.src=src;img.style.display="block";ph.style.display="none";z.style.display="block";z.dataset.photoSrc=src;z.dataset.photoName=p.name;
       img.onerror=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";};
     }catch(_){img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";}
