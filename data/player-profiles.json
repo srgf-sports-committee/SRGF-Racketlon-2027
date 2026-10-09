@@ -1,6 +1,18 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-09T02:13:10.441510+00:00",
+  "generatedAt": "2026-10-09T02:31:02.541089+00:00",
   "source": "Google Sheet via Apps Script",
-  "players": []
+  "players": [
+    {
+      "id": "P001",
+      "name": "APD",
+      "category": "Racketlon",
+      "badminton": "Advanced",
+      "tt": "Intermediate",
+      "tennis": "Beginer",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P001.jpg"
+    }
+  ]
 }
