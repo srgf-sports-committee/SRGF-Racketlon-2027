@@ -52,7 +52,6 @@
   function canEditFixtures(){return role()==="ADMIN"||role()==="WRITER";}
   function canViewLogs(){return role()==="ADMIN";}
   function canViewCaptains(){return role()==="ADMIN"||role()==="CAPTAIN";}
-  function canViewPublicPages(){return true;}
 
   function loadGoogleIdentityServices(){
     return new Promise((resolve,reject)=>{
