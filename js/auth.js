@@ -51,6 +51,7 @@
   function canAuction(){return role()==="ADMIN";}
   function canEditFixtures(){return role()==="ADMIN"||role()==="WRITER";}
   function canViewLogs(){return role()==="ADMIN";}
+  function canViewCaptains(){return role()==="ADMIN"||role()==="CAPTAIN";}
 
   function loadGoogleIdentityServices(){
     return new Promise((resolve,reject)=>{
@@ -110,7 +111,7 @@
     if(!box)return;
     box.innerHTML=`
       <div class="srgf-login-panel" id="srgfLoginPanel">
-        <div class="srgf-login-title">Admin / Writer Login</div>
+        <div class="srgf-login-title">Admin / Writer / Captain Login</div>
         <div class="srgf-login-help">Choose one of your Google accounts. If the account you need is not listed, Google provides an option to use another account and enter its email address.</div>
         <div id="googleSignInButton" class="srgf-google-button"></div>
         <button class="secondary srgf-login-cancel" id="srgfLoginCancel" type="button">Cancel</button>
@@ -227,5 +228,5 @@
 
   // Keep the login alive for 60 minutes from the user's last interaction.
   // A click, typing/edit, selection change, or touch resets the 60-minute window.
-  window.SRGFAuth={init,role,canAuction,canEditFixtures,canViewLogs,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
+  window.SRGFAuth={init,role,canAuction,canEditFixtures,canViewLogs,canViewCaptains,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
 })();
