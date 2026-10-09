@@ -15,13 +15,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install image optimization dependency
+        run: python -m pip install --disable-pip-version-check Pillow
+
       - name: Build player profile backup
         env:
           API_URL: https://script.google.com/macros/s/AKfycbw_KN0QUEsck_ChkjZ3HAS82Xj9aVb9R6UBYJzoh26MSE-ydTJjVjUzn6vFXG3WQlFJsg/exec
         run: |
           python - <<'PY'
-          import base64, json, mimetypes, os, re, urllib.parse, urllib.request
+          import base64, io, json, os, re, urllib.parse, urllib.request
           from pathlib import Path
+          from PIL import Image, ImageOps
 
           api = os.environ["API_URL"]
           root = Path(".")
@@ -53,14 +57,21 @@ jobs:
                   return value
               return ""
 
-          def extension(mime):
-              return {
-                  "image/jpeg": ".jpg",
-                  "image/png": ".png",
-                  "image/webp": ".webp",
-                  "image/gif": ".gif",
-                  "image/bmp": ".bmp"
-              }.get(mime, ".jpg")
+          def optimize_image(raw_bytes):
+              """Resize to at most 600x800 and compress before committing to Git."""
+              with Image.open(io.BytesIO(raw_bytes)) as opened:
+                  image = ImageOps.exif_transpose(opened)
+                  image.thumbnail((600, 800), Image.Resampling.LANCZOS)
+                  has_alpha = (image.mode in ("RGBA", "LA") or
+                               (image.mode == "P" and "transparency" in image.info))
+                  output = io.BytesIO()
+                  if has_alpha:
+                      image.convert("RGBA").save(output, format="PNG", optimize=True)
+                      return ".png", output.getvalue()
+                  image.convert("RGB").save(
+                      output, format="JPEG", quality=85, optimize=True, progressive=True
+                  )
+                  return ".jpg", output.getvalue()
 
           live = get_json(api + "?action=data")
           rows = live.get("players") or []
@@ -95,11 +106,11 @@ jobs:
                   try:
                       photo = get_json(api + "?action=photo&id=" + urllib.parse.quote(did))
                       if photo.get("ok") and photo.get("base64"):
-                          mime = photo.get("mimeType") or "image/jpeg"
-                          ext = extension(mime)
+                          ext, optimized = optimize_image(base64.b64decode(photo["base64"]))
                           out = photo_dir / (pid + ext)
-                          out.write_bytes(base64.b64decode(photo["base64"]))
+                          out.write_bytes(optimized)
                           profile["image"] = "assets/player-photos/" + out.name
+                          print("Optimized photo for", pid, "to", len(optimized), "bytes")
                   except Exception as exc:
                       print("Photo sync failed for", pid, ":", exc)
 
@@ -107,11 +118,12 @@ jobs:
                   try:
                       req = urllib.request.Request(photo_value, headers={"User-Agent": "SRGF-Racketlon-Profile-Sync"})
                       with urllib.request.urlopen(req, timeout=30) as r:
-                          mime = (r.headers.get_content_type() or "image/jpeg")
-                          ext = extension(mime)
-                          out = photo_dir / (pid + ext)
-                          out.write_bytes(r.read())
-                          profile["image"] = "assets/player-photos/" + out.name
+                          raw_bytes = r.read()
+                      ext, optimized = optimize_image(raw_bytes)
+                      out = photo_dir / (pid + ext)
+                      out.write_bytes(optimized)
+                      profile["image"] = "assets/player-photos/" + out.name
+                      print("Optimized photo for", pid, "to", len(optimized), "bytes")
                   except Exception as exc:
                       print("Direct photo sync failed for", pid, ":", exc)
 
