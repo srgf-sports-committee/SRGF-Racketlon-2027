@@ -28,6 +28,11 @@ function doGet(e){
       if(user.role!=='ADMIN') throw new Error('Admin access required for Logs.');
       return json_(getLogs_(500));
     }
+    if(a==='captains'){
+      const user=authorize_(e.parameter.token||'', false);
+      if(user.role!=='ADMIN' && user.role!=='CAPTAIN') throw new Error('Captain or Admin access required.');
+      return json_({ok:true,rows:getCaptainDirectory_()});
+    }
 
     // Every successful read carries the timestamp of the latest actual
     // Google-Sheet content change. This lets the website compare live data,
@@ -78,6 +83,25 @@ function getPhoto_(fileId){
   }catch(err){
     return {ok:false,error:'Unable to read photo from Google Drive: '+String(err.message||err)};
   }
+}
+
+function getCaptainDirectory_(){
+  const players=sheetObjectsCached_(SHEETS.players);
+  const teams=sheetObjectsCached_(SHEETS.teams);
+  const teamNames={};
+  teams.forEach(t=>{
+    const id=String(t['Team ID']||'').trim();
+    const name=String(t['Team Name']||id).trim();
+    if(id)teamNames[id]=name;
+  });
+  return players.filter(p=>String(p['Name']||'').trim()).map(p=>{
+    const teamId=String(p['Team ID']||'').trim();
+    return {
+      teamName:teamNames[teamId]||teamId,
+      playerName:String(p['Name']||'').trim(),
+      mobile:String(p['Mobile']||'').trim()
+    };
+  }).sort((a,b)=>a.teamName.localeCompare(b.teamName)||a.playerName.localeCompare(b.playerName));
 }
 
 function exportData_(){
