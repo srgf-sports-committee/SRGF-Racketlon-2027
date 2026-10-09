@@ -206,17 +206,24 @@ document.addEventListener("DOMContentLoaded",async()=>{
     $("historyBody").innerHTML=state.auction.length?[...state.auction].reverse().map(a=>'<tr><td>'+esc(a.player)+'</td><td>'+esc(a.team)+'</td><td>'+money(a.amount)+'</td><td>'+esc(a.time)+'</td><td><button class="danger remove-sale" data-player-id="'+esc(a.playerId)+'">Remove</button></td></tr>').join(""):'<tr><td colspan="5" class="notice">No auction sales yet.</td></tr>';
     document.querySelectorAll(".remove-sale").forEach(b=>b.addEventListener("click",()=>removeSale(b.dataset.playerId)));
   }
-  function mergeLive(players,teams,auction){
+  function mergeLive(players,teams,auction,staticPlayers=[]){
     const oldPlayers=state.players||[];
     const oldMap=profileMap(oldPlayers);
+    const staticMap=profileMap(staticPlayers);
     const deleted=new Set((state.pendingDeletes||[]).map(String)),remote=auction.filter(a=>!deleted.has(String(a.playerId))),keys=new Set(remote.map(key));
     const pending=(state.pending||[]).filter(a=>!keys.has(key(a)));
     state.players=players.map(p=>{
       const old=oldMap.get(String(p.id));
+      const profile=staticMap.get(String(p.id));
       const out={...p};
-      ["name","flat","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
+      ["name","flat","category","badminton","tt","tennis","pickle"].forEach(k=>{
         if(!String(out[k]??"").trim()&&String(old?.[k]??"").trim())out[k]=old[k];
       });
+      // Photo priority only: use the GitHub profile photo when present.
+      // Read the Sheet photo only when GitHub has no photo for this player.
+      out.image=String(profile?.image??"").trim()
+        ? profile.image
+        : (String(p.image??"").trim() ? p.image : String(old?.image??"").trim());
       return out;
     });
     state.teams=teams;state.auction=remote.concat(pending);state.pending=pending;
@@ -367,7 +374,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       try{
         SRGF.setStatus("Refreshing from Google Sheet…");
         const d=await apiData();state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
-        mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction));
+        mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction),staticProfiles);
         // Re-apply the GitHub static profile after live Sheet data so a Drive
         // photo value from the Sheet cannot replace the GitHub photo.
         mergeStaticProfiles(staticProfiles,false);
