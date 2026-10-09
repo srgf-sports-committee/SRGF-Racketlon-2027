@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-09T06:21:14.355Z",
-  "sourceUpdatedAt": "2026-10-09T06:21:14.355Z",
-  "syncedAt": "2026-10-09T10:49:27.825388Z",
+  "updatedAt": "2026-10-09T11:05:05.032Z",
+  "sourceUpdatedAt": "2026-10-09T11:05:05.032Z",
+  "syncedAt": "2026-10-09T11:05:16.004121Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -20,17 +20,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P002",
+      "Name": "Ranvijay Singh(32)*",
+      "Mobile": "6364369557 - (323551)",
+      "Flat": "B705",
+      "Photo": "https://drive.google.com/open?id=16TvFySfCnTe1YqqMJcF5cDOQUSYZdzzA",
+      "Priority Chart": "P1: Badminton | P2: Pickle Ball | P3: Lawn Tennis | P4: Table Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Advanced",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Advanced",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
