@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     return "";
   };
   const normalizePlayers=rows=>(Array.isArray(rows)?rows:[]).filter(r=>first(r,["Name"])).map((r,i)=>({
-    id:first(r,["Player ID"])||("P"+String(i+1).padStart(3,"0")),name:first(r,["Name"]),
+    id:first(r,["Player ID"])||("P"+String(i+1).padStart(3,"0")),name:first(r,["Name"]),flat:first(r,["Flat"]),
     category:first(r,["Preferred Category"]),badminton:first(r,["Badminton Level"]),
     tt:first(r,["Table Tennis Level"]),tennis:first(r,["Lawn Tennis Level"]),
     pickle:first(r,["Pickle Ball Level"]),priorityChart:first(r,["Priority Chart"]),team:first(r,["Team ID"]),amount:Number(first(r,["Auction Amount"])||0),
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       const s=profiles.get(String(p.id));
       if(!s)return p;
       const out={...p};
-      ["name","category","badminton","tt","tennis","pickle","image","priorityChart"].forEach(k=>{
+      ["name","flat","category","badminton","tt","tennis","pickle","image","priorityChart"].forEach(k=>{
         // GitHub is the static profile/photo backup. Prefer its photo whenever
         // one exists, even if the live Sheet still contains a Drive reference.
         if(k==="image"){
@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const p=selectedPlayer||state.players.find(x=>String(x.id)===String($("playerSelect").value)),box=$("playerDetails");
     if(!p){box.className="player-details-empty";box.innerHTML="Select a player to view player details.";return;}
     box.className="player-details";
-    box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px"><span>'+esc(p.name)+'</span><span class="priority-chart-value" style="margin-left:auto;text-align:right;font-weight:700;white-space:nowrap">'+priorityChartBadges(p.priorityChart||"")+'</span></div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
+    box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px"><span>'+esc(p.name)+(p.flat?' - '+esc(p.flat):'')+'</span><span class="priority-chart-value" style="margin-left:auto;text-align:right;font-weight:700;white-space:nowrap">'+priorityChartBadges(p.priorityChart||"")+'</span></div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
     playerPhoto(p);
   }
   function renderTeamsBoard(){
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     state.players=players.map(p=>{
       const old=oldMap.get(String(p.id));
       const out={...p};
-      ["name","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
+      ["name","flat","category","badminton","tt","tennis","pickle","image"].forEach(k=>{
         if(!String(out[k]??"").trim()&&String(old?.[k]??"").trim())out[k]=old[k];
       });
       return out;
