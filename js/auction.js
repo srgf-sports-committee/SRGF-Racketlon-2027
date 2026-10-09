@@ -160,32 +160,69 @@ document.addEventListener("DOMContentLoaded",async()=>{
     }));
   }
 
+  const PHOTO_CACHE_KEY="SRGF_RACKETLON_2027_AUCTION_PHOTO_CACHE_V1";
+  const photoSourceCache=new Map();
+  function readPhotoCache(){
+    try{const v=JSON.parse(localStorage.getItem(PHOTO_CACHE_KEY)||"{}");return v&&typeof v==="object"?v:{};}catch(_){return {};}
+  }
+  function writePhotoCache(id,src){
+    if(!id||!src)return;
+    photoSourceCache.set(String(id),src);
+    // Persist only source URLs, never large base64 image payloads.
+    if(/^https?:\\/\\//i.test(src)||/^assets\\//i.test(src)){
+      try{const cache=readPhotoCache();cache[String(id)]=src;localStorage.setItem(PHOTO_CACHE_KEY,JSON.stringify(cache));}catch(_){}
+    }
+  }
+  function photoUrl(value){
+    const v=String(value||"").trim();
+    if(!v)return "";
+    if(v.startsWith("drive:"))return "https://drive.google.com/thumbnail?id="+encodeURIComponent(v.slice(6))+"&sz=w1000";
+    if(/^assets\\//i.test(v))return v+"?v="+encodeURIComponent(staticProfileVersion);
+    return v;
+  }
   async function playerPhoto(p){
-    const img=$("selectedPlayerPhoto"),ph=$("selectedPlayerInitials"),z=$("photoZoomBtn"),link=$("selectedPlayerPhotoLink");if(!img||!ph||!z)return;
-    const v=String(p?.image||"").trim();
-    if(!v){img.style.display="none";ph.style.display="flex";ph.textContent=initials(p?.name);z.style.display="none";if(link)link.style.display="none";return;}
-    // Keep a directly clickable source URL visible even if the image itself fails to load.
-    let manualUrl=v;
-    if(v.startsWith("drive:"))manualUrl="https://drive.google.com/open?id="+encodeURIComponent(v.slice(6));
-    if(link){link.href=manualUrl;link.style.display="inline-block";link.textContent="Open image link ↗";}
-    try{
-      let src=v;
-      if(v.startsWith("drive:")){
-        const id=v.slice(6);
-        try{
-          const r=await SRGF.fetchTimeout(API+"?action=photo&id="+encodeURIComponent(id)+"&t="+Date.now(),{},15000),d=await r.json();
-          if(d.ok&&d.base64)src="data:"+d.mimeType+";base64,"+d.base64;
-          else throw new Error(d.error||"Photo endpoint unavailable");
-        }catch(_){
-          src="https://drive.google.com/thumbnail?id="+encodeURIComponent(id)+"&sz=w1000";
-        }
-      }
-      // Keep the image URL stable between renders so the browser can cache it.
-      // Version it by the profile manifest timestamp to refresh after a new sync.
-      if(/^assets\//i.test(src))src += (src.includes("?")?"&":"?")+"v="+encodeURIComponent(staticProfileVersion);
-      img.src=src;img.style.display="block";ph.style.display="none";z.style.display="block";z.dataset.photoSrc=src;z.dataset.photoName=p.name;
-      img.onerror=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";};
-    }catch(_){img.style.display="none";ph.style.display="flex";ph.textContent=initials(p.name);z.style.display="none";}
+    const img=$("selectedPlayerPhoto"),ph=$("selectedPlayerInitials"),z=$("photoZoomBtn"),link=$("selectedPlayerPhotoLink");
+    if(!img||!ph||!z)return;
+    const id=String(p?.id||""),sameLoaded=img.dataset.photoPlayerId===id&&img.complete&&img.naturalWidth>0;
+    if(sameLoaded)return;
+    const cached=photoSourceCache.get(id)||readPhotoCache()[id]||"";
+    const candidates=[];
+    const add=(value,kind)=>{const src=photoUrl(value);if(src&&!candidates.some(x=>x.src===src))candidates.push({src,kind});};
+    // First reuse the last successfully loaded source; then try the GitHub profile;
+    // only if that fails, fall back to the photo recorded in Google Sheets.
+    if(cached)candidates.push({src:cached,kind:"cache"});
+    add(p?.githubImage||((String(p?.image||"").startsWith("assets/"))?p.image:""),"github");
+    add(p?.image,"cached-profile");
+    add(p?.sheetImage,"sheet");
+    const manualValue=String(p?.sheetImage||p?.githubImage||p?.image||"").trim();
+    let manualUrl=manualValue;
+    if(manualValue.startsWith("drive:"))manualUrl="https://drive.google.com/open?id="+encodeURIComponent(manualValue.slice(6));
+    if(link){link.href=manualUrl||"#";link.style.display=manualUrl?"inline-block":"none";link.textContent="Open image link ↗";}
+    const placeholder=()=>{img.style.display="none";ph.style.display="flex";ph.textContent=initials(p?.name);z.style.display="none";};
+    if(!candidates.length){placeholder();return;}
+    // Keep a previously loaded image visible while checking a replacement source.
+    let index=0;
+    const tryNext=()=>{
+      if(index>=candidates.length){placeholder();return;}
+      const item=candidates[index++];
+      img.onload=()=>{
+        if(String($("playerSelect")?.value||"")!==id)return;
+        img.dataset.photoPlayerId=id;
+        writePhotoCache(id,item.src);
+        img.style.display="block";ph.style.display="none";z.style.display="block";
+        z.dataset.photoSrc=item.src;z.dataset.photoName=p.name||"Player";
+      };
+      img.onerror=()=>{
+        if(String($("playerSelect")?.value||"")!==id)return;
+        if(item.kind==="cache"){try{const cc=readPhotoCache();delete cc[id];localStorage.setItem(PHOTO_CACHE_KEY,JSON.stringify(cc));}catch(_){}photoSourceCache.delete(id);}
+        tryNext();
+      };
+      img.src=item.src;
+    };
+    // A cache entry may be the same URL already present in the image element.
+    const firstSrc=candidates[0].src;
+    if(img.dataset.photoPlayerId===id&&img.src===new URL(firstSrc,document.baseURI).href&&img.complete&&img.naturalWidth>0)return;
+    tryNext();
   }
   function renderPlayerDetails(selectedPlayer){
     const p=selectedPlayer||state.players.find(x=>String(x.id)===String($("playerSelect").value)),box=$("playerDetails");
@@ -246,11 +283,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
       ["name","flat","category","badminton","tt","tennis","pickle"].forEach(k=>{
         if(!String(out[k]??"").trim()&&String(old?.[k]??"").trim())out[k]=old[k];
       });
-      // Photo priority only: use the GitHub profile photo when present.
-      // Read the Sheet photo only when GitHub has no photo for this player.
-      out.image=String(profile?.image??"").trim()
-        ? profile.image
-        : (String(p.image??"").trim() ? p.image : String(old?.image??"").trim());
+      // Keep both sources separate so photo loading can stop at the first
+      // successfully loaded image: browser cache -> GitHub -> Google Sheet.
+      out.githubImage=String(profile?.image??"").trim()||String(old?.githubImage??"").trim();
+      out.sheetImage=String(p.image??"").trim()||String(old?.sheetImage??"").trim();
+      out.image=String(old?.image??"").trim()||out.githubImage||out.sheetImage;
       return out;
     });
     state.teams=teams;state.auction=remote.concat(pending);state.pending=pending;
