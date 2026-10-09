@@ -1,24 +1,8 @@
 {
-  "updatedAt": "2026-10-09T02:43:27.793Z",
-  "sourceUpdatedAt": "2026-10-09T02:43:27.793Z",
-  "syncedAt": "2026-10-09T02:59:32.996639Z",
+  "updatedAt": "2026-10-09T03:18:42.623Z",
+  "sourceUpdatedAt": "2026-10-09T03:18:42.623Z",
+  "syncedAt": "2026-10-09T03:23:33.109725Z",
   "rows": [
-    {
-      "Player ID": "P001",
-      "Name": "APD",
-      "Mobile": "1234567890",
-      "Flat": "F304",
-      "Photo": "https://drive.google.com/open?id=1PMq1H1LQkBgobyJe6MoZLzDtfDNOW4HI",
-      "Priority Chart": "P1: TT | P2: BAD | P3: LT | P4: PB",
-      "Preferred Category": "Racketlon",
-      "Badminton Level": "Advanced",
-      "Table Tennis Level": "Intermediate",
-      "Lawn Tennis Level": "Beginer",
-      "Pickle Ball Level": "Never Played",
-      "Team ID": "",
-      "Auction Amount": "0",
-      "Active": "1"
-    },
     {
       "Player ID": "",
       "Name": "",
