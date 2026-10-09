@@ -33,7 +33,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(showResponses&&!formResponsesLoaded)loadFormResponses();
   }
   function shortFormHeader(header,index){
-    if(index===16)return "Availability";
+    if(index===16)return "Whatspp";
+    if(index===21)return "Availability";
     let label=String(header||"").trim();
     // Remove common form-question wording while preserving the actual field meaning.
     label=label
@@ -85,8 +86,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
       if(result.ok===false)throw new Error(result.error||"Could not load Form Responses 1.");
       formResponseHeaders=Array.isArray(result.headers)?result.headers.map(String):[];
       formResponseRows=Array.isArray(result.rows)?result.rows:[];
-      // Column Q is renamed in this imported view only; the Google Sheet is untouched.
-      if(formResponseHeaders.length>16)formResponseHeaders[16]="Availability";
+      // Rename columns Q and V in this imported view only; the Google Sheet is untouched.
+      if(formResponseHeaders.length>16)formResponseHeaders[16]="Whatspp";
+      if(formResponseHeaders.length>21)formResponseHeaders[21]="Availability";
       renderFormResponses();
       formResponsesMessage.classList.add("hidden");
       formResponsesCard.classList.remove("hidden");
