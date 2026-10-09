@@ -43,18 +43,17 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase}
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
+  gap:8px;
   min-width:155px;
-  padding:12px 20px;
+  padding:11px 18px;
   border:1px solid transparent;
-  border-radius:11px;
+  border-radius:10px;
   background:transparent;
-  color:#91a8b0;
+  color:#cfe1e5;
   font-weight:800;
   font-size:14px;
-  line-height:1.2;
   cursor:pointer;
-  transition:background .2s ease,color .2s ease,box-shadow .2s ease,transform .2s ease;
+  transition:all .2s ease;
 }
 .player-score-tab:hover{
   background:rgba(72,224,209,.08);
@@ -62,10 +61,10 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase}
   transform:translateY(-1px);
 }
 .player-score-tab.active{
-  color:#082522;
-  background:linear-gradient(110deg,#d9f36c 0%,#9cebb0 55%,#4ce0cf 100%);
-  border-color:rgba(255,255,255,.22);
-  box-shadow:0 5px 16px rgba(72,224,209,.20),inset 0 1px 0 rgba(255,255,255,.28);
+  color:#09201d;
+  background:linear-gradient(135deg,#d9ee63,#8ee6b2 52%,#48e0d1);
+  border-color:rgba(255,255,255,.15);
+  box-shadow:0 7px 22px rgba(72,224,209,.22);
 }
 .player-score-tab-icon{font-size:16px;line-height:1}
 .player-score-filters{
@@ -1525,4 +1524,42 @@ main>section:not(#home){
   .logs-toolbar{align-items:stretch}
   .logs-toolbar > div,.logs-toolbar select{width:100%;min-width:0}
   .logs-toolbar button{width:100%}
+}
+
+
+/* Captain Directory tabs styled to match the Player Scores reference */
+.captain-tabs{
+  display:flex!important;
+  gap:6px!important;
+  flex-wrap:nowrap!important;
+  width:fit-content;
+  max-width:100%;
+  padding:6px;
+  margin-bottom:16px!important;
+  background:rgba(4,25,35,.72);
+  border:1px solid rgba(126,220,219,.20);
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.18);
+}
+.captain-tabs .btn{
+  min-height:42px!important;
+  padding:11px 18px!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:#91a8b0!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  cursor:pointer;
+  box-shadow:none!important;
+}
+.captain-tabs .btn.btn-primary{
+  color:#09201d!important;
+  background:linear-gradient(135deg,#d9ee63,#8ee6b2 52%,#48e0d1)!important;
+  border-color:rgba(255,255,255,.15)!important;
+  box-shadow:0 7px 22px rgba(72,224,209,.22)!important;
+}
+@media(max-width:520px){
+  .captain-tabs{width:100%;box-sizing:border-box}
+  .captain-tabs .btn{flex:1;min-width:0;padding:10px 12px!important}
 }
