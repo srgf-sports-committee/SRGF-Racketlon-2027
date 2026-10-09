@@ -20,6 +20,9 @@ function doGet(e){
     if(a==='ping') return json_({ok:true,now:new Date().toISOString()});
     if(a==='whoami'){
       const user=authorize_(e.parameter.token||'', false);
+      // Record successful Google sign-ins in the existing admin audit log.
+      // logWrite_ handles its own errors so logging cannot block login.
+      logWrite_(user,'LOGIN','Website','Successful Google sign-in');
       return json_({ok:true,email:user.email,role:user.role});
     }
     if(a==='photo') return json_(getPhoto_(e.parameter.id||''));
