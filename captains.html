@@ -29,6 +29,10 @@
   <div class="header-actions"><div><div id="status" class="status">Checking access…</div></div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
 </header>
 <main>
+<div class="captain-tabs" role="tablist" aria-label="Captain Directory views" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+  <button type="button" id="captainDirectoryTab" class="btn btn-primary" role="tab" aria-selected="true" aria-controls="captainDirectory" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Captain Directory</button>
+  <button type="button" id="captainFormResponsesTab" class="btn" role="tab" aria-selected="false" aria-controls="captainFormResponses" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Form Responses</button>
+</div>
 <section id="captainDirectory">
   <h1>Captain Directory</h1>
   <p class="notice">Team contact list for authorized Captains and Admin.</p>
@@ -48,13 +52,25 @@
         </div>
       </div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px"><p id="captainFilterCount" class="notice" aria-live="polite" style="margin:0"></p><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" id="captainExportBtn" class="btn btn-primary" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Export CSV</button><button type="button" id="captainFormResponsesExportBtn" class="btn btn-primary" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Download Form Responses CSV</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px"><p id="captainFilterCount" class="notice" aria-live="polite" style="margin:0"></p><div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" id="captainExportBtn" class="btn btn-primary" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Export CSV</button></div></div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr><th>Team Name</th><th>Player Name</th><th>Mobile (Transaction Code)</th></tr></thead>
         <tbody id="captainPlayersBody"></tbody>
       </table>
     </div>
+  </div>
+</section>
+<section id="captainFormResponses" class="hidden" role="tabpanel" aria-labelledby="captainFormResponsesTab">
+  <h1>Form Responses</h1>
+  <p class="notice">Imported view of the Form Responses 1 sheet. The source sheet is not modified.</p>
+  <div id="formResponsesMessage" class="card">Open this tab to load form responses.</div>
+  <div id="formResponsesCard" class="card hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px">
+      <p id="formResponsesCount" class="notice" style="margin:0"></p>
+      <button type="button" id="captainFormResponsesExportBtn" class="btn btn-primary" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Export Form Responses CSV</button>
+    </div>
+    <div style="overflow-x:auto"><table><thead id="formResponsesHead"></thead><tbody id="formResponsesBody"></tbody></table></div>
   </div>
 </section>
 </main>
