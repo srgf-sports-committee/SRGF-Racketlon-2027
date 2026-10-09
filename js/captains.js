@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(index===16)return "Whatspp";
     if(index===21)return "Availability";
     let label=String(header||"").trim();
+    if(label.toLowerCase().includes("rank your sports by priority"))return "";
+    if(label.toLowerCase().includes("nomination for") && label.toLowerCase().includes("nominate as a player"))return "Captain?";
     // Remove common form-question wording while preserving the actual field meaning.
     label=label
       .replace(/^please\s+(?:select|enter|provide|write|mention|choose|specify)\s+/i,"")
