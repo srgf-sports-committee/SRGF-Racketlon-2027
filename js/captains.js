@@ -63,9 +63,10 @@ document.addEventListener("DOMContentLoaded",async()=>{
     return label||String(header||"Column "+(index+1));
   }
   function renderFormResponses(){
-    formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map((h,i)=>"<th>"+esc(shortFormHeader(h,i))+"</th>").join("")+"</tr>";
+    const isPhotoColumn=header=>/photo|picture|image/i.test(String(header||""));
+    formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map((h,i)=>"<th"+(isPhotoColumn(h)?' class="form-response-photo-column"':"")+">"+esc(shortFormHeader(h,i))+"</th>").join("")+"</tr>";
     formResponsesBody.innerHTML=formResponseRows.length
-      ?formResponseRows.map(row=>"<tr>"+formResponseHeaders.map((_,i)=>"<td>"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
+      ?formResponseRows.map(row=>"<tr>"+formResponseHeaders.map((header,i)=>"<td"+(isPhotoColumn(header)?' class="form-response-photo-column"':"")+">"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
       :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses found.</td></tr>';
     formResponsesCount.textContent="Showing "+formResponseRows.length+" form responses";
   }
