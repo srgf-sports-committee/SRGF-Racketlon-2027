@@ -11,6 +11,64 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const playerOptions=$("captainPlayerOptions");
   const filterCount=$("captainFilterCount");
   let loading=false,loaded=false,players=[],selectedPlayer="";
+  let formResponsesLoaded=false,formResponseHeaders=[],formResponseRows=[],formResponsesLoading=false;
+  const directorySection=$("captainDirectory");
+  const formResponsesSection=$("captainFormResponses");
+  const directoryTab=$("captainDirectoryTab");
+  const formResponsesTab=$("captainFormResponsesTab");
+  const formResponsesMessage=$("formResponsesMessage");
+  const formResponsesCard=$("formResponsesCard");
+  const formResponsesHead=$("formResponsesHead");
+  const formResponsesBody=$("formResponsesBody");
+  const formResponsesCount=$("formResponsesCount");
+
+  function selectCaptainTab(tab){
+    const showResponses=tab==="responses";
+    directorySection.classList.toggle("hidden",showResponses);
+    formResponsesSection.classList.toggle("hidden",!showResponses);
+    directoryTab.classList.toggle("btn-primary",!showResponses);
+    formResponsesTab.classList.toggle("btn-primary",showResponses);
+    directoryTab.setAttribute("aria-selected",String(!showResponses));
+    formResponsesTab.setAttribute("aria-selected",String(showResponses));
+    if(showResponses&&!formResponsesLoaded)loadFormResponses();
+  }
+  function renderFormResponses(){
+    formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map(h=>"<th>"+esc(h)+"</th>").join("")+"</tr>";
+    formResponsesBody.innerHTML=formResponseRows.length
+      ?formResponseRows.map(row=>"<tr>"+formResponseHeaders.map((_,i)=>"<td>"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
+      :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses found.</td></tr>';
+    formResponsesCount.textContent="Showing "+formResponseRows.length+" form responses";
+  }
+  async function loadFormResponses(){
+    if(formResponsesLoading)return;
+    if(!canView()){
+      formResponsesMessage.classList.remove("hidden");
+      formResponsesMessage.textContent="Captain/Admin login required.";
+      formResponsesCard.classList.add("hidden");
+      return;
+    }
+    formResponsesLoading=true;
+    formResponsesMessage.classList.remove("hidden");
+    formResponsesMessage.textContent="Loading Form Responses 1…";
+    formResponsesCard.classList.add("hidden");
+    try{
+      const result=await live("formresponses",SRGFAuth.token());
+      if(result.ok===false)throw new Error(result.error||"Could not load Form Responses 1.");
+      formResponseHeaders=Array.isArray(result.headers)?result.headers.map(String):[];
+      formResponseRows=Array.isArray(result.rows)?result.rows:[];
+      // Column Q is renamed in this imported view only; the Google Sheet is untouched.
+      if(formResponseHeaders.length>16)formResponseHeaders[16]="Availability";
+      renderFormResponses();
+      formResponsesMessage.classList.add("hidden");
+      formResponsesCard.classList.remove("hidden");
+      formResponsesLoaded=true;
+      setStatus("Form Responses loaded");
+    }catch(e){
+      formResponsesMessage.classList.remove("hidden");
+      formResponsesMessage.textContent="Could not load Form Responses 1: "+(e.message||String(e));
+      setStatus("Could not load Form Responses",true);
+    }finally{formResponsesLoading=false;}
+  }
 
   function canView(){return SRGFAuth.canViewCaptains();}
   function showDenied(){
@@ -51,31 +109,23 @@ document.addEventListener("DOMContentLoaded",async()=>{
     link.remove();
     URL.revokeObjectURL(url);
   }
-  async function exportFormResponsesCsv(){
-    const button=$("captainFormResponsesExportBtn");
-    if(button){button.disabled=true;button.textContent="Preparing CSV…";}
-    try{
-      const result=await live("formresponses",SRGFAuth.token());
-      const headers=Array.isArray(result.headers)?result.headers:[];
-      const rows=Array.isArray(result.rows)?result.rows:[];
-      const csvRows=[headers,...rows];
-      const csv=csvRows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
-      const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
-      const url=URL.createObjectURL(blob);
-      const link=document.createElement("a");
-      link.href=url;
-      link.download="Form_Responses_1.csv";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
-      setStatus("Form Responses CSV ready");
-    }catch(e){
-      setStatus("Form Responses CSV download failed",true);
-      alert("Could not download Form Responses 1: "+(e.message||String(e)));
-    }finally{
-      if(button){button.disabled=false;button.textContent="Download Form Responses CSV";}
+  function exportFormResponsesCsv(){
+    if(!formResponsesLoaded){
+      alert("Please open the Form Responses tab and wait for the data to load.");
+      return;
     }
+    const rows=[formResponseHeaders,...formResponseRows];
+    const csv=rows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\\r\\n");
+    const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download="Form_Responses_1.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    setStatus("Form Responses CSV exported");
   }
   function populateTeamFilter(){
     const selected=teamFilter.value;
@@ -122,6 +172,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     }finally{loading=false;}
   }
 
+  directoryTab?.addEventListener("click",()=>selectCaptainTab("directory"));
+  formResponsesTab?.addEventListener("click",()=>selectCaptainTab("responses"));
   teamFilter.addEventListener("change",renderFilteredRows);
   $("captainExportBtn")?.addEventListener("click",exportDirectoryCsv);
   $("captainFormResponsesExportBtn")?.addEventListener("click",exportFormResponsesCsv);
