@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       const rows=Array.isArray(result.rows)?result.rows:[];
       const csvRows=[headers,...rows];
       const csv=csvRows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
-      const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+      const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
       const url=URL.createObjectURL(blob);
       const link=document.createElement("a");
       link.href=url;
