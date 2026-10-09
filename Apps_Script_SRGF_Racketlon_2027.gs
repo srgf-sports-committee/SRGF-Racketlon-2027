@@ -600,3 +600,55 @@ function authorizeServices(){
   });
   return 'Authorization check completed.';
 }
+
+
+/* =========================================================
+   PAYMENT VERIFICATION MIRROR
+   Source: Form Responses 1 in SPREADSHEET_ID
+   Destination: separate payment-verification spreadsheet
+   A:Y are source-owned; verifier tracking starts in Z.
+   Run setupPaymentVerificationSync() once to install a
+   five-minute time-driven sync trigger.
+========================================================= */
+const PAYMENT_VERIFICATION_SPREADSHEET_ID = '1OItkRa8tMQ_AdRrYfl7afO_eai4yriGWCp1x4o9RG64';
+
+function setupPaymentVerificationSync(){
+  const source = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const destination = SpreadsheetApp.openById(PAYMENT_VERIFICATION_SPREADSHEET_ID);
+  if(!source.getSheetByName('Form Responses 1')) throw new Error('Source sheet Form Responses 1 is missing.');
+  let target = destination.getSheetByName('Form Responses 1');
+  if(!target) target = destination.insertSheet('Form Responses 1');
+  // Perform an initial sync before enabling the recurring trigger.
+  syncPaymentVerificationCopy_();
+  // Avoid installing duplicate triggers for this function.
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'syncPaymentVerificationCopy_')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('syncPaymentVerificationCopy_').timeBased().everyMinutes(5).create();
+  return 'Initial sync completed. Automatic sync is scheduled every 5 minutes.';
+}
+
+function syncPaymentVerificationCopy_(){
+  const source = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const destination = SpreadsheetApp.openById(PAYMENT_VERIFICATION_SPREADSHEET_ID);
+  const sourceSheet = source.getSheetByName('Form Responses 1');
+  if(!sourceSheet) throw new Error('Source sheet Form Responses 1 is missing.');
+  let targetSheet = destination.getSheetByName('Form Responses 1');
+  if(!targetSheet) targetSheet = destination.insertSheet('Form Responses 1');
+
+  const sourceLastRow = Math.max(1, sourceSheet.getLastRow());
+  // Always sync exactly A:Y, even if source currently only has data through W.
+  const values = sourceSheet.getRange(1, 1, sourceLastRow, 25).getDisplayValues();
+
+  // Update only A:Y. This intentionally leaves Z onward untouched.
+  targetSheet.getRange(1, 1, values.length, 25).setValues(values);
+
+  // Clear stale mirror values if source rows were removed; never clear Z onward.
+  const oldTargetLastRow = targetSheet.getLastRow();
+  if(oldTargetLastRow > values.length){
+    targetSheet.getRange(values.length + 1, 1, oldTargetLastRow - values.length, 25).clearContent();
+  }
+  targetSheet.setFrozenRows(1);
+  SpreadsheetApp.flush();
+  return {ok:true, rows:values.length, columns:'A:Y', verifierColumns:'Z onward'};
+}
