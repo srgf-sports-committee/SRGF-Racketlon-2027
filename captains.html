@@ -18,6 +18,17 @@
   <p class="notice">Team contact list for authorized Captains and Admin.</p>
   <div id="captainAccessMessage" class="card">Checking access…</div>
   <div id="captainTableCard" class="card hidden">
+    <div class="captain-filters">
+      <div class="captain-filter-field">
+        <label for="captainTeamFilter">Team Name</label>
+        <select id="captainTeamFilter"><option value="">All Teams</option></select>
+      </div>
+      <div class="captain-filter-field">
+        <label for="captainPlayerFilter">Player Name</label>
+        <input id="captainPlayerFilter" type="search" placeholder="Search player name…" autocomplete="off">
+      </div>
+    </div>
+    <p id="captainFilterCount" class="notice" aria-live="polite"></p>
     <div style="overflow-x:auto">
       <table>
         <thead><tr><th>Team Name</th><th>Player Name</th><th>Mobile</th></tr></thead>
@@ -30,6 +41,6 @@
 <script src="js/config.js?v=20260929-auth1"></script>
 <script src="js/common.js?v=20261009-captainnav1"></script>
 <script src="js/auth.js?v=20261009-captainrole2"></script>
-<script src="js/captains.js?v=20261009-captains1"></script>
+<script src="js/captains.js?v=20261009-captains2"></script>
 </body>
 </html>
