@@ -1,6 +1,18 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-09T03:57:01.712849+00:00",
+  "generatedAt": "2026-10-09T04:13:40.158832+00:00",
   "source": "Google Sheet via Apps Script",
-  "players": []
+  "players": [
+    {
+      "id": "P001",
+      "name": "Shrikant Naidu(40)",
+      "category": "Individual",
+      "badminton": "Beginer",
+      "tt": "Never Played",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P001.jpg"
+    }
+  ]
 }
