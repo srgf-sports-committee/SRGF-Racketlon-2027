@@ -2,7 +2,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const {$,esc,setStatus,nav,live}=SRGF;
   const message=$("captainAccessMessage");
   const card=$("captainTableCard");
-  let loading=false,loaded=false;
+  const body=$("captainPlayersBody");
+  const teamFilter=$("captainTeamFilter");
+  const playerFilter=$("captainPlayerFilter");
+  const filterCount=$("captainFilterCount");
+  let loading=false,loaded=false,players=[];
 
   function canView(){
     return SRGFAuth.canViewCaptains();
@@ -13,6 +17,23 @@ document.addEventListener("DOMContentLoaded",async()=>{
     message.innerHTML='Please sign in with an account assigned the <strong>CAPTAIN</strong> or <strong>ADMIN</strong> role.';
     setStatus("Captain/Admin login required",true);
   }
+  function renderFilteredRows(){
+    const team=teamFilter.value;
+    const playerQuery=playerFilter.value.trim().toLocaleLowerCase();
+    const filtered=players.filter(p=>{
+      const teamName=String(p.teamName||"");
+      const playerName=String(p.playerName||"");
+      return (!team||teamName===team)&&(!playerQuery||playerName.toLocaleLowerCase().includes(playerQuery));
+    });
+    body.innerHTML=filtered.length?filtered.map(p=>'<tr><td>'+esc(p.teamName||"")+'</td><td>'+esc(p.playerName||"")+'</td><td>'+esc(p.mobile||"")+'</td></tr>').join(""):'<tr><td colspan="3">No players match the selected filters.</td></tr>';
+    filterCount.textContent='Showing '+filtered.length+' of '+players.length+' players';
+  }
+  function populateTeamFilter(){
+    const selected=teamFilter.value;
+    const teams=[...new Set(players.map(p=>String(p.teamName||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    teamFilter.innerHTML='<option value="">All Teams</option>'+teams.map(team=>'<option value="'+esc(team)+'">'+esc(team)+'</option>').join("");
+    if(teams.includes(selected))teamFilter.value=selected;
+  }
   async function loadDirectory(){
     if(loading)return;
     if(!canView()){showDenied();return;}
@@ -22,8 +43,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
     card.classList.add("hidden");
     try{
       const result=await live("captains",SRGFAuth.token());
-      const rows=Array.isArray(result.rows)?result.rows:[];
-      $("captainPlayersBody").innerHTML=rows.length?rows.map(p=>'<tr><td>'+esc(p.teamName||"")+'</td><td>'+esc(p.playerName||"")+'</td><td>'+esc(p.mobile||"")+'</td></tr>').join(""):'<tr><td colspan="3">No player details found.</td></tr>';
+      players=Array.isArray(result.rows)?result.rows:[];
+      populateTeamFilter();
+      renderFilteredRows();
       message.classList.add("hidden");
       card.classList.remove("hidden");
       setStatus("LIVE · Google Sheet");
@@ -34,6 +56,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
       setStatus("Could not load Captain Directory",true);
     }finally{loading=false;}
   }
+
+  teamFilter.addEventListener("change",renderFilteredRows);
+  playerFilter.addEventListener("input",renderFilteredRows);
 
   await SRGFAuth.init();
   nav("captains");
