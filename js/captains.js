@@ -37,26 +37,26 @@ document.addEventListener("DOMContentLoaded",async()=>{
     let label=String(header||"").trim();
     // Remove common form-question wording while preserving the actual field meaning.
     label=label
-      .replace(/^please\\s+(?:select|enter|provide|write|mention|choose|specify)\\s+/i,"")
-      .replace(/^kindly\\s+(?:select|enter|provide|write|mention|choose|specify)\\s+/i,"")
-      .replace(/^(?:what is|what's|which is|which are|please tell us)\\s+(?:your|the)\\s+/i,"")
-      .replace(/^(?:your|the)\\s+/i,"")
+      .replace(/^please\s+(?:select|enter|provide|write|mention|choose|specify)\s+/i,"")
+      .replace(/^kindly\s+(?:select|enter|provide|write|mention|choose|specify)\s+/i,"")
+      .replace(/^(?:what is|what's|which is|which are|please tell us)\s+(?:your|the)\s+/i,"")
+      .replace(/^(?:your|the)\s+/i,"")
       .replace(/[?:]+$/g,"")
-      .replace(/\\s+/g," ")
+      .replace(/\s+/g," ")
       .trim();
     const replacements=[
       [/^timestamp$/i,"Timestamp"],
-      [/e-?mail\\s+address/i,"Email"],
-      [/mobile\\s+(?:phone\\s+)?number/i,"Mobile"],
-      [/phone\\s+number/i,"Phone"],
-      [/contact\\s+number/i,"Contact"],
-      [/full\\s+name/i,"Name"],
-      [/date\\s+of\\s+birth/i,"DOB"],
-      [/available\\s+(?:sports|sport|dates|days|time)/i,"Availability"],
-      [/availability\\s+for/i,"Availability"],
-      [/team\\s+name/i,"Team"],
-      [/player\\s+name/i,"Player"],
-      [/transaction\\s+code/i,"Transaction Code"]
+      [/e-?mail\s+address/i,"Email"],
+      [/mobile\s+(?:phone\s+)?number/i,"Mobile"],
+      [/phone\s+number/i,"Phone"],
+      [/contact\s+number/i,"Contact"],
+      [/full\s+name/i,"Name"],
+      [/date\s+of\s+birth/i,"DOB"],
+      [/available\s+(?:sports|sport|dates|days|time)/i,"Availability"],
+      [/availability\s+for/i,"Availability"],
+      [/team\s+name/i,"Team"],
+      [/player\s+name/i,"Player"],
+      [/transaction\s+code/i,"Transaction Code"]
     ];
     replacements.forEach(([pattern,value])=>{label=label.replace(pattern,value);});
     return label||String(header||"Column "+(index+1));
