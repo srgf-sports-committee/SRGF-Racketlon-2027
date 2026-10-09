@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const labels=["P1","P2","P3","P4"];
     const colors=["#245B85","#23765B","#8A5A20","#67469A"];
     if(parts.length!==4||!parts.every((part,i)=>new RegExp("^"+labels[i]+"\\s*:","i").test(part)))return esc(value||"");
-    return '<span style="display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px">'+parts.map((part,i)=>'<span style="display:inline-block;background:'+colors[i]+';color:#fff;border-radius:5px;padding:3px 6px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:500">'+esc(part)+'</span>').join("")+'</span>';
+    return '<span style="display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px">'+parts.map((part,i)=>'<span style="display:inline-block;background:'+colors[i]+';color:#fff;border-radius:5px;padding:3px 6px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:500">'+esc(part)+'</span>').join("")+'</span>';
   }
 
   function playerOptions(q){
