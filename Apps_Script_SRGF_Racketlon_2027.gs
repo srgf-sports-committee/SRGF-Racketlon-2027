@@ -33,6 +33,11 @@ function doGet(e){
       if(user.role!=='ADMIN' && user.role!=='CAPTAIN') throw new Error('Captain or Admin access required.');
       return json_({ok:true,rows:getCaptainDirectory_()});
     }
+    if(a==='formresponses'){
+      const user=authorize_(e.parameter.token||'', false);
+      if(user.role!=='ADMIN' && user.role!=='CAPTAIN') throw new Error('Captain or Admin access required.');
+      return json_(getFormResponses_());
+    }
 
     // Every successful read carries the timestamp of the latest actual
     // Google-Sheet content change. This lets the website compare live data,
@@ -102,6 +107,18 @@ function getCaptainDirectory_(){
       mobile:String(p['Mobile']||'').trim()
     };
   }).sort((a,b)=>a.teamName.localeCompare(b.teamName)||a.playerName.localeCompare(b.playerName));
+}
+
+function getFormResponses_(){
+  const ss=SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh=ss.getSheetByName('Form Responses 1');
+  if(!sh) throw new Error('Form Responses 1 sheet is missing.');
+  const lastRow=sh.getLastRow(), lastCol=sh.getLastColumn();
+  if(lastRow<1 || lastCol<1) return {ok:true,headers:[],rows:[]};
+  const values=sh.getRange(1,1,lastRow,lastCol).getDisplayValues();
+  const headers=values[0].map(String);
+  const rows=values.slice(1).filter(row=>row.some(value=>String(value).trim()!==''));
+  return {ok:true,headers,rows};
 }
 
 function exportData_(){
