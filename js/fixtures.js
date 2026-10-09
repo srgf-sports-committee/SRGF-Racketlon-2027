@@ -406,10 +406,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
           const cells=x.r.map((v,i)=>{
             let out=String(v??"");
             if(norm(headers[i])==="schedule")out=formatSchedule(out);
-            // Render a Priority Chart stored in one Sheet cell as compact, color-coded badges.
-            if(/P1\s*:\s*TT\s*\|\s*P2\s*:\s*BAD\s*\|\s*P3\s*:\s*LT\s*\|\s*P4\s*:\s*PB/i.test(out)){
-              const badges=[["P1: TT","#245B85"],["P2: BAD","#23765B"],["P3: LT","#8A5A20"],["P4: PB","#67469A"]];
-              const html=badges.map(function(item){return '<span style="display:inline-block;background:'+item[1]+' ;color:#fff;border-radius:5px;padding:3px 7px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:500">'+item[0]+'</span>';}).join('<span style="display:inline-block;width:4px"></span>');
+            // Render any single-cell result containing P1, P2, P3, P4 in that order as compact badges.
+            const parts = out.split(/\\s*\\|\\s*/).map(function(part){return part.trim();});
+            if(parts.length===4 && parts.every(function(part,index){return new RegExp("^P"+(index+1)+"\\\\s*:","i").test(part);})){
+              const colors=["#245B85","#23765B","#8A5A20","#67469A"];
+              const html=parts.map(function(part,index){return '<span style="display:inline-block;background:'+colors[index]+';color:#fff;border-radius:5px;padding:3px 7px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:500">'+esc(part)+'</span>';}).join('<span style="display:inline-block;width:4px"></span>');
               return '<td><span style="display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px">'+html+'</span></td>';
             }
             return `<td>${esc(out)}</td>`;
