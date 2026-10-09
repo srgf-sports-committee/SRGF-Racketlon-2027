@@ -96,7 +96,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
     }finally{loading=false;}
   }
 
-  teamFilter.addEventListener("change",renderFilteredRows);\n  $("captainExportBtn")?.addEventListener("click",exportDirectoryCsv);
+  teamFilter.addEventListener("change",renderFilteredRows);
+  $("captainExportBtn")?.addEventListener("click",exportDirectoryCsv);
   playerTrigger.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
   playerSearch.addEventListener("input",renderPlayerOptions);
   playerOptions.addEventListener("click",event=>{
