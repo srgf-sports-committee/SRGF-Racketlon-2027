@@ -33,10 +33,7 @@
   <div class="header-actions"><div><div id="status" class="status">Checking access…</div></div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
 </header>
 <main>
-<div class="captain-tabs" role="tablist" aria-label="Captain Directory views" >
-  <button type="button" id="captainDirectoryTab" class="btn btn-primary" role="tab" aria-selected="true" aria-controls="captainDirectory" >Captain Directory</button>
-  <button type="button" id="captainFormResponsesTab" class="btn" role="tab" aria-selected="false" aria-controls="captainFormResponses" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Form Responses</button>
-</div>
+
 <section id="captainDirectory">
   <h1>Captain Directory</h1>
   <p class="notice">Team contact list for authorized Captains and Admin.</p>
@@ -65,6 +62,10 @@
     </div>
   </div>
 </section>
+<div class="captain-tabs" role="tablist" aria-label="Captain Directory views" >
+  <button type="button" id="captainDirectoryTab" class="btn btn-primary" role="tab" aria-selected="true" aria-controls="captainDirectory" >Captain Directory</button>
+  <button type="button" id="captainFormResponsesTab" class="btn" role="tab" aria-selected="false" aria-controls="captainFormResponses" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Form Responses</button>
+</div>
 <section id="captainFormResponses" class="hidden" role="tabpanel" aria-labelledby="captainFormResponsesTab">
   <h1>Form Responses</h1>
   <p class="notice">Imported view of the Form Responses 1 sheet. The source sheet is not modified.</p>
