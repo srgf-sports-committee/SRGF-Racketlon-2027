@@ -20,6 +20,10 @@
 .captain-player-option:hover,.captain-player-option.active{background:rgba(126,220,219,.12);color:#fff}
 .captain-player-no-match{padding:9px 10px;color:#a8c2ca;font-size:.9rem}
 @media(max-width:600px){.captain-filters{grid-template-columns:1fr;gap:12px}}
+.captain-tabs{display:flex!important;gap:6px!important;flex-wrap:nowrap!important;width:fit-content;max-width:100%;padding:6px;margin-bottom:16px!important;background:rgba(4,25,35,.72);border:1px solid rgba(126,220,219,.20);border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.18)}
+.captain-tabs .btn{min-height:42px!important;padding:11px 18px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#91a8b0!important;font-size:14px!important;font-weight:800!important;cursor:pointer;box-shadow:none!important}
+.captain-tabs .btn.btn-primary{color:#09201d!important;background:linear-gradient(135deg,#d9ee63,#8ee6b2 52%,#48e0d1)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 7px 22px rgba(72,224,209,.22)!important}
+@media(max-width:520px){.captain-tabs{width:100%;box-sizing:border-box}.captain-tabs .btn{flex:1;min-width:0;padding:10px 12px!important}}
 </style>
 </head>
 <body data-page="captains">
@@ -29,8 +33,8 @@
   <div class="header-actions"><div><div id="status" class="status">Checking access…</div></div><button id="refreshBtn" class="icon-refresh" title="Refresh">↻</button><div id="authBox" class="auth-box"></div></div>
 </header>
 <main>
-<div class="captain-tabs" role="tablist" aria-label="Captain Directory views" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-  <button type="button" id="captainDirectoryTab" class="btn btn-primary" role="tab" aria-selected="true" aria-controls="captainDirectory" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Captain Directory</button>
+<div class="captain-tabs" role="tablist" aria-label="Captain Directory views" >
+  <button type="button" id="captainDirectoryTab" class="btn btn-primary" role="tab" aria-selected="true" aria-controls="captainDirectory" >Captain Directory</button>
   <button type="button" id="captainFormResponsesTab" class="btn" role="tab" aria-selected="false" aria-controls="captainFormResponses" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Form Responses</button>
 </div>
 <section id="captainDirectory">
