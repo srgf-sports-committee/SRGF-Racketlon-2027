@@ -132,7 +132,7 @@
         box.innerHTML=`<span class="role-pill">${window.SRGF.esc(session.role)} · ${window.SRGF.esc(session.email)}</span><button class="secondary" id="logoutBtn">Logout</button>`;
         document.getElementById("logoutBtn")?.addEventListener("click",clear);
       }else{
-        box.innerHTML=`<button class="secondary" id="loginBtn">Admin / Writer Login</button>`;
+        box.innerHTML=`<button class="secondary" id="loginBtn">Login</button>`;
         document.getElementById("loginBtn")?.addEventListener("click",renderLoginPanel);
       }
     }
