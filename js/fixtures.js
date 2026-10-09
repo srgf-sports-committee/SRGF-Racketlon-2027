@@ -407,8 +407,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
             let out=String(v??"");
             if(norm(headers[i])==="schedule")out=formatSchedule(out);
             // Render any single-cell result containing P1, P2, P3, P4 in that order as compact badges.
-            const parts = out.split(/\\s*\\|\\s*/).map(function(part){return part.trim();});
-            if(parts.length===4 && parts.every(function(part,index){return new RegExp("^P"+(index+1)+"\\\\s*:","i").test(part);})){
+            const parts = out.split(/\s*\|\s*/).map(function(part){return part.trim();});
+            if(parts.length===4 && parts.every(function(part,index){return new RegExp("^P"+(index+1)+"\\s*:","i").test(part);})){
               const colors=["#245B85","#23765B","#8A5A20","#67469A"];
               const html=parts.map(function(part,index){return '<span style="display:inline-block;background:'+colors[index]+';color:#fff;border-radius:5px;padding:3px 7px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:500">'+esc(part)+'</span>';}).join('<span style="display:inline-block;width:4px"></span>');
               return '<td><span style="display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px">'+html+'</span></td>';
