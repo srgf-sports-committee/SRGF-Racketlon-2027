@@ -4,13 +4,15 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const card=$("captainTableCard");
   const body=$("captainPlayersBody");
   const teamFilter=$("captainTeamFilter");
-  const playerFilter=$("captainPlayerFilter");
+  const playerTrigger=$("captainPlayerTrigger");
+  const playerSelected=$("captainPlayerSelected");
+  const playerDropdown=$("captainPlayerDropdown");
+  const playerSearch=$("captainPlayerSearch");
+  const playerOptions=$("captainPlayerOptions");
   const filterCount=$("captainFilterCount");
-  let loading=false,loaded=false,players=[];
+  let loading=false,loaded=false,players=[],selectedPlayer="";
 
-  function canView(){
-    return SRGFAuth.canViewCaptains();
-  }
+  function canView(){return SRGFAuth.canViewCaptains();}
   function showDenied(){
     card.classList.add("hidden");
     message.classList.remove("hidden");
@@ -19,11 +21,10 @@ document.addEventListener("DOMContentLoaded",async()=>{
   }
   function renderFilteredRows(){
     const team=teamFilter.value;
-    const playerQuery=playerFilter.value.trim().toLocaleLowerCase();
     const filtered=players.filter(p=>{
-      const teamName=String(p.teamName||"");
-      const playerName=String(p.playerName||"");
-      return (!team||teamName===team)&&(!playerQuery||playerName.toLocaleLowerCase().includes(playerQuery));
+      const teamName=String(p.teamName||"").trim();
+      const playerName=String(p.playerName||"").trim();
+      return (!team||teamName===team)&&(!selectedPlayer||playerName===selectedPlayer);
     });
     body.innerHTML=filtered.length?filtered.map(p=>'<tr><td>'+esc(p.teamName||"")+'</td><td>'+esc(p.playerName||"")+'</td><td>'+esc(p.mobile||"")+'</td></tr>').join(""):'<tr><td colspan="3">No players match the selected filters.</td></tr>';
     filterCount.textContent='Showing '+filtered.length+' of '+players.length+' players';
@@ -33,6 +34,21 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const teams=[...new Set(players.map(p=>String(p.teamName||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     teamFilter.innerHTML='<option value="">All Teams</option>'+teams.map(team=>'<option value="'+esc(team)+'">'+esc(team)+'</option>').join("");
     if(teams.includes(selected))teamFilter.value=selected;
+  }
+  function renderPlayerOptions(){
+    const query=playerSearch.value.trim().toLocaleLowerCase();
+    const names=[...new Set(players.map(p=>String(p.playerName||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const filtered=names.filter(name=>name.toLocaleLowerCase().includes(query));
+    const options=[{name:"All Players",value:""},...filtered.map(name=>({name,value:name}))];
+    playerOptions.innerHTML=options.length?options.map(option=>'<button type="button" role="option" aria-selected="'+(selectedPlayer===option.value)+'" class="captain-player-option'+(selectedPlayer===option.value?' active':'')+'" data-player="'+esc(option.value)+'">'+esc(option.name)+'</button>').join(""):'<div class="captain-player-no-match">No matching players</div>';
+  }
+  function closePlayerDropdown(){playerDropdown.classList.add("hidden");playerTrigger.setAttribute("aria-expanded","false");}
+  function openPlayerDropdown(){
+    playerDropdown.classList.remove("hidden");
+    playerTrigger.setAttribute("aria-expanded","true");
+    playerSearch.value="";
+    renderPlayerOptions();
+    playerSearch.focus();
   }
   async function loadDirectory(){
     if(loading)return;
@@ -45,6 +61,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       const result=await live("captains",SRGFAuth.token());
       players=Array.isArray(result.rows)?result.rows:[];
       populateTeamFilter();
+      renderPlayerOptions();
       renderFilteredRows();
       message.classList.add("hidden");
       card.classList.remove("hidden");
@@ -58,14 +75,25 @@ document.addEventListener("DOMContentLoaded",async()=>{
   }
 
   teamFilter.addEventListener("change",renderFilteredRows);
-  playerFilter.addEventListener("input",renderFilteredRows);
+  playerTrigger.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
+  playerSearch.addEventListener("input",renderPlayerOptions);
+  playerOptions.addEventListener("click",event=>{
+    const option=event.target.closest("[data-player]");
+    if(!option)return;
+    selectedPlayer=option.dataset.player||"";
+    playerSelected.textContent=selectedPlayer||"All Players";
+    closePlayerDropdown();
+    renderPlayerOptions();
+    renderFilteredRows();
+  });
+  document.addEventListener("click",event=>{
+    if(!$("captainPlayerFilterWrap").contains(event.target))closePlayerDropdown();
+  });
+  document.addEventListener("keydown",event=>{if(event.key==="Escape")closePlayerDropdown();});
 
   await SRGFAuth.init();
   nav("captains");
   if(canView())await loadDirectory();else showDenied();
-
-  // Re-check when the sign-in UI changes, so a newly logged-in Captain
-  // can see the directory without manually refreshing the page.
   const authBox=$("authBox");
   if(authBox){
     new MutationObserver(()=>{
