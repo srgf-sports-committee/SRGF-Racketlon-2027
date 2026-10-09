@@ -32,8 +32,37 @@ document.addEventListener("DOMContentLoaded",async()=>{
     formResponsesTab.setAttribute("aria-selected",String(showResponses));
     if(showResponses&&!formResponsesLoaded)loadFormResponses();
   }
+  function shortFormHeader(header,index){
+    if(index===16)return "Availability";
+    let label=String(header||"").trim();
+    // Remove common form-question wording while preserving the actual field meaning.
+    label=label
+      .replace(/^please\\s+(?:select|enter|provide|write|mention|choose|specify)\\s+/i,"")
+      .replace(/^kindly\\s+(?:select|enter|provide|write|mention|choose|specify)\\s+/i,"")
+      .replace(/^(?:what is|what's|which is|which are|please tell us)\\s+(?:your|the)\\s+/i,"")
+      .replace(/^(?:your|the)\\s+/i,"")
+      .replace(/[?:]+$/g,"")
+      .replace(/\\s+/g," ")
+      .trim();
+    const replacements=[
+      [/^timestamp$/i,"Timestamp"],
+      [/e-?mail\\s+address/i,"Email"],
+      [/mobile\\s+(?:phone\\s+)?number/i,"Mobile"],
+      [/phone\\s+number/i,"Phone"],
+      [/contact\\s+number/i,"Contact"],
+      [/full\\s+name/i,"Name"],
+      [/date\\s+of\\s+birth/i,"DOB"],
+      [/available\\s+(?:sports|sport|dates|days|time)/i,"Availability"],
+      [/availability\\s+for/i,"Availability"],
+      [/team\\s+name/i,"Team"],
+      [/player\\s+name/i,"Player"],
+      [/transaction\\s+code/i,"Transaction Code"]
+    ];
+    replacements.forEach(([pattern,value])=>{label=label.replace(pattern,value);});
+    return label||String(header||"Column "+(index+1));
+  }
   function renderFormResponses(){
-    formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map(h=>"<th>"+esc(h)+"</th>").join("")+"</tr>";
+    formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map((h,i)=>"<th>"+esc(shortFormHeader(h,i))+"</th>").join("")+"</tr>";
     formResponsesBody.innerHTML=formResponseRows.length
       ?formResponseRows.map(row=>"<tr>"+formResponseHeaders.map((_,i)=>"<td>"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
       :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses found.</td></tr>';
@@ -114,7 +143,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       alert("Please open the Form Responses tab and wait for the data to load.");
       return;
     }
-    const rows=[formResponseHeaders,...formResponseRows];
+    const rows=[formResponseHeaders.map((header,index)=>shortFormHeader(header,index)),...formResponseRows];
     const csv=rows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
     const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
     const url=URL.createObjectURL(blob);
