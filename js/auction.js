@@ -124,6 +124,13 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const n=Number(v);return n>=1&&n<=99.9?Math.round(n*scaleInfo().scale):0;
   }
   function initials(name){return String(name||"?").trim().split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase()||"?";}
+  function priorityChartBadges(value){
+    const parts=String(value||"").split(/\s*\|\s*/).map(x=>x.trim());
+    const labels=["P1","P2","P3","P4"];
+    const colors=["#245B85","#23765B","#8A5A20","#67469A"];
+    if(parts.length!==4||!parts.every((part,i)=>new RegExp("^"+labels[i]+"\\s*:","i").test(part)))return esc(value||"");
+    return '<span style="display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px">'+parts.map((part,i)=>'<span style="display:inline-block;background:'+colors[i]+';color:#fff;border-radius:5px;padding:3px 7px;white-space:nowrap;font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:500">'+esc(part)+'</span>').join("")+'</span>';
+  }
 
   function playerOptions(q){
     const avail=state.players.filter(p=>p.active&&!state.auction.some(a=>String(a.playerId)===String(p.id)));
@@ -161,7 +168,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const p=selectedPlayer||state.players.find(x=>String(x.id)===String($("playerSelect").value)),box=$("playerDetails");
     if(!p){box.className="player-details-empty";box.innerHTML="Select a player to view player details.";return;}
     box.className="player-details";
-    box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px"><span>'+esc(p.name)+'</span><span class="priority-chart-value" style="margin-left:auto;text-align:right;font-weight:700;white-space:nowrap">'+esc(p.priorityChart||"")+'</span></div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
+    box.innerHTML='<div class="player-photo-wrap"><img id="selectedPlayerPhoto" class="player-photo" src="" alt="'+esc(p.name)+'" style="display:none"><div id="selectedPlayerInitials" class="player-photo-placeholder">'+esc(initials(p.name))+'</div><button type="button" id="photoZoomBtn" class="photo-zoom-btn" style="display:none">🔍 Zoom</button></div><div><div class="player-name" style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px"><span>'+esc(p.name)+'</span><span class="priority-chart-value" style="margin-left:auto;text-align:right;font-weight:700;white-space:nowrap">'+priorityChartBadges(p.priorityChart||"")+'</span></div><div class="player-info"><div class="player-info-item"><label>Player ID</label><strong>'+esc(p.id)+'</strong></div><div class="player-info-item"><label>Category</label><strong>'+esc(p.category||"—")+'</strong></div><div class="player-info-item"><label>Badminton</label><strong>'+esc(p.badminton||"—")+'</strong></div><div class="player-info-item"><label>Table Tennis</label><strong>'+esc(p.tt||"—")+'</strong></div><div class="player-info-item"><label>Lawn Tennis</label><strong>'+esc(p.tennis||"—")+'</strong></div><div class="player-info-item"><label>Pickleball</label><strong>'+esc(p.pickle||"—")+'</strong></div></div></div>';
     playerPhoto(p);
   }
   function renderTeamsBoard(){
