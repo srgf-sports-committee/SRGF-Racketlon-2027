@@ -385,7 +385,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
       // Start the live Sheet request at the same time as the static GitHub
       // profile requests, so neither network wait is added on top of the other.
       const profilesRequest=loadStaticProfiles();
-      const liveRequest=apiData();
+      // Capture a fast API rejection immediately while profile JSON is loading.
+      const liveRequest=apiData().then(data=>({data}),error=>({error}));
       let staticProfiles=[];
       try{staticProfiles=await profilesRequest;}catch(_){}
       if(staticProfiles.length){
@@ -396,7 +397,9 @@ document.addEventListener("DOMContentLoaded",async()=>{
       }
       try{
         SRGF.setStatus("Refreshing from Google Sheet…");
-        const d=await liveRequest;state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
+        const liveResult=await liveRequest;
+        if(liveResult.error)throw liveResult.error;
+        const d=liveResult.data;state.config={};(d.config||[]).forEach(r=>{if(r["Parameter"]!==undefined)state.config[String(r["Parameter"])]=r["Value"];});
         mergeLive(normalizePlayers(d.players),normalizeTeams(d.teams),normalizeAuction(d.auction),staticProfiles);
         // Re-apply the GitHub static profile after live Sheet data so a Drive
         // photo value from the Sheet cannot replace the GitHub photo.
