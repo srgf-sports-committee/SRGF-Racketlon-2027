@@ -51,6 +51,32 @@ document.addEventListener("DOMContentLoaded",async()=>{
     link.remove();
     URL.revokeObjectURL(url);
   }
+  async function exportFormResponsesCsv(){
+    const button=$("captainFormResponsesExportBtn");
+    if(button){button.disabled=true;button.textContent="Preparing CSV…";}
+    try{
+      const result=await live("formresponses",SRGFAuth.token());
+      const headers=Array.isArray(result.headers)?result.headers:[];
+      const rows=Array.isArray(result.rows)?result.rows:[];
+      const csvRows=[headers,...rows];
+      const csv=csvRows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
+      const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      link.href=url;
+      link.download="Form_Responses_1.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      setStatus("Form Responses CSV ready");
+    }catch(e){
+      setStatus("Form Responses CSV download failed",true);
+      alert("Could not download Form Responses 1: "+(e.message||String(e)));
+    }finally{
+      if(button){button.disabled=false;button.textContent="Download Form Responses CSV";}
+    }
+  }
   function populateTeamFilter(){
     const selected=teamFilter.value;
     const teams=[...new Set(players.map(p=>String(p.teamName||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -98,6 +124,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
 
   teamFilter.addEventListener("change",renderFilteredRows);
   $("captainExportBtn")?.addEventListener("click",exportDirectoryCsv);
+  $("captainFormResponsesExportBtn")?.addEventListener("click",exportFormResponsesCsv);
   playerTrigger.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
   playerSearch.addEventListener("input",renderPlayerOptions);
   playerOptions.addEventListener("click",event=>{
