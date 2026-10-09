@@ -111,7 +111,7 @@
     if(!box)return;
     box.innerHTML=`
       <div class="srgf-login-panel" id="srgfLoginPanel">
-        <div class="srgf-login-title">Admin / Writer Login</div>
+        <div class="srgf-login-title">Login</div>
         <div class="srgf-login-help">Choose one of your Google accounts. If the account you need is not listed, Google provides an option to use another account and enter its email address.</div>
         <div id="googleSignInButton" class="srgf-google-button"></div>
         <button class="secondary srgf-login-cancel" id="srgfLoginCancel" type="button">Cancel</button>
