@@ -43,17 +43,18 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase}
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:10px;
   min-width:155px;
-  padding:11px 18px;
+  padding:12px 20px;
   border:1px solid transparent;
-  border-radius:10px;
+  border-radius:11px;
   background:transparent;
-  color:#cfe1e5;
+  color:#91a8b0;
   font-weight:800;
   font-size:14px;
+  line-height:1.2;
   cursor:pointer;
-  transition:all .2s ease;
+  transition:background .2s ease,color .2s ease,box-shadow .2s ease,transform .2s ease;
 }
 .player-score-tab:hover{
   background:rgba(72,224,209,.08);
@@ -61,10 +62,10 @@ th{color:var(--muted);font-size:11px;text-transform:uppercase}
   transform:translateY(-1px);
 }
 .player-score-tab.active{
-  color:#09201d;
-  background:linear-gradient(135deg,#d9ee63,#8ee6b2 52%,#48e0d1);
-  border-color:rgba(255,255,255,.15);
-  box-shadow:0 7px 22px rgba(72,224,209,.22);
+  color:#082522;
+  background:linear-gradient(110deg,#d9f36c 0%,#9cebb0 55%,#4ce0cf 100%);
+  border-color:rgba(255,255,255,.22);
+  box-shadow:0 5px 16px rgba(72,224,209,.20),inset 0 1px 0 rgba(255,255,255,.28);
 }
 .player-score-tab-icon{font-size:16px;line-height:1}
 .player-score-filters{
