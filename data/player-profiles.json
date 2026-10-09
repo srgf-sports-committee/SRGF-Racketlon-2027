@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-09T12:53:21.086447+00:00",
+  "generatedAt": "2026-10-09T13:09:33.844650+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
       "id": "P001",
-      "name": "Shrikant Naidu(40)",
+      "name": "Shrikant Naidu (40)",
       "category": "Individual",
       "badminton": "Beginner",
       "tt": "Never Played",
@@ -16,7 +16,7 @@
     },
     {
       "id": "P002",
-      "name": "Ranvijay Singh(32)*",
+      "name": "Ranvijay Singh (32) *",
       "category": "Racketlon",
       "badminton": "Advanced",
       "tt": "Beginner",
