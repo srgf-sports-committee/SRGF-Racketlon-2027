@@ -1,8 +1,24 @@
 {
-  "updatedAt": "2026-10-09T03:58:47.234Z",
-  "sourceUpdatedAt": "2026-10-09T03:58:47.234Z",
-  "syncedAt": "2026-10-09T04:02:42.907217Z",
+  "updatedAt": "2026-10-09T04:12:39.286Z",
+  "sourceUpdatedAt": "2026-10-09T04:12:39.286Z",
+  "syncedAt": "2026-10-09T04:26:42.031219Z",
   "rows": [
+    {
+      "Player ID": "P001",
+      "Name": "Shrikant Naidu(40)",
+      "Mobile": "9970277267",
+      "Flat": "J804",
+      "Photo": "https://drive.google.com/open?id=1ddW01i5p7yIaWnnULaprOFm402RtyCFj",
+      "Priority Chart": "P1: Lawn Tennis | P2: Badminton | P3: Pickle Ball | P4: Table Tennis",
+      "Preferred Category": "Individual",
+      "Badminton Level": "Beginer",
+      "Table Tennis Level": "Never Played",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Never Played",
+      "Team ID": "",
+      "Auction Amount": "0",
+      "Active": "1"
+    },
     {
       "Player ID": "",
       "Name": "",
