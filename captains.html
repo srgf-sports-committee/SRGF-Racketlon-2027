@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SRGF Racketlon 2027 — Captain Directory</title>
 <link rel="stylesheet" href="css/srgf.css">
+<style>
+.captain-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end;margin-bottom:12px}
+.captain-filter-field{min-width:0;position:relative}
+.captain-filter-field>label{display:block;margin-bottom:7px;font-size:.85rem;color:#b9d3cd}
+.captain-filter-field select,.captain-player-trigger{width:100%;min-width:0;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid rgba(126,220,219,.25);background:#102b2b;color:#fff;outline:none;font:inherit;text-align:left}
+.captain-player-trigger{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.captain-player-trigger:focus,.captain-filter-field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(217,238,99,.16)}
+.captain-player-dropdown{position:absolute;z-index:1000;top:calc(100% + 6px);left:0;right:0;padding:8px;border:1px solid rgba(126,220,219,.25);border-radius:10px;background:#0b2427;box-shadow:0 14px 35px rgba(0,0,0,.35)}
+.captain-player-dropdown.hidden{display:none!important}
+.captain-player-search{width:100%;box-sizing:border-box;padding:9px 10px;margin-bottom:7px;border:1px solid rgba(126,220,219,.25);border-radius:8px;background:#102b2b;color:#fff;outline:none;font:inherit}
+.captain-player-options{max-height:240px;overflow:auto}
+.captain-player-option{display:block;width:100%;border:0;background:transparent;color:#dce9e6;padding:9px 10px;border-radius:7px;text-align:left;cursor:pointer;font:inherit}
+.captain-player-option:hover,.captain-player-option.active{background:rgba(126,220,219,.12);color:#fff}
+.captain-player-no-match{padding:9px 10px;color:#a8c2ca;font-size:.9rem}
+@media(max-width:600px){.captain-filters{grid-template-columns:1fr;gap:12px}}
+</style>
 </head>
 <body data-page="captains">
 <header class="topbar">
@@ -23,9 +39,13 @@
         <label for="captainTeamFilter">Team Name</label>
         <select id="captainTeamFilter"><option value="">All Teams</option></select>
       </div>
-      <div class="captain-filter-field">
-        <label for="captainPlayerFilter">Player Name</label>
-        <input id="captainPlayerFilter" type="search" placeholder="Search player name…" autocomplete="off">
+      <div class="captain-filter-field" id="captainPlayerFilterWrap">
+        <label for="captainPlayerTrigger">Player Name</label>
+        <button type="button" id="captainPlayerTrigger" class="captain-player-trigger" aria-haspopup="listbox" aria-expanded="false"><span id="captainPlayerSelected">All Players</span><span aria-hidden="true">⌄</span></button>
+        <div id="captainPlayerDropdown" class="captain-player-dropdown hidden">
+          <input id="captainPlayerSearch" class="captain-player-search" type="search" placeholder="Search player name…" autocomplete="off" aria-label="Search player names">
+          <div id="captainPlayerOptions" class="captain-player-options" role="listbox" aria-label="Player names"></div>
+        </div>
       </div>
     </div>
     <p id="captainFilterCount" class="notice" aria-live="polite"></p>
@@ -41,6 +61,6 @@
 <script src="js/config.js?v=20260929-auth1"></script>
 <script src="js/common.js?v=20261009-captainnav1"></script>
 <script src="js/auth.js?v=20261009-captainrole2"></script>
-<script src="js/captains.js?v=20261009-captains2"></script>
+<script src="js/captains.js?v=20261009-captains3"></script>
 </body>
 </html>
