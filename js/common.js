@@ -202,13 +202,15 @@
       ["results.html","Results","results"],
       ["important-links.html","Important Links","importantLinks"],
       ["auction.html","Auction","auction"],
-      ["logs.html","Logs","logs"]
+      ["logs.html","Logs","logs"],
+      ["captains.html","Captain Directory","captains"]
     ];
     const n=document.querySelector(".page-nav");
     if(!n)return;
     n.innerHTML=items.map(([href,label,key])=>{
       if(key==="auction"&&!window.SRGFAuth?.canAuction())return "";
       if(key==="logs"&&!window.SRGFAuth?.canViewLogs())return "";
+      if(key==="captains"&&!window.SRGFAuth?.canViewCaptains())return "";
       return `<a href="${href}" class="${active===key?"active":""}">${label}</a>`;
     }).join("");
   }
