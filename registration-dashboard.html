@@ -30,21 +30,22 @@ main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template
 @media(max-width:680px){header.topbar{padding:10px;align-items:flex-start}.brand{font-size:12px}.header-actions{width:100%;justify-content:flex-start;margin:0;flex-wrap:wrap}.header-actions #status{text-align:left}.page-nav a{padding:7px 10px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}.main{display:block}main{padding:0 8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
 
 
-/* Final reference match: use the same shell, colours and active-tab treatment as Players/Teams. */
+/* Match the Players page shell and blue-toned background exactly. */
 :root{--navy:#f2f6f3;--line:rgba(126,220,219,.25);--muted:#a8c2ca;--panel:rgba(12,35,47,.78);--bg:#071b25}
-html{background:#071b25}
-body{min-height:100vh!important;margin:0!important;color:#f5fbff!important;font-family:Arial,sans-serif!important;background:radial-gradient(circle at 12% 8%,rgba(72,224,209,.16),transparent 25%),radial-gradient(circle at 88% 14%,rgba(167,120,255,.16),transparent 25%),radial-gradient(circle at 78% 82%,rgba(255,111,181,.11),transparent 28%),linear-gradient(135deg,#061820 0%,#082735 48%,#071a28 100%)!important}
-header.topbar{height:54px;min-height:54px;padding:0 18px!important;background:#0b241c!important;color:#f2f6f3!important;border-bottom:1px solid #24473b;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:12px}
-.brand-wrap{display:flex;align-items:center;gap:9px;flex-shrink:0}
-.brand-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,#d9ee63,#8edb3e);font-size:18px;box-shadow:none}
-.brand{font-size:21px;font-weight:700;white-space:nowrap;color:#f2f6f3}
+html{background:#061b24!important}
+body{min-height:100vh!important;margin:0!important;color:#f5fbff!important;font-family:Arial,Helvetica,sans-serif!important;background:radial-gradient(circle at 12% 8%,rgba(23,113,128,.18),transparent 28%),radial-gradient(circle at 88% 35%,rgba(36,67,105,.22),transparent 32%),linear-gradient(135deg,#061b24 0%,#061e29 45%,#081b28 100%)!important}
+header.topbar{height:68px;min-height:68px;padding:0 28px!important;background:rgba(3,25,35,.96)!important;color:#f2f6f3!important;border-bottom:1px solid rgba(117,192,196,.18)!important;box-shadow:0 8px 25px rgba(0,0,0,.22);display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:20px;position:sticky;top:0;z-index:50}
+.brand-wrap{display:flex;align-items:center;gap:12px;flex-shrink:0;white-space:nowrap}
+.brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#e5f84d,#a8cf35);font-size:22px;box-shadow:0 5px 18px rgba(217,238,99,.25)}
+.brand{font-size:20px;font-weight:900;letter-spacing:.2px;white-space:nowrap;color:#f5f8f5}
 .brand span{color:#d9ee63;margin-left:4px}
-.page-nav{display:flex;align-items:center;justify-content:center;gap:8px;padding:0;border:0;background:transparent;flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
-.page-nav a{color:#f2f6f3;text-decoration:none;border:1px solid transparent;border-radius:9px;padding:8px 11px;font-size:13px;font-weight:400;white-space:nowrap;background:transparent}
-.page-nav a:hover,.page-nav a.active{color:#f2f6f3;background:rgba(255,255,255,.08);border-color:transparent}
-.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-left:auto;flex-shrink:0}
-.header-actions .status,#status{font-size:12px;color:#a8c2ca;white-space:nowrap}
-.icon-refresh{background:transparent;color:#f2f6f3;border:1px solid #49665b;border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer}
+.page-nav{display:flex;align-items:center;justify-content:center;gap:6px;padding:0;border:0;background:transparent;flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
+.page-nav a{color:#eef5f3;text-decoration:none;border:0;border-radius:13px;padding:10px 12px;font-size:13px;font-weight:700;white-space:nowrap;background:transparent}
+.page-nav a:hover{background:rgba(255,255,255,.07);color:#eef5f3}
+.page-nav a.active{background:rgba(255,255,255,.07);color:#eef5f3;border:0;box-shadow:none}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-left:0;flex-shrink:0;white-space:nowrap}
+.header-actions .status,#status{font-size:12px;color:#e5efeb;white-space:nowrap}
+.icon-refresh{background:transparent;color:#d9e5e3;border:0;border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer}
 .auth-box{display:flex;align-items:center;gap:8px}
 .role-pill{display:inline-block;background:rgba(217,238,99,.12);color:#d9ee63;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:700;white-space:nowrap}
 .panel,.chartbox{background:rgba(12,35,47,.78)!important;border:1px solid rgba(126,220,219,.25)!important;color:#f5fbff;box-shadow:0 18px 55px rgba(0,0,0,.18)}
@@ -52,16 +53,15 @@ header.topbar{height:54px;min-height:54px;padding:0 18px!important;background:#0
 .kpi:nth-child(2),.kpi:nth-child(3),.kpi:nth-child(4),.kpi:nth-child(5){background:rgba(20,49,62,.78)!important}
 .kpi .label{color:#a8c2ca}.kpi strong{color:#d9ee63}.kpi small,.sub,.foot{color:#a8c2ca}
 .priority-col{border-color:rgba(126,220,219,.20)}
-.track{background:#0c2a20}.popular{background:rgba(20,49,62,.78);border:1px solid rgba(126,220,219,.25)}
+.track{background:#092832}.popular{background:rgba(20,49,62,.78);border:1px solid rgba(126,220,219,.25)}
 .bar-label{color:#a8c2ca}
 .bar-chart{border-bottom-color:rgba(126,220,219,.25);background:repeating-linear-gradient(to top,transparent 0,transparent 43px,rgba(126,220,219,.09) 44px,rgba(126,220,219,.09) 45px)}
 .rule-note{color:#d2e0da;background:rgba(20,49,62,.78);border:1px solid rgba(126,220,219,.25)}
-table{color:#f5fbff}th{background:#0c2a34!important;color:#a8c2ca!important}td{border-color:rgba(126,220,219,.18)}tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
-.age-row .stack-track{background:#0c2a20}
+table{color:#f5fbff}th{background:#092832!important;color:#a8c2ca!important}td{border-color:rgba(126,220,219,.18)}tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.age-row .stack-track{background:#092832}
 .empty{color:#a8c2ca}
-@media(max-width:1100px){header.topbar{height:auto;min-height:54px;flex-wrap:wrap;gap:10px;padding:10px 14px!important}.page-nav{order:3;width:100%;flex:0 0 100%;justify-content:flex-start}.header-actions{margin-left:auto}main{grid-template-columns:1fr}}
-@media(max-width:680px){header.topbar{padding:10px!important;align-items:flex-start;flex-direction:row;flex-wrap:wrap}.brand{font-size:17px}.brand-mark{width:32px;height:32px}.header-actions{width:auto;justify-content:flex-start;margin-left:auto;flex-wrap:wrap}.header-actions .status,#status{white-space:normal;text-align:right}.page-nav{order:3;width:100%;flex:0 0 100%;overflow-x:auto;flex-wrap:nowrap}.page-nav a{padding:7px 8px;font-size:12px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}main{padding:8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
-
+@media(max-width:1200px){header.topbar{height:auto;min-height:68px;flex-wrap:wrap;gap:10px;padding:10px 18px!important}.page-nav{order:3;width:100%;flex:0 0 100%;justify-content:flex-start}.header-actions{margin-left:auto}main{grid-template-columns:1fr}}
+@media(max-width:680px){header.topbar{padding:10px!important;align-items:flex-start;flex-direction:row;flex-wrap:wrap}.brand{font-size:17px}.brand-mark{width:34px;height:34px}.header-actions{width:auto;justify-content:flex-start;margin-left:auto;flex-wrap:wrap}.header-actions .status,#status{white-space:normal;text-align:right}.page-nav{order:3;width:100%;flex:0 0 100%;overflow-x:auto;flex-wrap:nowrap}.page-nav a{padding:7px 8px;font-size:12px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}main{padding:8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
 </style>
 </head>
 <body data-page="stats">
