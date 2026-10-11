@@ -30,38 +30,37 @@ main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template
 @media(max-width:680px){header.topbar{padding:10px;align-items:flex-start}.brand{font-size:12px}.header-actions{width:100%;justify-content:flex-start;margin:0;flex-wrap:wrap}.header-actions #status{text-align:left}.page-nav a{padding:7px 10px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}.main{display:block}main{padding:0 8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
 
 
-/* SRGF shared-site theme: keep Stats visually consistent with every other page. */
-:root{--navy:#08251c;--line:#24473b;--muted:#aabbb3;--panel:#12352a;--bg:#08251c}
-html,body{min-height:100%;background:#08251c!important;color:#f2f6f3!important;font-family:Arial,sans-serif}
-body{margin:0!important}
-header.topbar{height:auto;min-height:66px;padding:10px 18px;background:#061e27!important;color:#f2f6f3!important;border-bottom:1px solid #24473b;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:18px}
-.brand-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.brand-mark{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#d9ee63,#8edb3e);font-size:20px;box-shadow:0 3px 12px #d9ee6328}
-.brand{font-size:21px;font-weight:800;white-space:nowrap;color:#f2f6f3}
-.brand span{color:#d9ee63;margin-left:5px}
-.page-nav{display:flex;align-items:center;justify-content:center;gap:5px;padding:0;border:0;background:transparent;flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
-.page-nav a{color:#f2f6f3;text-decoration:none;border:1px solid transparent;border-radius:7px;padding:9px 10px;font-size:12px;font-weight:600;white-space:nowrap;background:transparent}
-.page-nav a:hover{color:#d9ee63;background:rgba(217,238,99,.06)}
-.page-nav a.active{color:#d9ee63;background:rgba(217,238,99,.09);border-color:rgba(217,238,99,.15)}
+/* Final reference match: use the same shell, colours and active-tab treatment as Players/Teams. */
+:root{--navy:#f2f6f3;--line:rgba(126,220,219,.25);--muted:#a8c2ca;--panel:rgba(12,35,47,.78);--bg:#071b25}
+html{background:#071b25}
+body{min-height:100vh!important;margin:0!important;color:#f5fbff!important;font-family:Arial,sans-serif!important;background:radial-gradient(circle at 12% 8%,rgba(72,224,209,.16),transparent 25%),radial-gradient(circle at 88% 14%,rgba(167,120,255,.16),transparent 25%),radial-gradient(circle at 78% 82%,rgba(255,111,181,.11),transparent 28%),linear-gradient(135deg,#061820 0%,#082735 48%,#071a28 100%)!important}
+header.topbar{height:54px;min-height:54px;padding:0 18px!important;background:#0b241c!important;color:#f2f6f3!important;border-bottom:1px solid #24473b;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:12px}
+.brand-wrap{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.brand-mark{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(135deg,#d9ee63,#8edb3e);font-size:18px;box-shadow:none}
+.brand{font-size:21px;font-weight:700;white-space:nowrap;color:#f2f6f3}
+.brand span{color:#d9ee63;margin-left:4px}
+.page-nav{display:flex;align-items:center;justify-content:center;gap:8px;padding:0;border:0;background:transparent;flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
+.page-nav a{color:#f2f6f3;text-decoration:none;border:1px solid transparent;border-radius:9px;padding:8px 11px;font-size:13px;font-weight:400;white-space:nowrap;background:transparent}
+.page-nav a:hover,.page-nav a.active{color:#f2f6f3;background:rgba(255,255,255,.08);border-color:transparent}
 .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-left:auto;flex-shrink:0}
-.header-actions .status,#status{font-size:12px;color:#aabbb3;white-space:nowrap}
+.header-actions .status,#status{font-size:12px;color:#a8c2ca;white-space:nowrap}
 .icon-refresh{background:transparent;color:#f2f6f3;border:1px solid #49665b;border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer}
 .auth-box{display:flex;align-items:center;gap:8px}
-.role-pill{display:inline-block;background:#253d2d;color:#d9ee63;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap}
-.panel,.chartbox{background:#12352a!important;border:1px solid #49665b!important;color:#f2f6f3;box-shadow:none}
-.kpi{background:#14352f!important;border-color:#36564b!important}
-.kpi:nth-child(2),.kpi:nth-child(3),.kpi:nth-child(4),.kpi:nth-child(5){background:#14352f!important}
-.kpi .label{color:#b9d1d6}.kpi strong{color:#d9ee63}.kpi small,.sub,.foot{color:#aabbb3}
-.priority-col{border-color:#36564b}
-.track{background:#0c2a20}.popular{background:#15353e;border:1px solid #36564b}
-.bar-label{color:#b9d1d6}
-.bar-chart{border-bottom-color:#49665b;background:repeating-linear-gradient(to top,transparent 0,transparent 43px,#24473b 44px,#24473b 45px)}
-.rule-note{color:#d2e0da;background:#183d4a;border:1px solid #36564b}
-table{color:#f2f6f3}th{background:#0c2a20!important;color:#b9d1d6!important}td{border-color:#36564b}tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.role-pill{display:inline-block;background:rgba(217,238,99,.12);color:#d9ee63;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.panel,.chartbox{background:rgba(12,35,47,.78)!important;border:1px solid rgba(126,220,219,.25)!important;color:#f5fbff;box-shadow:0 18px 55px rgba(0,0,0,.18)}
+.kpi{background:rgba(20,49,62,.78)!important;border-color:rgba(126,220,219,.25)!important}
+.kpi:nth-child(2),.kpi:nth-child(3),.kpi:nth-child(4),.kpi:nth-child(5){background:rgba(20,49,62,.78)!important}
+.kpi .label{color:#a8c2ca}.kpi strong{color:#d9ee63}.kpi small,.sub,.foot{color:#a8c2ca}
+.priority-col{border-color:rgba(126,220,219,.20)}
+.track{background:#0c2a20}.popular{background:rgba(20,49,62,.78);border:1px solid rgba(126,220,219,.25)}
+.bar-label{color:#a8c2ca}
+.bar-chart{border-bottom-color:rgba(126,220,219,.25);background:repeating-linear-gradient(to top,transparent 0,transparent 43px,rgba(126,220,219,.09) 44px,rgba(126,220,219,.09) 45px)}
+.rule-note{color:#d2e0da;background:rgba(20,49,62,.78);border:1px solid rgba(126,220,219,.25)}
+table{color:#f5fbff}th{background:#0c2a34!important;color:#a8c2ca!important}td{border-color:rgba(126,220,219,.18)}tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
 .age-row .stack-track{background:#0c2a20}
-.empty{color:#aabbb3}
-@media(max-width:1100px){header.topbar{flex-wrap:wrap;gap:10px}.page-nav{order:3;width:100%;flex:0 0 100%;justify-content:flex-start}.header-actions{margin-left:auto}main{grid-template-columns:1fr}}
-@media(max-width:680px){header.topbar{padding:10px;align-items:flex-start;flex-direction:row;flex-wrap:wrap}.brand{font-size:14px}.brand-mark{width:34px;height:34px}.header-actions{width:auto;justify-content:flex-start;margin-left:auto;flex-wrap:wrap}.header-actions .status,#status{white-space:normal;text-align:right}.page-nav{order:3;width:100%;flex:0 0 100%;overflow-x:auto;flex-wrap:nowrap}.page-nav a{padding:7px 9px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}main{padding:8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
+.empty{color:#a8c2ca}
+@media(max-width:1100px){header.topbar{height:auto;min-height:54px;flex-wrap:wrap;gap:10px;padding:10px 14px!important}.page-nav{order:3;width:100%;flex:0 0 100%;justify-content:flex-start}.header-actions{margin-left:auto}main{grid-template-columns:1fr}}
+@media(max-width:680px){header.topbar{padding:10px!important;align-items:flex-start;flex-direction:row;flex-wrap:wrap}.brand{font-size:17px}.brand-mark{width:32px;height:32px}.header-actions{width:auto;justify-content:flex-start;margin-left:auto;flex-wrap:wrap}.header-actions .status,#status{white-space:normal;text-align:right}.page-nav{order:3;width:100%;flex:0 0 100%;overflow-x:auto;flex-wrap:nowrap}.page-nav a{padding:7px 8px;font-size:12px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}main{padding:8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
 
 </style>
 </head>
@@ -69,7 +68,7 @@ table{color:#f2f6f3}th{background:#0c2a20!important;color:#b9d1d6!important}td{b
 <header class="topbar">
   <div class="brand-wrap"><a href="index.html" style="text-decoration:none"><div class="brand-mark">🏆</div></a><div class="brand">SRGF <span>RACKETLON 2027</span></div></div>
   <nav class="page-nav"></nav>
-  <div class="header-actions"><div><div id="status" class="status">Loading registration data…</div></div><button id="refreshBtn" class="icon-refresh" title="Refresh" type="button">↻</button><div id="authBox" class="auth-box"></div></div>
+  <div class="header-actions"><div><div id="status" class="status">Loading…</div><div id="dataFreshness" class="data-freshness">Checking data freshness…</div></div><button id="refreshBtn" class="icon-refresh" title="Refresh" type="button">↻</button><div id="authBox" class="auth-box"></div></div>
 </header>
 <main>
 <div class="left">
@@ -87,9 +86,9 @@ table{color:#f2f6f3}th{background:#0c2a20!important;color:#b9d1d6!important}td{b
 </div>
 <aside class="panel contenders"><h2>🏆 Top 15 Contenders</h2><div class="rule-note"><b>Skill Level Colour Legend</b><div class="legend" style="margin-top:8px;gap:8px 12px"><span><i style="background:#259f78"></i>Advanced</span><span><i style="background:#e99a2c"></i>Intermediate</span><span><i style="background:#347fd6"></i>Beginner</span><span><i style="background:#8a98ab"></i>Never Played</span></div></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Player ID</th><th>Sport &amp; level</th></tr></thead><tbody id="contenderRows"></tbody></table></div></aside>
 </main>
-<script src="js/config.js?v=20261011-statstheme3"></script>
-<script src="js/common.js?v=20261011-statstheme3"></script>
-<script src="js/auth.js?v=20261011-statstheme3"></script>
+<script src="js/config.js?v=20261011-statstheme4"></script>
+<script src="js/common.js?v=20261011-statstheme4"></script>
+<script src="js/auth.js?v=20261011-statstheme4"></script>
 <script>
 (() => {
 const SPORTS=[
