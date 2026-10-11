@@ -22,6 +22,28 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const formResponsesBody=$("formResponsesBody");
   const formResponsesCount=$("formResponsesCount");
 
+  // Private Captain Directory cache: only read or render it after the role check.
+  // Successful live responses replace the cache; failed requests keep cached data visible.
+  const DIRECTORY_CACHE_KEY="SRGF_CAPTAIN_DIRECTORY_CACHE_V1";
+  const FORM_RESPONSES_CACHE_KEY="SRGF_CAPTAIN_FORM_RESPONSES_CACHE_V1";
+  const SYNC_RETRY_MS=15000;
+  const SYNC_INTERVAL_MS=30000;
+  let directorySyncTimer=null,formResponsesSyncTimer=null;
+  function readCaptainCache(key){
+    try{const value=JSON.parse(localStorage.getItem(key)||"null");return value&&typeof value==="object"?value:null;}catch(_){return null;}
+  }
+  function writeCaptainCache(key,value){
+    try{localStorage.setItem(key,JSON.stringify({...value,cachedAt:new Date().toISOString()}));}catch(_){}
+  }
+  function scheduleDirectorySync(delay=SYNC_INTERVAL_MS){
+    clearTimeout(directorySyncTimer);
+    directorySyncTimer=setTimeout(()=>syncDirectory(),delay);
+  }
+  function scheduleFormResponsesSync(delay=SYNC_INTERVAL_MS){
+    clearTimeout(formResponsesSyncTimer);
+    formResponsesSyncTimer=setTimeout(()=>syncFormResponses(),delay);
+  }
+
   function selectCaptainTab(tab){
     const showResponses=tab==="responses";
     directorySection.classList.toggle("hidden",showResponses);
@@ -72,6 +94,42 @@ document.addEventListener("DOMContentLoaded",async()=>{
       :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses found.</td></tr>';
     formResponsesCount.textContent="Showing "+formResponseRows.length+" form responses";
   }
+  function applyFormResponsesData(data){
+    formResponseHeaders=Array.isArray(data.headers)?data.headers.map(String):[];
+    formResponseRows=Array.isArray(data.rows)?data.rows:[];
+    // Rename columns Q and V in this imported view only; the Google Sheet is untouched.
+    if(formResponseHeaders.length>16)formResponseHeaders[16]="Whatspp";
+    if(formResponseHeaders.length>21)formResponseHeaders[21]="Availability";
+    renderFormResponses();
+    formResponsesMessage.classList.add("hidden");
+    formResponsesCard.classList.remove("hidden");
+    formResponsesLoaded=true;
+  }
+  async function syncFormResponses(){
+    if(formResponsesLoading)return;
+    if(!canView())return;
+    formResponsesLoading=true;
+    try{
+      const result=await live("formresponses",SRGFAuth.token());
+      if(result.ok===false)throw new Error(result.error||"Could not load Form Responses 1.");
+      if(!Array.isArray(result.headers)||!Array.isArray(result.rows))throw new Error("Invalid Form Responses response.");
+      const data={headers:result.headers.map(String),rows:result.rows};
+      writeCaptainCache(FORM_RESPONSES_CACHE_KEY,data);
+      applyFormResponsesData(data);
+      setStatus("LIVE · Google Sheet");
+      scheduleFormResponsesSync(SYNC_INTERVAL_MS);
+    }catch(e){
+      if(formResponsesLoaded){
+        formResponsesMessage.classList.add("hidden");
+        setStatus("CACHE · retrying Google Sheet");
+      }else{
+        formResponsesMessage.classList.remove("hidden");
+        formResponsesMessage.textContent="Could not load Form Responses 1: "+(e.message||String(e));
+        setStatus("Could not load Form Responses",true);
+      }
+      scheduleFormResponsesSync(SYNC_RETRY_MS);
+    }finally{formResponsesLoading=false;}
+  }
   async function loadFormResponses(){
     if(formResponsesLoading)return;
     if(!canView()){
@@ -80,28 +138,16 @@ document.addEventListener("DOMContentLoaded",async()=>{
       formResponsesCard.classList.add("hidden");
       return;
     }
-    formResponsesLoading=true;
-    formResponsesMessage.classList.remove("hidden");
-    formResponsesMessage.textContent="Loading Form Responses 1…";
-    formResponsesCard.classList.add("hidden");
-    try{
-      const result=await live("formresponses",SRGFAuth.token());
-      if(result.ok===false)throw new Error(result.error||"Could not load Form Responses 1.");
-      formResponseHeaders=Array.isArray(result.headers)?result.headers.map(String):[];
-      formResponseRows=Array.isArray(result.rows)?result.rows:[];
-      // Rename columns Q and V in this imported view only; the Google Sheet is untouched.
-      if(formResponseHeaders.length>16)formResponseHeaders[16]="Whatspp";
-      if(formResponseHeaders.length>21)formResponseHeaders[21]="Availability";
-      renderFormResponses();
-      formResponsesMessage.classList.add("hidden");
-      formResponsesCard.classList.remove("hidden");
-      formResponsesLoaded=true;
-      setStatus("Form Responses loaded");
-    }catch(e){
+    const cached=readCaptainCache(FORM_RESPONSES_CACHE_KEY);
+    if(cached&&Array.isArray(cached.headers)&&Array.isArray(cached.rows)){
+      applyFormResponsesData(cached);
+      setStatus("CACHE · syncing Google Sheet");
+    }else{
       formResponsesMessage.classList.remove("hidden");
-      formResponsesMessage.textContent="Could not load Form Responses 1: "+(e.message||String(e));
-      setStatus("Could not load Form Responses",true);
-    }finally{formResponsesLoading=false;}
+      formResponsesMessage.textContent="Loading Form Responses 1…";
+      formResponsesCard.classList.add("hidden");
+    }
+    await syncFormResponses();
   }
 
   function canView(){return SRGFAuth.canViewCaptains();}
@@ -182,28 +228,53 @@ document.addEventListener("DOMContentLoaded",async()=>{
     renderPlayerOptions();
     playerSearch.focus();
   }
+  function applyDirectoryData(data){
+    players=Array.isArray(data.rows)?data.rows:[];
+    populateTeamFilter();
+    renderPlayerOptions();
+    renderFilteredRows();
+    message.classList.add("hidden");
+    card.classList.remove("hidden");
+    loaded=true;
+  }
+  async function syncDirectory(){
+    if(loading)return;
+    if(!canView())return;
+    loading=true;
+    try{
+      const result=await live("captains",SRGFAuth.token());
+      if(!Array.isArray(result.rows))throw new Error("Invalid Captain Directory response.");
+      const data={rows:result.rows};
+      writeCaptainCache(DIRECTORY_CACHE_KEY,data);
+      applyDirectoryData(data);
+      setStatus("LIVE · Google Sheet");
+      scheduleDirectorySync(SYNC_INTERVAL_MS);
+    }catch(e){
+      if(loaded){
+        message.classList.add("hidden");
+        card.classList.remove("hidden");
+        setStatus("CACHE · retrying Google Sheet");
+      }else{
+        message.classList.remove("hidden");
+        message.textContent=(e.message||String(e))+" If you were just assigned the Captain role, check the ACCESS sheet and try again.";
+        setStatus("Could not load Captain Directory",true);
+      }
+      scheduleDirectorySync(SYNC_RETRY_MS);
+    }finally{loading=false;}
+  }
   async function loadDirectory(){
     if(loading)return;
     if(!canView()){showDenied();return;}
-    loading=true;
-    message.classList.remove("hidden");
-    message.textContent="Loading player contact details…";
-    card.classList.add("hidden");
-    try{
-      const result=await live("captains",SRGFAuth.token());
-      players=Array.isArray(result.rows)?result.rows:[];
-      populateTeamFilter();
-      renderPlayerOptions();
-      renderFilteredRows();
-      message.classList.add("hidden");
-      card.classList.remove("hidden");
-      setStatus("LIVE · Google Sheet");
-      loaded=true;
-    }catch(e){
+    const cached=readCaptainCache(DIRECTORY_CACHE_KEY);
+    if(cached&&Array.isArray(cached.rows)){
+      applyDirectoryData(cached);
+      setStatus("CACHE · syncing Google Sheet");
+    }else{
       message.classList.remove("hidden");
-      message.textContent=(e.message||String(e))+" If you were just assigned the Captain role, check the ACCESS sheet and try again.";
-      setStatus("Could not load Captain Directory",true);
-    }finally{loading=false;}
+      message.textContent="Loading player contact details…";
+      card.classList.add("hidden");
+    }
+    await syncDirectory();
   }
 
   directoryTab?.addEventListener("click",()=>selectCaptainTab("directory"));
