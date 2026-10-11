@@ -188,11 +188,14 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const cached=photoSourceCache.get(id)||readPhotoCache()[id]||"";
     const candidates=[];
     const add=(value,kind)=>{const src=photoUrl(value);if(src&&!candidates.some(x=>x.src===src))candidates.push({src,kind});};
-    // First reuse the last successfully loaded source; then try the GitHub profile;
-    // only if that fails, fall back to the photo recorded in Google Sheets.
-    if(cached)candidates.push({src:cached,kind:"cache"});
-    add(p?.githubImage||((String(p?.image||"").startsWith("assets/"))?p.image:""),"github");
-    add(p?.image,"cached-profile");
+    // Photo priority: GitHub-hosted local image first for speed. Google Drive is
+    // only attempted as a fallback after the GitHub image fails.
+    const githubValue=String(p?.githubImage||((String(p?.image||"").startsWith("assets/"))?p.image:"")||"").trim();
+    add(githubValue,"github");
+    // Reuse a cached URL only when it is not a Drive URL; a stale Drive cache
+    // must never delay the fast GitHub-hosted image.
+    if(cached&&!/drive\.google\.com/i.test(cached))add(cached,"cache");
+    if(p?.image&&!String(p.image).startsWith("assets/"))add(p.image,"cached-profile");
     add(p?.sheetImage,"sheet");
     const manualValue=String(p?.sheetImage||p?.githubImage||p?.image||"").trim();
     let manualUrl=manualValue;
