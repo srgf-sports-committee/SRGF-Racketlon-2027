@@ -15,7 +15,7 @@
 body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
 header.topbar{height:auto;min-height:54px;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #24473b;background:#0b241c;color:var(--text)}
 .brand-wrap{display:flex;align-items:center;gap:9px;flex-shrink:0}.brand-mark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--accent);color:var(--accentText);font-size:18px}.brand{font-weight:700;white-space:nowrap}.brand span{color:var(--accent);margin-left:4px}
-.page-nav{display:flex;align-items:center;gap:5px;padding:0;border:0;flex-wrap:wrap}.page-nav a{color:var(--text);text-decoration:none;border:1px solid transparent;border-radius:18px;padding:8px 11px;font-size:12px;white-space:nowrap}.page-nav a:hover{background:rgba(217,238,99,.08);border-color:#49665b}.page-nav a.active{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
+.page-nav{display:flex;align-items:center;gap:5px;padding:0;border:0;flex-wrap:wrap}.page-nav a{color:#f2f6f3;text-decoration:none;border:1px solid transparent;border-radius:6px;padding:8px 10px;font-size:12px;font-weight:600;white-space:nowrap;background:transparent}.page-nav a:hover{color:var(--accent);background:rgba(217,238,99,.06);border-color:transparent}.page-nav a.active{color:var(--accent);background:transparent;border-color:transparent}
 .header-actions{display:flex;align-items:center;gap:10px;margin-left:auto}.header-actions .status{margin:0;color:var(--muted);font-size:12px}.header-actions #status{max-width:210px;text-align:right;white-space:normal}.icon-refresh{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:8px;padding:6px 10px;font-size:20px;cursor:pointer}.auth-box{display:flex;align-items:center;gap:8px}.role-pill{font-size:11px;color:var(--muted)}
 main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template-columns:minmax(0,2.1fr) minmax(330px,.9fr);gap:10px}
 .panel,.chartbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);color:var(--text)}
@@ -54,7 +54,7 @@ main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template
 <aside class="panel contenders"><h2>🏆 Top 15 Contenders</h2><div class="rule-note"><b>Skill Level Colour Legend</b><div class="legend" style="margin-top:8px;gap:8px 12px"><span><i style="background:#259f78"></i>Advanced</span><span><i style="background:#e99a2c"></i>Intermediate</span><span><i style="background:#347fd6"></i>Beginner</span><span><i style="background:#8a98ab"></i>Never Played</span></div></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Player ID</th><th>Sport &amp; level</th></tr></thead><tbody id="contenderRows"></tbody></table></div></aside>
 </main>
 <script src="js/config.js?v=20261011-dashboardtheme"></script>
-<script src="js/common.js?v=20261009-captainnav1"></script>
+<script src="js/common.js?v=20261011-statsnavtheme"></script>
 <script src="js/auth.js?v=20261009-captainrole2"></script>
 <script>
 (() => {
