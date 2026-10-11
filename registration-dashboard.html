@@ -29,6 +29,40 @@ main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template
 @media(max-width:1100px){header.topbar{flex-wrap:wrap;gap:10px}.page-nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap}.header-actions{margin-left:auto}main{grid-template-columns:1fr}.contenders{position:static;max-height:none}}
 @media(max-width:680px){header.topbar{padding:10px;align-items:flex-start}.brand{font-size:12px}.header-actions{width:100%;justify-content:flex-start;margin:0;flex-wrap:wrap}.header-actions #status{text-align:left}.page-nav a{padding:7px 10px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}.main{display:block}main{padding:0 8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
 
+
+/* SRGF shared-site theme: keep Stats visually consistent with every other page. */
+:root{--navy:#08251c;--line:#24473b;--muted:#aabbb3;--panel:#12352a;--bg:#08251c}
+html,body{min-height:100%;background:#08251c!important;color:#f2f6f3!important;font-family:Arial,sans-serif}
+body{margin:0!important}
+header.topbar{height:auto;min-height:66px;padding:10px 18px;background:#061e27!important;color:#f2f6f3!important;border-bottom:1px solid #24473b;display:flex;flex-direction:row;justify-content:space-between;align-items:center;gap:18px}
+.brand-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-mark{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#d9ee63,#8edb3e);font-size:20px;box-shadow:0 3px 12px #d9ee6328}
+.brand{font-size:21px;font-weight:800;white-space:nowrap;color:#f2f6f3}
+.brand span{color:#d9ee63;margin-left:5px}
+.page-nav{display:flex;align-items:center;justify-content:center;gap:5px;padding:0;border:0;background:transparent;flex:1;min-width:0;overflow-x:auto;white-space:nowrap}
+.page-nav a{color:#f2f6f3;text-decoration:none;border:1px solid transparent;border-radius:7px;padding:9px 10px;font-size:12px;font-weight:600;white-space:nowrap;background:transparent}
+.page-nav a:hover{color:#d9ee63;background:rgba(217,238,99,.06)}
+.page-nav a.active{color:#d9ee63;background:rgba(217,238,99,.09);border-color:rgba(217,238,99,.15)}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-left:auto;flex-shrink:0}
+.header-actions .status,#status{font-size:12px;color:#aabbb3;white-space:nowrap}
+.icon-refresh{background:transparent;color:#f2f6f3;border:1px solid #49665b;border-radius:8px;width:38px;height:38px;font-size:22px;cursor:pointer}
+.auth-box{display:flex;align-items:center;gap:8px}
+.role-pill{display:inline-block;background:#253d2d;color:#d9ee63;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.panel,.chartbox{background:#12352a!important;border:1px solid #49665b!important;color:#f2f6f3;box-shadow:none}
+.kpi{background:#14352f!important;border-color:#36564b!important}
+.kpi:nth-child(2),.kpi:nth-child(3),.kpi:nth-child(4),.kpi:nth-child(5){background:#14352f!important}
+.kpi .label{color:#b9d1d6}.kpi strong{color:#d9ee63}.kpi small,.sub,.foot{color:#aabbb3}
+.priority-col{border-color:#36564b}
+.track{background:#0c2a20}.popular{background:#15353e;border:1px solid #36564b}
+.bar-label{color:#b9d1d6}
+.bar-chart{border-bottom-color:#49665b;background:repeating-linear-gradient(to top,transparent 0,transparent 43px,#24473b 44px,#24473b 45px)}
+.rule-note{color:#d2e0da;background:#183d4a;border:1px solid #36564b}
+table{color:#f2f6f3}th{background:#0c2a20!important;color:#b9d1d6!important}td{border-color:#36564b}tbody tr:nth-child(even){background:rgba(255,255,255,.025)}
+.age-row .stack-track{background:#0c2a20}
+.empty{color:#aabbb3}
+@media(max-width:1100px){header.topbar{flex-wrap:wrap;gap:10px}.page-nav{order:3;width:100%;flex:0 0 100%;justify-content:flex-start}.header-actions{margin-left:auto}main{grid-template-columns:1fr}}
+@media(max-width:680px){header.topbar{padding:10px;align-items:flex-start;flex-direction:row;flex-wrap:wrap}.brand{font-size:14px}.brand-mark{width:34px;height:34px}.header-actions{width:auto;justify-content:flex-start;margin-left:auto;flex-wrap:wrap}.header-actions .status,#status{white-space:normal;text-align:right}.page-nav{order:3;width:100%;flex:0 0 100%;overflow-x:auto;flex-wrap:nowrap}.page-nav a{padding:7px 9px}.priority-grid,.charts,.age-charts{grid-template-columns:1fr}main{padding:8px;display:block}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.skill-groups{gap:8px}.panel,.chartbox{padding:10px}.contenders h2{font-size:17px}}
+
 </style>
 </head>
 <body data-page="stats">
@@ -53,9 +87,9 @@ main{max-width:1700px;margin:18px auto;padding:0 14px;display:grid;grid-template
 </div>
 <aside class="panel contenders"><h2>🏆 Top 15 Contenders</h2><div class="rule-note"><b>Skill Level Colour Legend</b><div class="legend" style="margin-top:8px;gap:8px 12px"><span><i style="background:#259f78"></i>Advanced</span><span><i style="background:#e99a2c"></i>Intermediate</span><span><i style="background:#347fd6"></i>Beginner</span><span><i style="background:#8a98ab"></i>Never Played</span></div></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Player ID</th><th>Sport &amp; level</th></tr></thead><tbody id="contenderRows"></tbody></table></div></aside>
 </main>
-<script src="js/config.js?v=20261011-dashboardtheme"></script>
-<script src="js/common.js?v=20261011-statsnavtheme"></script>
-<script src="js/auth.js?v=20261009-captainrole2"></script>
+<script src="js/config.js?v=20261011-statstheme2"></script>
+<script src="js/common.js?v=20261011-statstheme2"></script>
+<script src="js/auth.js?v=20261011-statstheme2"></script>
 <script>
 (() => {
 const SPORTS=[
