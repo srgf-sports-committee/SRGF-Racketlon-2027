@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-09T12:55:16.177Z",
-  "sourceUpdatedAt": "2026-10-09T12:55:16.177Z",
-  "syncedAt": "2026-10-11T15:37:03.413552Z",
+  "updatedAt": "2026-10-11T15:47:38.263Z",
+  "sourceUpdatedAt": "2026-10-11T15:47:38.263Z",
+  "syncedAt": "2026-10-11T15:54:59.014245Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -36,17 +36,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P003",
+      "Name": "Viswam Pedada (41)",
+      "Mobile": "9866739873 - (362737)",
+      "Flat": "D404",
+      "Photo": "https://drive.google.com/open?id=1G6Jv9rOZGmee_7pcmfmraOQx4yQZvGTy",
+      "Priority Chart": "P1: Pickle Ball | P2: Table Tennis | P3: Badminton | P4: Lawn Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Intermediate",
+      "Table Tennis Level": "Advanced",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Advanced",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
