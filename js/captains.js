@@ -152,7 +152,12 @@ document.addEventListener("DOMContentLoaded",async()=>{
 
   function canView(){return SRGFAuth.canViewCaptains();}
   function showDenied(){
+    clearTimeout(directorySyncTimer);
+    clearTimeout(formResponsesSyncTimer);
     card.classList.add("hidden");
+    formResponsesCard.classList.add("hidden");
+    formResponsesMessage.classList.remove("hidden");
+    formResponsesMessage.textContent="Captain/Admin login required.";
     message.classList.remove("hidden");
     message.innerHTML='Please sign in with an account assigned the <strong>CAPTAIN</strong> or <strong>ADMIN</strong> role.';
     setStatus("Captain/Admin login required",true);
