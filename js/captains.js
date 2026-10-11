@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const DIRECTORY_CACHE_KEY="SRGF_CAPTAIN_DIRECTORY_CACHE_V1";
   const FORM_RESPONSES_CACHE_KEY="SRGF_CAPTAIN_FORM_RESPONSES_CACHE_V1";
   const SYNC_RETRY_MS=15000;
-  const SYNC_INTERVAL_MS=30000;
   let directorySyncTimer=null,formResponsesSyncTimer=null;
   function readCaptainCache(key){
     try{const value=JSON.parse(localStorage.getItem(key)||"null");return value&&typeof value==="object"?value:null;}catch(_){return null;}
@@ -35,11 +34,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
   function writeCaptainCache(key,value){
     try{localStorage.setItem(key,JSON.stringify({...value,cachedAt:new Date().toISOString()}));}catch(_){}
   }
-  function scheduleDirectorySync(delay=SYNC_INTERVAL_MS){
+  function scheduleDirectorySync(delay=SYNC_RETRY_MS){
     clearTimeout(directorySyncTimer);
     directorySyncTimer=setTimeout(()=>syncDirectory(),delay);
   }
-  function scheduleFormResponsesSync(delay=SYNC_INTERVAL_MS){
+  function scheduleFormResponsesSync(delay=SYNC_RETRY_MS){
     clearTimeout(formResponsesSyncTimer);
     formResponsesSyncTimer=setTimeout(()=>syncFormResponses(),delay);
   }
@@ -117,7 +116,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       writeCaptainCache(FORM_RESPONSES_CACHE_KEY,data);
       applyFormResponsesData(data);
       setStatus("LIVE · Google Sheet");
-      scheduleFormResponsesSync(SYNC_INTERVAL_MS);
+      clearTimeout(formResponsesSyncTimer);
     }catch(e){
       if(formResponsesLoaded){
         formResponsesMessage.classList.add("hidden");
@@ -253,7 +252,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       writeCaptainCache(DIRECTORY_CACHE_KEY,data);
       applyDirectoryData(data);
       setStatus("LIVE · Google Sheet");
-      scheduleDirectorySync(SYNC_INTERVAL_MS);
+      clearTimeout(directorySyncTimer);
     }catch(e){
       if(loaded){
         message.classList.add("hidden");
