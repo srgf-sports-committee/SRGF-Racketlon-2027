@@ -236,7 +236,8 @@
     const allowed =
       /(?:^|\/)players\.html$/.test(path) ||
       /(?:^|\/)results\.html$/.test(path) ||
-      /(?:^|\/)teams\.html$/.test(path);
+      /(?:^|\/)teams\.html$/.test(path) ||
+      /(?:^|\/)registration-dashboard\.html$/.test(path);
 
     if(!allowed)return;
 
