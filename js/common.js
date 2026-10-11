@@ -197,6 +197,7 @@
     const items=[
       ["registration.html","Registration Form","registration"],
       ["players.html","Players","players"],
+      ["registration-dashboard.html","Stats","stats"],
       ["teams.html","Teams","teams"],
       ["fixtures.html","Fixtures","fixtures"],
       ["results.html","Results","results"],
