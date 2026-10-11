@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-11T16:23:46.830258+00:00",
+  "generatedAt": "2026-10-11T16:33:52.489282+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -35,6 +35,17 @@
       "pickle": "Advanced",
       "active": true,
       "image": "assets/player-photos/P003.jpg"
+    },
+    {
+      "id": "P004",
+      "name": "Sashwinakash k s (11)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Never Played",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P004.jpg"
     }
   ]
 }
