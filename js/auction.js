@@ -433,7 +433,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
       const profilesRequest=loadStaticProfiles();
       const liveRequest=apiData();
       let staticProfiles=[];
-      try{staticProfiles=await profilesRequest;}catch(_){}
+      // A stalled GitHub profile request must never block live Sheet data or the page controls.
+      try{staticProfiles=await Promise.race([profilesRequest,new Promise(resolve=>setTimeout(()=>resolve([]),4000))]);}catch(_){}
       if(staticProfiles.length){
         mergeStaticProfiles(staticProfiles,!hadCache);
         saveCache();
@@ -530,5 +531,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     a.href=u;a.download="SRGF_Racketlon_2027_Auction_"+new Date().toISOString().replace(/[:.]/g,"-").slice(0,19)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
   });
 
-  await load();
+  // Attach all controls before starting network loading, so Test Sheet and Refresh
+  // remain responsive even if a data source stalls.
+  setTimeout(()=>{load().catch(e=>{SRGF.setStatus(e?.message||String(e),true);});},0);
 });
