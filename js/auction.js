@@ -190,8 +190,11 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const add=(value,kind)=>{const src=photoUrl(value);if(src&&!candidates.some(x=>x.src===src))candidates.push({src,kind});};
     // Photo priority: GitHub-hosted local image first for speed. Google Drive is
     // only attempted as a fallback after the GitHub image fails.
+    // Derive the GitHub photo path directly from Player ID first. Only the
+    // photos present in the repo will load; a 404 immediately advances to Drive.
     const githubValue=String(p?.githubImage||((String(p?.image||"").startsWith("assets/"))?p.image:"")||"").trim();
-    add(githubValue,"github");
+    if(id)add("assets/player-photos/"+encodeURIComponent(id)+".jpg","github");
+    add(githubValue,"github-manifest");
     // Reuse a cached URL only when it is not a Drive URL; a stale Drive cache
     // must never delay the fast GitHub-hosted image.
     if(cached&&!/drive\.google\.com/i.test(cached))add(cached,"cache");
