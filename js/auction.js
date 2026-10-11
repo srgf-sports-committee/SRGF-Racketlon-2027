@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
   function photoUrl(value){
     const v=String(value||"").trim();
     if(!v)return "";
-    if(v.startsWith("drive:"))return "https://drive.google.com/thumbnail?id="+encodeURIComponent(v.slice(6))+"&sz=w1000";
+    if(v.startsWith("drive:"))return "https://drive.google.com/uc?export=view&id="+encodeURIComponent(v.slice(6));
     if(/^assets\//i.test(v))return v+"?v="+encodeURIComponent(staticProfileVersion);
     return v;
   }
