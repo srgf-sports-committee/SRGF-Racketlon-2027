@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(!id||!src)return;
     photoSourceCache.set(String(id),src);
     // Persist only source URLs, never large base64 image payloads.
-    if(/^https?:\\/\\//i.test(src)||/^assets\\//i.test(src)){
+    if(/^https?:\/\//i.test(src)||/^assets\//i.test(src)){
       try{const cache=readPhotoCache();cache[String(id)]=src;localStorage.setItem(PHOTO_CACHE_KEY,JSON.stringify(cache));}catch(_){}
     }
   }
@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     const v=String(value||"").trim();
     if(!v)return "";
     if(v.startsWith("drive:"))return "https://drive.google.com/thumbnail?id="+encodeURIComponent(v.slice(6))+"&sz=w1000";
-    if(/^assets\\//i.test(v))return v+"?v="+encodeURIComponent(staticProfileVersion);
+    if(/^assets\//i.test(v))return v+"?v="+encodeURIComponent(staticProfileVersion);
     return v;
   }
   async function playerPhoto(p){
