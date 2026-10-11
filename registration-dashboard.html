@@ -87,9 +87,9 @@ table{color:#f2f6f3}th{background:#0c2a20!important;color:#b9d1d6!important}td{b
 </div>
 <aside class="panel contenders"><h2>🏆 Top 15 Contenders</h2><div class="rule-note"><b>Skill Level Colour Legend</b><div class="legend" style="margin-top:8px;gap:8px 12px"><span><i style="background:#259f78"></i>Advanced</span><span><i style="background:#e99a2c"></i>Intermediate</span><span><i style="background:#347fd6"></i>Beginner</span><span><i style="background:#8a98ab"></i>Never Played</span></div></div><div class="table-wrap"><table><thead><tr><th>#</th><th>Player</th><th>Player ID</th><th>Sport &amp; level</th></tr></thead><tbody id="contenderRows"></tbody></table></div></aside>
 </main>
-<script src="js/config.js?v=20261011-statstheme2"></script>
-<script src="js/common.js?v=20261011-statstheme2"></script>
-<script src="js/auth.js?v=20261011-statstheme2"></script>
+<script src="js/config.js?v=20261011-statstheme3"></script>
+<script src="js/common.js?v=20261011-statstheme3"></script>
+<script src="js/auth.js?v=20261011-statstheme3"></script>
 <script>
 (() => {
 const SPORTS=[
@@ -126,6 +126,11 @@ function renderAge(ps,gender,target,groups){const genderValues=ps.map(p=>String(
 function renderContenders(ps){const sorted=[...ps].sort(contenderCompare).slice(0,15);$("contenderRows").innerHTML=sorted.map((p,i)=>'<tr><td class="rank">'+(i+1)+'</td><td class="player-name">'+esc(p.name)+'</td><td>'+esc(p.id)+'</td><td><div class="tags">'+p.rankLevels.map(x=>{const li=x.level;const label=li===4?"Not provided":LEVELS[li];return '<span class="tag '+levelClass(li)+'" title="'+esc(x.sport.name+" — "+label)+'">'+esc(x.sport.short)+'</span>'}).join("")+'</div></td></tr>').join("")||'<tr><td colspan="4" class="empty">No player profiles found.</td></tr>'}
 function renderAggregateAge(stats,gender,target,groups){const counts=stats?.ageGroups?.[gender];if(!counts){$(target).innerHTML='<div class="empty">Age statistics are not available.</div>';return;}const entries=groups.map(label=>({label,n:Number(counts[label]||0)}));const max=Math.max(1,...entries.map(x=>x.n));$(target).innerHTML=entries.map(x=>'<div class="age-row"><b>'+x.label+'</b><div class="stack-track"><span title="'+x.label+': '+x.n+'" style="width:'+(x.n/max*100)+'%;background:'+(gender==="male"?"#2878d8":"#d94683")+'"></span></div><b>'+x.n+'</b></div>').join("")}
 async function load(){try{let stats=null;const config=window.SRGF_CONFIG;if(config?.API_URL){try{const sr=await fetch(config.API_URL+"?action=registrationstats&t="+Date.now(),{cache:"no-store"});if(sr.ok){const sj=await sr.json();if(sj.ok===true)stats=sj;}}catch(e){console.warn("Aggregate registration statistics unavailable",e);}}let data=null,source="";try{if(!config?.API_URL)throw Error("API config unavailable");const r=await fetch(config.API_URL+"?action=data&t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("Registration feed unavailable");data=await r.json();if(data.ok===false)throw Error(data.error||"Registration feed error");source="Live registration feed";}catch(e){const r=await fetch("./data/player-profiles.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw Error("Profile backup unavailable");data=await r.json();source="Synced profile backup";}const raw=Array.isArray(data)?data:(data.players||data.rows||[]);const ps=prepare(raw);renderKpis(ps,stats);renderPriority(ps,stats);renderCategory(ps);renderSkills(ps);if(stats?.ageGroups){renderAggregateAge(stats,"male","maleAge",["Under 12","12–18","19–40","41–59","60+"]);renderAggregateAge(stats,"female","femaleAge",["Under 18","18+"]);renderAggregateAge(stats,"female","femaleAge",["Under 18","18+"]);}else{renderAge(ps,"male","maleAge",["Under 12","12–17","18–39","40–59","60+"]);renderAge(ps,"female","femaleAge",["Under 18","18+"]);}renderContenders(ps);$("status").textContent=source+(stats?" + live aggregate statistics":" · aggregate stats unavailable")+" · "+new Date().toLocaleTimeString();}catch(e){$("status").textContent="Could not load registration data";$("status").className="error";$("contenderRows").innerHTML='<tr><td colspan="4" class="empty">Registration data could not be loaded. Please refresh later.</td></tr>';}}
+// Initialize the same shared navigation and login controls used by Players and Teams.
+document.addEventListener("DOMContentLoaded",()=>{
+  window.SRGFAuth?.init();
+  window.SRGF?.nav("stats");
+});
 document.getElementById("refreshBtn")?.addEventListener("click",load);
 load();setInterval(load,60000);
 })();
