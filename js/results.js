@@ -261,9 +261,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const entries = Object.values(stats).sort((a, b) =>
-      b.score - a.score || b.wins - a.wins ||
+      b.wins - a.wins ||
       (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
-      b.pd - a.pd || a.name.localeCompare(b.name)
+      b.pd - a.pd || b.score - a.score || a.name.localeCompare(b.name)
     );
 
     body.innerHTML = entries.length
