@@ -10,12 +10,12 @@
 .important-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
 .important-header h1{margin:0 0 6px}
 .important-header p{margin:0;color:#b9cbca;font-size:13px}
-.download-pdf{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;text-decoration:none;background:#d9ee63;color:#102017;border:1px solid #c5dd55;border-radius:8px;padding:10px 14px;font-weight:800}
+.important-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.video-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;text-decoration:none;background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-weight:800}.video-link:hover{background:rgba(255,255,255,.12)}.youtube-icon{width:22px;height:22px;display:block;flex:0 0 auto}.download-pdf{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;text-decoration:none;background:#d9ee63;color:#102017;border:1px solid #c5dd55;border-radius:8px;padding:10px 14px;font-weight:800}
 .download-pdf:hover{filter:brightness(1.06)}
 .pdf-preview{width:100%;height:min(78vh,850px);min-height:650px;overflow:hidden;border-radius:12px;background:#fff}
 .pdf-preview iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 .preview-note{margin-top:10px;color:#a9c5cc;font-size:12px}
-@media(max-width:700px){.page-card{margin:20px 10px}.pdf-preview{height:75vh;min-height:600px}}
+@media(max-width:700px){.page-card{margin:20px 10px}.pdf-preview{height:75vh;min-height:600px}.important-actions{width:100%;justify-content:flex-start}}
 </style>
 </head>
 <body data-page="importantLinks">
@@ -39,7 +39,10 @@
         <h1>Important Links</h1>
         <p>Read the SRGF Racketlon 2027 rules and guidelines below. Download only if you want a copy.</p>
       </div>
-      <a class="download-pdf" href="https://raw.githubusercontent.com/srgf-sports-committee/SRGF-Racketlon-2027/main/SRGF%20Racketlon%202027%20Rules.pdf" download="SRGF Racketlon 2027 Rules.pdf">⬇ Download PDF</a>
+      <div class="important-actions">
+        <a class="video-link" href="https://www.youtube.com/watch?si=_PCbpbVyzX91Wgo4&amp;v=TROFhDGvQ6o&amp;feature=youtu.be" target="_blank" rel="noopener noreferrer" aria-label="Watch video on YouTube"><svg class="youtube-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="#FF0033" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8Z"/><path fill="#fff" d="m9.6 15.6 6.2-3.6-6.2-3.6v7.2Z"/></svg><span>Video</span></a>
+        <a class="download-pdf" href="https://raw.githubusercontent.com/srgf-sports-committee/SRGF-Racketlon-2027/main/SRGF%20Racketlon%202027%20Rules.pdf" download="SRGF Racketlon 2027 Rules.pdf">⬇ Download PDF</a>
+      </div>
     </div>
     <div class="pdf-preview">
       <iframe
