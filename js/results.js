@@ -375,7 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("playerScoresTable")?.classList.remove("hidden");
     const msg = $("playerScoresMessage");
     if (msg) msg.textContent = activeTab === "racketlon"
-      ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points.`
+      ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points. If tied, the head-to-head result between tied players will be used.`
       : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → Net Game Difference (Games Won − Games Lost) → Point Difference.`;
   }
 
