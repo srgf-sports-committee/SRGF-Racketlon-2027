@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-12T14:50:33.968Z",
-  "sourceUpdatedAt": "2026-10-12T14:50:33.968Z",
-  "syncedAt": "2026-10-12T14:56:54.413936Z",
+  "updatedAt": "2026-10-12T15:07:35.304Z",
+  "sourceUpdatedAt": "2026-10-12T15:07:35.304Z",
+  "syncedAt": "2026-10-12T15:22:03.449571Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -21,7 +21,7 @@
     },
     {
       "Player ID": "P002",
-      "Name": "Ranvijay Singh (32) *",
+      "Name": "Ranvijay Singh (32)*",
       "Mobile": "6364369557 - (323551)",
       "Flat": "B705",
       "Photo": "https://drive.google.com/open?id=16TvFySfCnTe1YqqMJcF5cDOQUSYZdzzA",
@@ -85,7 +85,7 @@
     },
     {
       "Player ID": "P006",
-      "Name": "Abhinav Tonk (40) *",
+      "Name": "Abhinav Tonk (40)*",
       "Mobile": "9535080669 - (547913)",
       "Flat": "D-1107",
       "Photo": "https://drive.google.com/open?id=15uWBfpAqwn4WQcdPWy-kYXUFalmn0e3Z",
@@ -100,17 +100,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P007",
+      "Name": "Chandra Bhushan (32)*",
+      "Mobile": "9580467691 - (134724)",
+      "Flat": "B 1905",
+      "Photo": "https://drive.google.com/open?id=1tnTCHC_BnUGhzJyJtQt1Rk-hhEKv8IRH",
+      "Priority Chart": "P1: Table Tennis | P2: Pickle Ball | P3: Lawn Tennis | P4: Badminton",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Intermediate",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Intermediate",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
