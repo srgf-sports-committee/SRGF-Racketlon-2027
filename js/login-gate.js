@@ -34,6 +34,7 @@
     originalChildren.forEach(el => { el.hidden = !loggedIn; });
     gate.hidden = loggedIn;
     document.body.classList.remove("srgf-login-gate-pending");
+    document.documentElement.classList.remove("srgf-login-gate-pending");
   }
 
   window.addEventListener("srgf-auth-change", updateGate);
