@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-12T14:53:18.065432+00:00",
+  "generatedAt": "2026-10-12T15:04:01.402054+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -68,6 +68,17 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P006.jpg"
+    },
+    {
+      "id": "P007",
+      "name": "*",
+      "category": "",
+      "badminton": "",
+      "tt": "",
+      "tennis": "",
+      "pickle": "",
+      "active": true,
+      "image": ""
     }
   ]
 }
