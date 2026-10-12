@@ -42,6 +42,12 @@ function doGet(e){
       return json_(getFormResponses_());
     }
 
+    // Public, read-only aggregate statistics.
+    // Never returns names, contact details, or individual response rows.
+    if(a==='registrationstats'){
+      return json_(getRegistrationStats_());
+    }
+
     // Every successful read carries the timestamp of the latest actual
     // Google-Sheet content change. This lets the website compare live data,
     // browser cache and GitHub JSON without ever going backwards.
@@ -122,6 +128,123 @@ function getFormResponses_(){
   const headers=values[0].map(String);
   const rows=values.slice(1).filter(row=>row.some(value=>String(value).trim()!==''));
   return {ok:true,headers,rows};
+}
+
+
+function getRegistrationStats_(){
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh = ss.getSheetByName('Form Responses 1');
+
+  if(!sh) throw new Error('Form Responses 1 sheet is missing.');
+
+  const lastRow = sh.getLastRow();
+  const lastCol = sh.getLastColumn();
+
+  const sports = [
+    {name:'Badminton', column:18},       // R
+    {name:'Table Tennis', column:19},    // S
+    {name:'Lawn Tennis', column:20},     // T
+    {name:'Pickle Ball', column:21}      // U
+  ];
+
+  const priorities = ['P1','P2','P3','P4'];
+  const priorityCounts = {};
+
+  sports.forEach(sport => {
+    priorityCounts[sport.name] = {P1:0, P2:0, P3:0, P4:0};
+  });
+
+  const genderCounts = {Male:0, Female:0, Other:0, Unspecified:0};
+  const ageGroups = {
+    male: {
+      'Under 12': 0,
+      '12–18': 0,
+      '19–40': 0,
+      '41–59': 0,
+      '60+': 0
+    },
+    female: {
+      'Under 18': 0,
+      '18+': 0
+    }
+  };
+
+  if(lastRow < 2 || lastCol < 21){
+    return {
+      ok:true,
+      total:0,
+      genderCounts,
+      ageGroups,
+      priorityCounts,
+      generatedAt:new Date().toISOString()
+    };
+  }
+
+  // Only read the columns needed for these statistics.
+  // O = Age, P = Gender, R:U = sport priorities.
+  const rows = sh.getRange(2, 1, lastRow - 1, 21).getDisplayValues();
+
+  let total = 0;
+
+  rows.forEach(row => {
+    // Ignore completely blank form-response rows.
+    if(!row.some(value => String(value).trim() !== '')) return;
+    total++;
+
+    const ageText = String(row[14] || '').trim();   // O
+    const genderText = String(row[15] || '').trim(); // P
+    const age = Number(ageText);
+    const gender = genderText.toLowerCase();
+
+    if(gender === 'male'){
+      genderCounts.Male++;
+      if(ageText !== '' && Number.isFinite(age) && age >= 0){
+        if (age < 12) {
+          ageGroups.male['Under 12']++;
+        } else if (age <= 18) {
+          ageGroups.male['12–18']++;
+        } else if (age <= 40) {
+          ageGroups.male['19–40']++;
+        } else if (age < 60) {
+          ageGroups.male['41–59']++;
+        } else {
+          ageGroups.male['60+']++;
+        }
+      }
+    }else if(gender === 'female'){
+      genderCounts.Female++;
+      if(ageText !== '' && Number.isFinite(age) && age >= 0){
+        if(age < 18) ageGroups.female['Under 18']++;
+        else ageGroups.female['18+']++;
+      }
+    }else if(genderText){
+      genderCounts.Other++;
+    }else{
+      genderCounts.Unspecified++;
+    }
+
+    sports.forEach(sport => {
+      const value = String(row[sport.column - 1] || '')
+        .trim().toUpperCase();
+
+      priorities.forEach(priority => {
+        // Supports values such as "P1", "P1 - Highest Priority",
+        // and "P1 – Highest Priority".
+        if(new RegExp('^' + priority + '(?:\\s|$|[-–—])').test(value)){
+          priorityCounts[sport.name][priority]++;
+        }
+      });
+    });
+  });
+
+  return {
+    ok:true,
+    total,
+    genderCounts,
+    ageGroups,
+    priorityCounts,
+    generatedAt:new Date().toISOString()
+  };
 }
 
 function exportData_(){
