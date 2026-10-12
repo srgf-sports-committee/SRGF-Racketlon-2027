@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-12T06:39:57.048599+00:00",
+  "generatedAt": "2026-10-12T07:08:37.995245+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -46,6 +46,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P004.jpg"
+    },
+    {
+      "id": "P005",
+      "name": "Mrigaraj Baruah  (41)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P005.jpg"
     }
   ]
 }
