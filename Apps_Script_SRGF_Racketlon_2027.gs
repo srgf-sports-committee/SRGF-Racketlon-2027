@@ -81,6 +81,23 @@ function doPost(e){
     if(a==='sellplayer') return json_({ok:true,result:sellPlayer_(e.parameter,user)});
     if(a==='removeplayer') return json_({ok:true,result:removePlayer_(e.parameter,user)});
     if(a==='syncchanges') return json_(syncChanges_(e.parameter,user));
+    if(a==='clearfixtureresults'){
+      user=authorize_(token,true);
+
+      if(user.role!=='ADMIN'){
+        throw new Error('Admin access required to clear fixture results.');
+      }
+
+      if(String(e?.parameter?.confirmation||'')!=='YES'){
+        throw new Error('Confirmation must be exactly YES in capital letters.');
+      }
+
+      return json_({
+        ok:true,
+        result:clearFixtureResults_(user)
+      });
+    }
+
     throw new Error('Unknown POST action.');
   }catch(err){return json_({ok:false,error:String(err.message||err)})}
 }
@@ -774,4 +791,77 @@ function syncPaymentVerificationCopy_(){
   targetSheet.setFrozenRows(1);
   SpreadsheetApp.flush();
   return {ok:true, rows:values.length, columns:'A:Y', verifierColumns:'Z onward'};
+}
+
+
+function clearFixtureResults_(user){
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sh = requireSheet_(ss, SHEETS.fixtures);
+    const h = headers_(sh);
+
+    const resultColumns = [];
+
+    h.forEach((header, index) => {
+      const normalized = String(header || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '');
+
+      if (
+        /^(?:game|set)[1-4]/.test(normalized) ||
+        normalized === 'winningteam'
+      ) {
+        resultColumns.push(index + 1);
+      }
+    });
+
+    if (!resultColumns.length) {
+      throw new Error(
+        'No Game/Set or Winning Team result columns were found in FIXTURES.'
+      );
+    }
+
+    const lastRow = sh.getLastRow();
+    let clearedCells = 0;
+
+    if (lastRow >= 2) {
+      resultColumns.forEach(column => {
+        sh.getRange(2, column, lastRow - 1, 1)
+          .clearContent();
+
+        clearedCells += lastRow - 1;
+      });
+    }
+
+    SpreadsheetApp.flush();
+
+    // Invalidate the cached Fixtures data.
+    CacheService.getScriptCache()
+      .remove('SRGF_READ_V3_' + SHEETS.fixtures);
+
+    // Record the action in the existing audit log.
+    logWrite_(
+      user,
+      'CLEAR_FIXTURE_RESULTS',
+      'FIXTURES',
+      'Cleared all Game/Set scores and Winning Team values across ' +
+        Math.max(0, lastRow - 1) + ' fixture row(s).',
+      ss
+    );
+
+    return {
+      ok: true,
+      clearedRows: Math.max(0, lastRow - 1),
+      clearedCells: clearedCells,
+      columnsCleared: resultColumns.length,
+      clearedAt: new Date().toISOString()
+    };
+
+  } finally {
+    lock.releaseLock();
+  }
 }
