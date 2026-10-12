@@ -26,7 +26,7 @@
   main.prepend(gate);
 
   document.getElementById("loginToViewContent").addEventListener("click", function(){
-    window.SRGFAuth?.login?.();
+    document.getElementById("loginBtn")?.click();
   });
 
   function updateGate(){
