@@ -31,13 +31,14 @@
   </div>
   <div><label class="field" for="sportFilter">Sport</label><select id="sportFilter"><option value="">All Sports</option><option value="badminton">Badminton</option><option value="tt">Table Tennis</option><option value="tennis">Lawn Tennis</option><option value="pickle">Pickle Ball</option></select></div>
   <div><label class="field" for="skillFilter">Skill</label><select id="skillFilter"><option value="">All Skills</option></select></div>
+  <div><label class="field" for="categoryFilter">Category</label><select id="categoryFilter"><option value="">All Categories</option></select></div>
 </div>
 <div id="playersResultCount" class="players-result-count" aria-live="polite"></div>
 <div class="result-table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Badminton</th><th>TT</th><th>Tennis</th><th>Pickleball</th><th>Team</th></tr></thead>
 <tbody id="playersBody"></tbody></table></div>
 </div>
 <style>
-.players-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
+.players-filters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
 .players-filters>div{min-width:0}.players-result-count{color:var(--muted);font-size:12px;margin:0 0 8px}
 @media(max-width:700px){.players-filters{grid-template-columns:1fr}}
 </style>
