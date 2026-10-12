@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const PENDING_KEY="SRGF_PENDING_FIXTURE_RESULTS_V1";
   let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
+  const roleCanClearResults=()=>SRGFAuth.role()==="ADMIN";
+  function syncClearResultsButton(){const bar=$("clearResultsAdminBar");if(bar)bar.style.display=roleCanClearResults()?"block":"none";}
 
   function loadPending(){
     try{pendingResults=JSON.parse(localStorage.getItem(PENDING_KEY)||"{}")||{};}catch(_){pendingResults={};}
@@ -530,6 +532,52 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     };
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
+  async function clearAllFixtureResults(){
+    if(!roleCanClearResults()){
+      alert("Admin access is required to clear fixture results.");
+      return;
+    }
+    const answer=prompt("WARNING: This will permanently clear all entered fixture results from the FIXTURES sheet.\n\nTo continue, type YES in capital letters.");
+    if(answer===null)return;
+    if(answer!=="YES"){
+      alert("Confirmation did not match. No results were cleared. Enter exactly YES in capital letters.");
+      return;
+    }
+    const button=$("clearAllResultsBtn");
+    if(button){button.disabled=true;button.textContent="Clearing…";}
+    try{
+      const body=new URLSearchParams({action:"clearFixtureResults",token:SRGFAuth.token(),confirmation:"YES"});
+      const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+        body
+      },30000);
+      const result=await res.json();
+      if(!res.ok||!result.ok)throw new Error(result.error||"Unable to clear fixture results.");
+      // Remove local unsaved edits so they cannot reappear after the clear.
+      pendingResults={};
+      savePending();
+      if($("resultModal")){
+        $("resultModal").classList.add("hidden");
+        $("resultModal").querySelectorAll("input").forEach(input=>input.value="");
+      }
+      // Clear only result columns in the current view; fixture metadata stays intact.
+      const resultIndexes=headers.map((h,i)=>({h:String(h||"").trim().toLowerCase().replace(/[^a-z0-9]/g,""),i}))
+        .filter(x=>/^game[1-4]/.test(x.h)||/^set[1-4]/.test(x.h)||x.h==="winningteam")
+        .map(x=>x.i);
+      rows=rows.map(row=>row.map((value,i)=>resultIndexes.includes(i)?"":value));
+      render();
+      setStatus("✓ All fixture results cleared from Google Sheets",false);
+      alert("All fixture results have been cleared from Google Sheets.");
+    }catch(e){
+      setStatus("Could not clear fixture results: "+(e.message||e),true);
+      alert("Could not clear fixture results. "+(e.message||e));
+    }finally{
+      if(button){button.disabled=false;button.textContent="Clear All Results";}
+      syncClearResultsButton();
+    }
+  }
+
   async function load(){
     // Editors use the same cache-first/live-retry loader as viewers.
     // This prevents a temporary Google Sheets/API failure from blanking the
@@ -618,6 +666,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   loadPending();
   setupPlayerDropdown();
+  $("clearAllResultsBtn")?.addEventListener("click",clearAllFixtureResults);
+  syncClearResultsButton();
+  window.addEventListener("srgf-auth-change",syncClearResultsButton);
   $("refreshBtn")?.addEventListener("click",load);
   await load();
 });
