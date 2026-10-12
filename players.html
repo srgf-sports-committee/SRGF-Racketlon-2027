@@ -18,9 +18,29 @@
 <section id="players">
 <h1>Players</h1>
 <div class="card">
-<table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Badminton</th><th>TT</th><th>Tennis</th><th>Pickleball</th><th>Team</th></tr></thead>
-<tbody id="playersBody"></tbody></table>
+<div class="players-filters">
+  <div class="player-select-wrap">
+    <label class="field" for="playerNameButton">Player Name</label>
+    <div class="player-combobox" id="playerNameCombo">
+      <button type="button" id="playerNameButton" class="player-combobox-display" aria-haspopup="listbox" aria-expanded="false">All Players</button>
+      <div id="playerNameDropdown" class="player-dropdown hidden">
+        <input id="playerNameSearch" class="player-dropdown-search" type="search" placeholder="Search player name…" autocomplete="off" aria-label="Search player name">
+        <div id="playerNameOptions" class="player-dropdown-options" role="listbox"></div>
+      </div>
+    </div>
+  </div>
+  <div><label class="field" for="sportFilter">Sport</label><select id="sportFilter"><option value="">All Sports</option><option value="badminton">Badminton</option><option value="tt">Table Tennis</option><option value="tennis">Lawn Tennis</option><option value="pickle">Pickle Ball</option></select></div>
+  <div><label class="field" for="skillFilter">Skill</label><select id="skillFilter"><option value="">All Skills</option></select></div>
 </div>
+<div id="playersResultCount" class="players-result-count" aria-live="polite"></div>
+<div class="result-table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Badminton</th><th>TT</th><th>Tennis</th><th>Pickleball</th><th>Team</th></tr></thead>
+<tbody id="playersBody"></tbody></table></div>
+</div>
+<style>
+.players-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
+.players-filters>div{min-width:0}.players-result-count{color:var(--muted);font-size:12px;margin:0 0 8px}
+@media(max-width:700px){.players-filters{grid-template-columns:1fr}}
+</style>
 </section>
 
 </main>
