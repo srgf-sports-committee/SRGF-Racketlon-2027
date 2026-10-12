@@ -566,6 +566,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         .filter(x=>/^game[1-4]/.test(x.h)||/^set[1-4]/.test(x.h)||x.h==="winningteam")
         .map(x=>x.i);
       rows=rows.map(row=>row.map((value,i)=>resultIndexes.includes(i)?"":value));
+      // Pull the just-cleared sheet snapshot directly, bypassing browser cache.
+      try{
+        const latest=await SRGF.live("fixtures");
+        const freshRows=Array.isArray(latest.fixtures)?latest.fixtures:[];
+        if(freshRows.length){
+          headers=Object.keys(freshRows[0]||{});
+          rows=freshRows.map(item=>headers.map(header=>item[header]??""));
+        }
+      }catch(_){/* keep the locally cleared view if the follow-up read fails */}
       render();
       setStatus("✓ All fixture results cleared from Google Sheets",false);
       alert("All fixture results have been cleared from Google Sheets.");
