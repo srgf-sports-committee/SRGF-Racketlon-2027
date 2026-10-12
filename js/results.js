@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
       const key = teamKey(clean);
-      if (!stats[key]) stats[key] = { name: clean, score: 0, wins: 0, losses: 0, pd: 0 };
+      if (!stats[key]) stats[key] = { name: clean, score: 0, wins: 0, gamesWon: 0, losses: 0, pd: 0 };
       return stats[key];
     };
 
@@ -241,11 +241,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!parsed) return;
         if (a) {
           ensure(a).pd += parsed[0] - parsed[1];
-          if (parsed[0] < parsed[1]) ensure(a).losses++;
+          if (parsed[0] > parsed[1]) ensure(a).gamesWon++;
+          else if (parsed[0] < parsed[1]) ensure(a).losses++;
         }
         if (b) {
           ensure(b).pd += parsed[1] - parsed[0];
-          if (parsed[1] < parsed[0]) ensure(b).losses++;
+          if (parsed[1] > parsed[0]) ensure(b).gamesWon++;
+          else if (parsed[1] < parsed[0]) ensure(b).losses++;
         }
       });
     });
@@ -259,12 +261,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const entries = Object.values(stats).sort((a, b) =>
-      b.score - a.score || b.wins - a.wins || a.losses - b.losses || b.pd - a.pd || a.name.localeCompare(b.name)
+      b.score - a.score || b.wins - a.wins ||
+      (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
+      b.pd - a.pd || a.name.localeCompare(b.name)
     );
 
     body.innerHTML = entries.length
-      ? entries.map((x, i) => `<tr class="${i === 0 ? "team-top-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
-      : '<tr><td colspan="5">No team results available.</td></tr>';
+      ? entries.map((x, i) => `<tr class="${i === 0 ? "team-top-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
+      : '<tr><td colspan="7">No team results available.</td></tr>';
     table.classList.remove("hidden");
     if (msg) msg.textContent = entries.length ? `${entries.length} team(s) shown.` : "Results will appear here after fixture scores are entered.";
   }
@@ -276,7 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const playerScores = {};
     const ensure = (sportName, tierName, player) => {
       const key = `${norm(sportName)}|||${norm(tierName)}|||${norm(player)}`;
-      if (!playerScores[key]) playerScores[key] = { sport: sportName, tier: tierName, player, points: 0, wins: 0, losses: 0, pd: 0 };
+      if (!playerScores[key]) playerScores[key] = { sport: sportName, tier: tierName, player, points: 0, wins: 0, gamesWon: 0, losses: 0, pd: 0 };
       return playerScores[key];
     };
 
@@ -308,6 +312,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (a) a.points += parsed[0];
           if (b) b.points += parsed[1];
         } else {
+          if (parsed[0] > parsed[1] && a) a.gamesWon++;
+          if (parsed[1] > parsed[0] && b) b.gamesWon++;
           if (parsed[0] < parsed[1] && a) a.losses++;
           if (parsed[1] < parsed[0] && b) b.losses++;
           if (a) a.pd += parsed[0] - parsed[1];
@@ -329,14 +335,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     Object.values(groups).forEach(group => group.sort((a, b) => activeTab === "racketlon"
       ? b.points - a.points || a.player.localeCompare(b.player)
-      : b.wins - a.wins || a.losses - b.losses || b.pd - a.pd || a.player.localeCompare(b.player)
+      : b.wins - a.wins || (b.gamesWon - b.losses) - (a.gamesWon - a.losses) || b.pd - a.pd || a.player.localeCompare(b.player)
     ));
 
     const head = $("playerScoresHead");
     if (head) {
       head.innerHTML = activeTab === "racketlon"
         ? "<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Total Points</th></tr>"
-        : "<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Matches Won</th><th>Games Lost</th><th>Point Difference</th></tr>";
+        : "<tr><th>Sport</th><th>Tier</th><th>Player Name</th><th>Matches Won</th><th>Games Won</th><th>Games Lost</th><th>Net Game Difference</th><th>Point Difference</th></tr>";
     }
 
     const body = $("playerScoresBody");
@@ -362,14 +368,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const cls = top.has(x.player) ? "racketlon-top-player" : "";
       return activeTab === "racketlon"
         ? `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.points}</td></tr>`
-        : `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.wins}</td><td>${x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
-    }).join("") : `<tr><td colspan="${activeTab === "racketlon" ? 4 : 6}">No player scores available.</td></tr>`;
+        : `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
+    }).join("") : `<tr><td colspan="${activeTab === "racketlon" ? 4 : 8}">No player scores available.</td></tr>`;
 
     $("playerScoresTable")?.classList.remove("hidden");
     const msg = $("playerScoresMessage");
     if (msg) msg.textContent = activeTab === "racketlon"
       ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points.`
-      : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → fewer Games Lost → Point Difference.`;
+      : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → Net Game Difference (Games Won − Games Lost) → Point Difference.`;
   }
 
   function render() {
