@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-12T13:20:06.076292+00:00",
+  "generatedAt": "2026-10-12T13:52:20.175674+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -57,6 +57,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P005.jpg"
+    },
+    {
+      "id": "P006",
+      "name": "Abhinav Tonk (40) *",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Intermediate",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P006.jpg"
     }
   ]
 }
