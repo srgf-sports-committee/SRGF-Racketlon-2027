@@ -11,6 +11,7 @@
   const CACHE_KEY = "SRGF_RACKETLON_2027_LATEST_GOOD_DATA_V4";
   const LEGACY_CACHE_KEYS = ["SRGF_RACKETLON_2027_LATEST_GOOD_DATA_V3"];
   const RETRY_MS = 15000;
+  const PAGE_REFRESH_MS = 60000;
 
   function removeFreshness(){
     document.querySelectorAll("#dataFreshness,.data-freshness").forEach(el=>el.remove());
@@ -245,7 +246,7 @@
       // Do not interrupt an active edit/modal interaction.
       if(document.querySelector(".modal:not(.hidden), input:focus, textarea:focus, select:focus"))return;
       location.reload();
-    },RETRY_MS);
+    },PAGE_REFRESH_MS);
   }
 
   window.SRGF={
