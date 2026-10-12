@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-12T15:04:01.402054+00:00",
+  "generatedAt": "2026-10-12T15:23:45.002865+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -16,7 +16,7 @@
     },
     {
       "id": "P002",
-      "name": "Ranvijay Singh (32) *",
+      "name": "Ranvijay Singh (32)*",
       "category": "Racketlon",
       "badminton": "Advanced",
       "tt": "Beginner",
@@ -60,7 +60,7 @@
     },
     {
       "id": "P006",
-      "name": "Abhinav Tonk (40) *",
+      "name": "Abhinav Tonk (40)*",
       "category": "Racketlon",
       "badminton": "Beginner",
       "tt": "Intermediate",
@@ -71,14 +71,14 @@
     },
     {
       "id": "P007",
-      "name": "*",
-      "category": "",
-      "badminton": "",
-      "tt": "",
-      "tennis": "",
-      "pickle": "",
+      "name": "Chandra Bhushan (32)*",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Intermediate",
+      "pickle": "Intermediate",
       "active": true,
-      "image": ""
+      "image": "assets/player-photos/P007.jpg"
     }
   ]
 }
