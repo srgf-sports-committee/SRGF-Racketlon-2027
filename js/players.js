@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let allRows=[];
   let selectedPlayer="";
   const playerButton=$("playerNameButton"), playerDropdown=$("playerNameDropdown"), playerSearch=$("playerNameSearch"), playerOptions=$("playerNameOptions");
-  const sportFilter=$("sportFilter"), skillFilter=$("skillFilter");
+  const sportFilter=$("sportFilter"), skillFilter=$("skillFilter"), categoryFilter=$("categoryFilter");
   const clean=v=>String(v??"").trim();
   const skillFor=(p,key)=>clean(p[sportFields[key]] ?? p[sportAliases[key]] ?? "");
   function buildPlayerOptions(){
@@ -37,14 +37,22 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     skillFilter.innerHTML='<option value="">All Skills</option>'+skills.map(skill=>'<option value="'+esc(skill)+'">'+esc(skill)+'</option>').join("");
     if(skills.includes(previous))skillFilter.value=previous;
   }
+  function buildCategoryOptions(){
+    const previous=categoryFilter.value;
+    const categories=[...new Set(allRows.map(r=>clean(r.player["Preferred Category"] ?? r.player.category ?? "" )).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    categoryFilter.innerHTML='<option value="">All Categories</option>'+categories.map(category=>'<option value="'+esc(category)+'">'+esc(category)+'</option>').join("");
+    if(categories.includes(previous))categoryFilter.value=previous;
+  }
   function applyFilters(){
-    const sport=sportFilter.value, skill=skillFilter.value;
+    const sport=sportFilter.value, skill=skillFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase();
     let shown=0;
     allRows.forEach(row=>{
       const playerMatch=!selectedPlayer||row.name===selectedPlayer;
       const skills=sport?[skillFor(row.player,sport)]:Object.keys(sportFields).map(key=>skillFor(row.player,key));
       const skillMatch=!skill||skills.some(value=>clean(value).toLocaleLowerCase()===skill.toLocaleLowerCase());
-      const show=playerMatch&&skillMatch; row.element.hidden=!show; if(show)shown++;
+      const rowCategory=clean(row.player["Preferred Category"] ?? row.player.category ?? "").toLocaleLowerCase();
+      const categoryMatch=!category||rowCategory===category;
+      const show=playerMatch&&skillMatch&&categoryMatch; row.element.hidden=!show; if(show)shown++;
     });
     $("playersResultCount").textContent=shown+" of "+allRows.length+" players";
     const noResults=$("playersNoResults");
@@ -63,12 +71,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       return {player:p,name,element:tr,values};
     });
     const body=$("playersBody");body.innerHTML="";allRows.forEach(row=>body.appendChild(row.element));
-    buildPlayerOptions();buildSkillOptions();applyFilters();
+    buildPlayerOptions();buildSkillOptions();buildCategoryOptions();applyFilters();
   }
   playerButton?.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
   playerSearch?.addEventListener("input",filterPlayerOptions);
   sportFilter?.addEventListener("change",()=>{buildSkillOptions();applyFilters();});
   skillFilter?.addEventListener("change",applyFilters);
+  categoryFilter?.addEventListener("change",applyFilters);
   document.addEventListener("click",event=>{if(!$("playerNameCombo")?.contains(event.target))closePlayerDropdown();});
   document.addEventListener("keydown",event=>{if(event.key==="Escape")closePlayerDropdown();});
   try{
