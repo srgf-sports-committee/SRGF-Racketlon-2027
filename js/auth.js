@@ -139,7 +139,7 @@
       if(!document.getElementById("srgfWhatsAppStyles")){
         const style=document.createElement("style");
         style.id="srgfWhatsAppStyles";
-        style.textContent=".srgf-whatsapp-link{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-left:10px;padding:9px 12px;border-radius:9px;background:#128c4a;color:#fff!important;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 2px 10px rgba(18,140,74,.25);animation:srgfWhatsAppBlink 1.1s steps(2,start) infinite}@keyframes srgfWhatsAppBlink{to{visibility:hidden}}.srgf-whatsapp-link:focus-visible{outline:3px solid #b7df35;outline-offset:3px}@media(max-width:600px){.srgf-whatsapp-link{margin-left:0;margin-top:6px;padding:8px 10px;font-size:12px}}";
+        style.textContent=".srgf-whatsapp-link{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-left:10px;padding:9px 12px;border-radius:9px;background:#128c4a;color:#fff!important;font-size:13px;font-weight:800;text-decoration:none;white-space:nowrap;box-shadow:0 2px 10px rgba(18,140,74,.25)}.srgf-whatsapp-link:focus-visible{outline:3px solid #b7df35;outline-offset:3px}@media(max-width:600px){.srgf-whatsapp-link{margin-left:0;margin-top:6px;padding:8px 10px;font-size:12px}}";
         document.head.appendChild(style);
       }
     }
