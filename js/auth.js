@@ -149,6 +149,7 @@
     if(window.SRGF?.nav) window.SRGF.nav(currentPage);
     document.body?.classList.toggle("is-admin",canAuction());
     document.body?.classList.toggle("is-writer",canEditFixtures()&&!canAuction());
+    window.dispatchEvent(new Event("srgf-auth-change"));
   }
 
   function configureGoogle(callback,emailHint=""){
