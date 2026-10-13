@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-13T07:24:46.211Z",
-  "sourceUpdatedAt": "2026-10-13T07:24:46.211Z",
-  "syncedAt": "2026-10-13T08:00:07.857712Z",
+  "updatedAt": "2026-10-13T08:07:17.749Z",
+  "sourceUpdatedAt": "2026-10-13T08:07:17.749Z",
+  "syncedAt": "2026-10-13T08:27:25.272707Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -228,17 +228,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P015",
+      "Name": "Bhupesh kumar (30)*",
+      "Mobile": "9650865953 - (443514)",
+      "Flat": "A1307",
+      "Photo": "https://drive.google.com/open?id=1mKkmQRg7vB11uTP9ayMBtYfnq_DrZi0e",
+      "Priority Chart": "P1: Lawn Tennis | P2: Badminton | P3: Pickle Ball | P4: Table Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Intermediate",
+      "Table Tennis Level": "Intermediate",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Intermediate",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
