@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-13T08:04:55.575655+00:00",
+  "generatedAt": "2026-10-13T08:29:04.250937+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -156,6 +156,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P014.jpg"
+    },
+    {
+      "id": "P015",
+      "name": "Bhupesh kumar (30)*",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Intermediate",
+      "tennis": "Intermediate",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P015.jpg"
     }
   ]
 }
