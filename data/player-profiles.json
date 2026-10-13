@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-13T04:46:43.631583+00:00",
+  "generatedAt": "2026-10-13T05:04:14.682683+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -101,6 +101,28 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P009.jpg"
+    },
+    {
+      "id": "P010",
+      "name": "Alwin Dmello (35)",
+      "category": "Racketlon",
+      "badminton": "Advanced",
+      "tt": "Intermediate",
+      "tennis": "Beginner",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P010.jpg"
+    },
+    {
+      "id": "P011",
+      "name": "Aneesh. Krishnan U (33)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P011.jpg"
     }
   ]
 }
