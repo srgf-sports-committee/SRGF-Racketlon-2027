@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-13T07:25:05.726005+00:00",
+  "generatedAt": "2026-10-13T07:47:36.435034+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -145,6 +145,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P013.jpg"
+    },
+    {
+      "id": "P014",
+      "name": "Suresh subramaniam  (62)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P014.jpg"
     }
   ]
 }
