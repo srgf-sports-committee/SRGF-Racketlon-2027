@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let allRows=[];
   let selectedPlayer="";
   const playerButton=$("playerNameButton"), playerDropdown=$("playerNameDropdown"), playerSearch=$("playerNameSearch"), playerOptions=$("playerNameOptions");
-  const sportFilter=$("sportFilter"), skillFilter=$("skillFilter"), categoryFilter=$("categoryFilter");
+  const sportFilter=$("sportFilter"), skillFilter=$("skillFilter"), categoryFilter=$("categoryFilter"), captainNomineeFilter=$("captainNomineeFilter");
   const clean=v=>String(v??"").trim();
   const skillFor=(p,key)=>clean(p[sportFields[key]] ?? p[sportAliases[key]] ?? "");
   function buildPlayerOptions(){
@@ -44,10 +44,10 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(categories.includes(previous))categoryFilter.value=previous;
   }
   function applyFilters(){
-    const sport=sportFilter.value, skill=skillFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase();
+    const sport=sportFilter.value, skill=skillFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), captainNominee=clean(captainNomineeFilter?.value);
     let shown=0;
     allRows.forEach(row=>{
-      const playerMatch=!selectedPlayer||row.name===selectedPlayer;
+      const playerMatch=(!selectedPlayer||row.name===selectedPlayer) && (!captainNominee || (captainNominee==="yes" ? /\\*\\s*$/.test(row.name) : !/\\*\\s*$/.test(row.name)));
       const skills=sport?[skillFor(row.player,sport)]:Object.keys(sportFields).map(key=>skillFor(row.player,key));
       const skillMatch=!skill||skills.some(value=>clean(value).toLocaleLowerCase()===skill.toLocaleLowerCase());
       const rowCategory=clean(row.player["Preferred Category"] ?? row.player.category ?? "").toLocaleLowerCase();
@@ -78,6 +78,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   sportFilter?.addEventListener("change",()=>{buildSkillOptions();applyFilters();});
   skillFilter?.addEventListener("change",applyFilters);
   categoryFilter?.addEventListener("change",applyFilters);
+  captainNomineeFilter?.addEventListener("change",applyFilters);
   document.addEventListener("click",event=>{if(!$("playerNameCombo")?.contains(event.target))closePlayerDropdown();});
   document.addEventListener("keydown",event=>{if(event.key==="Escape")closePlayerDropdown();});
   try{
