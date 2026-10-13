@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-13T05:17:29.224Z",
-  "sourceUpdatedAt": "2026-10-13T05:17:29.224Z",
-  "syncedAt": "2026-10-13T06:04:04.599352Z",
+  "updatedAt": "2026-10-13T06:13:52.511Z",
+  "sourceUpdatedAt": "2026-10-13T06:13:52.511Z",
+  "syncedAt": "2026-10-13T06:35:38.366385Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -196,17 +196,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P013",
+      "Name": "Jaya Krishna (40)*",
+      "Mobile": "9886716662 - (123456)",
+      "Flat": "G907",
+      "Photo": "https://drive.google.com/open?id=1Kw3n8On2ks9_iOXLZG4c9s6B-ew_5Rsc",
+      "Priority Chart": "P1: Badminton | P2: Lawn Tennis | P3: Pickle Ball | P4: Table Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Advanced",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Beginner",
+      "Pickle Ball Level": "Beginner",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
