@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-13T06:13:52.511Z",
-  "sourceUpdatedAt": "2026-10-13T06:13:52.511Z",
-  "syncedAt": "2026-10-13T07:07:27.580910Z",
+  "updatedAt": "2026-10-13T07:24:46.211Z",
+  "sourceUpdatedAt": "2026-10-13T07:24:46.211Z",
+  "syncedAt": "2026-10-13T07:36:30.824293Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -212,17 +212,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P014",
+      "Name": "Suresh subramaniam  (62)",
+      "Mobile": "9916096293 - (123456)",
+      "Flat": "C 706",
+      "Photo": "https://drive.google.com/open?id=1JSflZ28dLWxg_TyHQN-LlElwkqGajLep",
+      "Priority Chart": "P1: Lawn Tennis | P2: Pickle Ball | P3: Table Tennis | P4: Badminton",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Beginner",
+      "Pickle Ball Level": "Beginner",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
