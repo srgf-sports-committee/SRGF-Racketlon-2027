@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-13T05:04:14.682683+00:00",
+  "generatedAt": "2026-10-13T05:25:53.644824+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -123,6 +123,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P011.jpg"
+    },
+    {
+      "id": "P012",
+      "name": "Sudhir Kumar (51)*",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Advanced",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P012.jpg"
     }
   ]
 }
