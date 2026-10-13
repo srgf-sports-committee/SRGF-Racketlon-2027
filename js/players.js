@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const sport=sportFilter.value, skill=skillFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), captainNominee=clean(captainNomineeFilter?.value);
     let shown=0;
     allRows.forEach(row=>{
-      const playerMatch=(!selectedPlayer||row.name===selectedPlayer) && (!captainNominee || (captainNominee==="yes" ? /\\*\\s*$/.test(row.name) : !/\\*\\s*$/.test(row.name)));
+      const playerMatch=(!selectedPlayer||row.name===selectedPlayer) && (!captainNominee || (captainNominee==="yes" ? /\*\s*$/.test(row.name) : !/\*\s*$/.test(row.name)));
       const skills=sport?[skillFor(row.player,sport)]:Object.keys(sportFields).map(key=>skillFor(row.player,key));
       const skillMatch=!skill||skills.some(value=>clean(value).toLocaleLowerCase()===skill.toLocaleLowerCase());
       const rowCategory=clean(row.player["Preferred Category"] ?? row.player.category ?? "").toLocaleLowerCase();
