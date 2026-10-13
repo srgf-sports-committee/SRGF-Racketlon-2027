@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-13T06:03:00.356316+00:00",
+  "generatedAt": "2026-10-13T06:30:24.435818+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -134,6 +134,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P012.jpg"
+    },
+    {
+      "id": "P013",
+      "name": "Jaya Krishna (40)*",
+      "category": "Racketlon",
+      "badminton": "Advanced",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P013.jpg"
     }
   ]
 }
