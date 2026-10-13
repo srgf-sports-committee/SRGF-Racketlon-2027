@@ -1,6 +1,6 @@
 (() => {
   const C=window.SRGF_CONFIG;
-  const SESSION_TTL=60*60*1000; // 60 minutes
+  const SESSION_TTL=6*60*60*1000; // 6 hours
   let session={role:"USER",email:"",token:"",loginAt:0,expiresAt:0};
   let expiryTimer=null;
   let lastActivityWrite=0;
@@ -219,7 +219,7 @@
     const s=readStored();
     if(!s.token)return;
     const now=Date.now();
-    // Keep the existing browser login across refreshes for 60 minutes.
+    // Keep the existing browser login across refreshes for 6 hours.
     if(s.expiresAt && now < Number(s.expiresAt)){
       session={role:String(s.role||"USER").toUpperCase(),email:s.email||"",token:s.token,loginAt:Number(s.loginAt||now),expiresAt:Number(s.expiresAt)};
       lastActivityWrite=now;
@@ -227,14 +227,14 @@
       armExpiryTimer();
       return;
     }
-    // Upgrade an older saved session (from before the 60-minute expiry was added).
+    // Upgrade an older saved session (from before the 6-hour expiry was added).
     if(!s.expiresAt){
       try{ await verifyToken(s.token); return; }catch(_){ clear(); return; }
     }
     clear();
   }
 
-  // Keep the login alive for 60 minutes from the user's last interaction.
-  // A click, typing/edit, selection change, or touch resets the 60-minute window.
+  // Keep the login alive for 6 hours from the user's last interaction.
+  // A click, typing/edit, selection change, or touch resets the 6-hour window.
   window.SRGFAuth={init,role,canAuction,canEditFixtures,canViewLogs,canViewCaptains,token:()=>session.token,email:()=>session.email,clear,login:startLogin};
 })();
