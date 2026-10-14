@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-14T09:17:25.794Z",
-  "sourceUpdatedAt": "2026-10-14T09:17:25.794Z",
-  "syncedAt": "2026-10-14T12:10:07.486296Z",
+  "updatedAt": "2026-10-14T12:34:09.580Z",
+  "sourceUpdatedAt": "2026-10-14T12:34:09.580Z",
+  "syncedAt": "2026-10-14T12:56:34.745519Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -260,17 +260,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P017",
+      "Name": "Anshul bhardwaj (41)*",
+      "Mobile": "9611105501 - (643422)",
+      "Flat": "B 1403",
+      "Photo": "https://drive.google.com/open?id=1PLMYZwYatO6uK6b7S5y5_yEisJ6k3tAN",
+      "Priority Chart": "P1: Lawn Tennis | P2: Pickle Ball | P3: Badminton | P4: Table Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Never Played",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Beginner",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
