@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-14T09:09:05.829715+00:00",
+  "generatedAt": "2026-10-14T09:40:06.816494+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -167,6 +167,17 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P015.jpg"
+    },
+    {
+      "id": "P016",
+      "name": "Harshavardhan JB (41)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P016.jpg"
     }
   ]
 }
