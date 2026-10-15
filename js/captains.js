@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded",async()=>{
   const formResponsesHead=$("formResponsesHead");
   const formResponsesBody=$("formResponsesBody");
   const formResponsesCount=$("formResponsesCount");
+  const captainNominationFilter=$("captainNominationFilter");
+  const captainNominationFilterWrap=$("captainNominationFilterWrap");
 
   // Private Captain Directory cache: only read or render it after the role check.
   // Successful live responses replace the cache; failed requests keep cached data visible.
@@ -85,13 +87,32 @@ document.addEventListener("DOMContentLoaded",async()=>{
     replacements.forEach(([pattern,value])=>{label=label.replace(pattern,value);});
     return label||String(header||"Column "+(index+1));
   }
+  function captainNominationColumnIndex(){
+    return formResponseHeaders.findIndex(header=>{
+      const h=String(header||"").toLowerCase();
+      return (h.includes("nomination for")&&h.includes("nominate as a player")) ||
+        (h.includes("captain")&&/(nomination|nominate|interested|volunteer)/.test(h));
+    });
+  }
+  function filteredFormResponseRows(){
+    const choice=captainNominationFilter?.value||"";
+    const column=captainNominationColumnIndex();
+    if(!choice||column<0)return formResponseRows;
+    return formResponseRows.filter(row=>{
+      const value=String(row[column]??"").trim().toLowerCase();
+      return choice==="yes"?/^yes\\b/.test(value):/^no\\b/.test(value);
+    });
+  }
   function renderFormResponses(){
     const isPhotoColumn=header=>/photo|picture|image/i.test(String(header||""));
+    const column=captainNominationColumnIndex();
+    if(captainNominationFilterWrap)captainNominationFilterWrap.classList.toggle("hidden",column<0);
     formResponsesHead.innerHTML="<tr>"+formResponseHeaders.map((h,i)=>"<th"+(isPhotoColumn(h)?' class="form-response-photo-column"':"")+">"+esc(shortFormHeader(h,i))+"</th>").join("")+"</tr>";
-    formResponsesBody.innerHTML=formResponseRows.length
-      ?formResponseRows.map(row=>"<tr>"+formResponseHeaders.map((header,i)=>"<td"+(isPhotoColumn(header)?' class="form-response-photo-column"':"")+">"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
-      :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses found.</td></tr>';
-    formResponsesCount.textContent="Showing "+formResponseRows.length+" form responses";
+    const visibleRows=filteredFormResponseRows();
+    formResponsesBody.innerHTML=visibleRows.length
+      ?visibleRows.map(row=>"<tr>"+formResponseHeaders.map((header,i)=>"<td"+(isPhotoColumn(header)?' class="form-response-photo-column"':"")+">"+esc(row[i]??"")+"</td>").join("")+"</tr>").join("")
+      :'<tr><td colspan="'+Math.max(1,formResponseHeaders.length)+'">No form responses match the selected filter.</td></tr>';
+    formResponsesCount.textContent="Showing "+visibleRows.length+" of "+formResponseRows.length+" form responses";
   }
   function applyFormResponsesData(data){
     formResponseHeaders=Array.isArray(data.headers)?data.headers.map(String):[];
@@ -198,7 +219,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
       alert("Please open the Form Responses tab and wait for the data to load.");
       return;
     }
-    const rows=[formResponseHeaders.map((header,index)=>shortFormHeader(header,index)),...formResponseRows];
+    const rows=[formResponseHeaders.map((header,index)=>shortFormHeader(header,index)),...filteredFormResponseRows()];
     const csv=rows.map(row=>row.map(value=>'"'+String(value??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
     const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
     const url=URL.createObjectURL(blob);
@@ -286,6 +307,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
   teamFilter.addEventListener("change",renderFilteredRows);
   $("captainExportBtn")?.addEventListener("click",exportDirectoryCsv);
   $("captainFormResponsesExportBtn")?.addEventListener("click",exportFormResponsesCsv);
+  captainNominationFilter?.addEventListener("change",renderFormResponses);
   playerTrigger.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
   playerSearch.addEventListener("input",renderPlayerOptions);
   playerOptions.addEventListener("click",event=>{
