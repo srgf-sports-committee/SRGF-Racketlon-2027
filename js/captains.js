@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(!choice||column<0)return formResponseRows;
     return formResponseRows.filter(row=>{
       const value=String(row[column]??"").trim().toLowerCase();
-      return choice==="yes"?/^yes\\b/.test(value):/^no\\b/.test(value);
+      return choice==="yes"?/^yes\b/.test(value):/^no\b/.test(value);
     });
   }
   function renderFormResponses(){
