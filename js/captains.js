@@ -100,7 +100,10 @@ document.addEventListener("DOMContentLoaded",async()=>{
     if(!choice||column<0)return formResponseRows;
     return formResponseRows.filter(row=>{
       const value=String(row[column]??"").trim().toLowerCase();
-      return choice==="yes"?/^yes\b/.test(value):/^no\b/.test(value);
+      if(choice==="captain")return /\bcaptain\b/.test(value)&&!/vice\s*captain/.test(value);
+      if(choice==="vice-captain")return /vice\s*captain/.test(value);
+      if(choice==="player")return value==="";
+      return true;
     });
   }
   function renderFormResponses(){
