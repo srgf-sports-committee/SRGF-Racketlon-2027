@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   function filterPlayerOptions(){
     const query=clean(playerSearch.value).toLocaleLowerCase(); let visible=0;
     playerOptions.querySelectorAll(".player-dropdown-option").forEach(option=>{
-      const show=!query||option.textContent.toLocaleLowerCase().includes(query); option.hidden=!show; if(show)visible++;
+      const show=!query||option.textContent.toLocaleLowerCase().includes(query); option.hidden=!show; option.style.display=show?"block":"none"; if(show)visible++;
     });
     let empty=playerOptions.querySelector(".player-dropdown-empty");
     if(!visible){if(!empty){empty=document.createElement("div");empty.className="player-dropdown-empty";empty.textContent="No matching players";playerOptions.appendChild(empty);}}
