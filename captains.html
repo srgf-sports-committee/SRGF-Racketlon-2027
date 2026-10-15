@@ -21,7 +21,7 @@
 .captain-player-no-match{padding:9px 10px;color:#a8c2ca;font-size:.9rem}
 @media(max-width:600px){.captain-filters{grid-template-columns:1fr;gap:12px}}
 .captain-tabs{display:flex!important;gap:6px!important;flex-wrap:nowrap!important;width:fit-content;max-width:100%;box-sizing:border-box;padding:6px;margin-top:0!important;margin-bottom:0!important;margin-left:0!important;transform:translate(370px, 8px);background:rgba(4,25,35,.72);border:1px solid rgba(126,220,219,.20);border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.18)}
-.form-response-photo-column{width:90px!important;max-width:90px!important;min-width:90px!important;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.form-response-photo-column img{display:block;max-width:64px!important;max-height:48px!important;object-fit:cover}
+.form-response-filters{display:flex;align-items:end;gap:12px;flex-wrap:wrap}.form-response-filter-field{min-width:180px}.form-response-filter-field label{display:block;margin-bottom:7px;font-size:.85rem;color:#b9d3cd}.form-response-filter-field select{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid rgba(126,220,219,.25);background:#102b2b;color:#fff;font:inherit}.form-response-photo-column{width:90px!important;max-width:90px!important;min-width:90px!important;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.form-response-photo-column img{display:block;max-width:64px!important;max-height:48px!important;object-fit:cover}
 .captain-tabs .btn{min-height:42px!important;padding:11px 18px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#91a8b0!important;font-size:14px!important;font-weight:800!important;cursor:pointer;box-shadow:none!important}
 .captain-tabs .btn.btn-primary{color:#09201d!important;background:linear-gradient(135deg,#d9ee63,#8ee6b2 52%,#48e0d1)!important;border-color:rgba(255,255,255,.15)!important;box-shadow:0 7px 22px rgba(72,224,209,.22)!important}
 @media(max-width:520px){.captain-tabs{width:100%;box-sizing:border-box}.captain-tabs .btn{flex:1;min-width:0;padding:10px 12px!important}}
@@ -75,7 +75,7 @@
   <div id="formResponsesMessage" class="card">Open this tab to load form responses.</div>
   <div id="formResponsesCard" class="card hidden">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px">
-      <p id="formResponsesCount" class="notice" style="margin:0"></p>
+      <div class="form-response-filters"><div class="form-response-filter-field" id="captainNominationFilterWrap"><label for="captainNominationFilter">Captain?</label><select id="captainNominationFilter"><option value="">All Responses</option><option value="yes">Yes</option><option value="no">No</option></select></div><p id="formResponsesCount" class="notice" style="margin:0"></p></div>
       <button type="button" id="captainFormResponsesExportBtn" class="btn btn-primary" style="padding:12px 20px;font-size:1rem;font-weight:600;min-height:44px">Export Form Responses CSV</button>
     </div>
     <div style="overflow-x:auto"><table><thead id="formResponsesHead"></thead><tbody id="formResponsesBody"></tbody></table></div>
