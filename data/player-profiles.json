@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-17T18:29:19.241918+00:00",
+  "generatedAt": "2026-10-17T18:57:56.018646+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -200,6 +200,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P018.jpg"
+    },
+    {
+      "id": "P019",
+      "name": "Gaurav Kumar Upadhyay  (25)",
+      "category": "Racketlon",
+      "badminton": "Advanced",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P019.jpg"
     }
   ]
 }
