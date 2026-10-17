@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-17T09:27:55.398105+00:00",
+  "generatedAt": "2026-10-17T09:55:12.122787+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -189,6 +189,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P017.jpg"
+    },
+    {
+      "id": "P018",
+      "name": "Shardendu Kumar  (42)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P018.jpg"
     }
   ]
 }
