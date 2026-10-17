@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-17T09:43:46.156Z",
-  "sourceUpdatedAt": "2026-10-17T09:43:46.156Z",
-  "syncedAt": "2026-10-17T18:49:52.115748Z",
+  "updatedAt": "2026-10-17T18:50:50.060Z",
+  "sourceUpdatedAt": "2026-10-17T18:50:50.060Z",
+  "syncedAt": "2026-10-17T19:12:34.730104Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -292,17 +292,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P019",
+      "Name": "Gaurav Kumar Upadhyay  (25)",
+      "Mobile": "7676613308 - (528590)",
+      "Flat": "C1308",
+      "Photo": "https://drive.google.com/open?id=1-rLygo5PmzeE_HI_Jzq6eFAyCuSqFtpC",
+      "Priority Chart": "P1: Badminton | P2: Lawn Tennis | P3: Pickle Ball | P4: Table Tennis",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Advanced",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Intermediate",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
