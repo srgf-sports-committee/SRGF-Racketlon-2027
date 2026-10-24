@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-24T14:08:50.470407+00:00",
+  "generatedAt": "2026-10-24T17:26:00.143070+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -211,6 +211,17 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P019.jpg"
+    },
+    {
+      "id": "P020",
+      "name": "Subramanyam Rangam (39)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P020.jpg"
     }
   ]
 }
