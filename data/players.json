@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-24T17:22:07.527Z",
-  "sourceUpdatedAt": "2026-10-24T17:22:07.527Z",
-  "syncedAt": "2026-10-25T09:26:47.622689Z",
+  "updatedAt": "2026-10-25T12:40:35.073Z",
+  "sourceUpdatedAt": "2026-10-25T12:40:35.073Z",
+  "syncedAt": "2026-10-25T13:52:50.947422Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -324,17 +324,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P021",
+      "Name": "NAMAN GUPTA (35)",
+      "Mobile": "9035819043 - (983219)",
+      "Flat": "B704",
+      "Photo": "https://drive.google.com/open?id=1XO8-yzVQ4WOvDR5kxGGlofDBkeXqDll2",
+      "Priority Chart": "P1: Lawn Tennis | P2: Table Tennis | P3: Badminton | P4: Pickle Ball",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Beginner",
+      "Pickle Ball Level": "Never Played",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
