@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-25T12:40:35.073Z",
-  "sourceUpdatedAt": "2026-10-25T12:40:35.073Z",
-  "syncedAt": "2026-10-25T13:52:50.947422Z",
+  "updatedAt": "2026-10-25T17:24:36.608Z",
+  "sourceUpdatedAt": "2026-10-25T17:24:36.608Z",
+  "syncedAt": "2026-10-25T17:24:37.480262Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -332,8 +332,8 @@
       "Priority Chart": "P1: Lawn Tennis | P2: Table Tennis | P3: Badminton | P4: Pickle Ball",
       "Preferred Category": "Racketlon",
       "Badminton Level": "Beginner",
-      "Table Tennis Level": "Beginner",
-      "Lawn Tennis Level": "Beginner",
+      "Table Tennis Level": "Intermediate",
+      "Lawn Tennis Level": "Intermediate",
       "Pickle Ball Level": "Never Played",
       "Team ID": "",
       "Auction Amount": "0",
