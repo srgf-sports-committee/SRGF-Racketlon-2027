@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-25T12:26:14.223834+00:00",
+  "generatedAt": "2026-10-25T19:17:11.462836+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -222,6 +222,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P020.jpg"
+    },
+    {
+      "id": "P021",
+      "name": "NAMAN GUPTA (35)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P021.jpg"
     }
   ]
 }
