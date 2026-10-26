@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-25T17:24:36.608Z",
-  "sourceUpdatedAt": "2026-10-25T17:24:36.608Z",
-  "syncedAt": "2026-10-26T05:13:30.794078Z",
+  "updatedAt": "2026-10-26T11:14:36.752Z",
+  "sourceUpdatedAt": "2026-10-26T11:14:36.752Z",
+  "syncedAt": "2026-10-26T11:14:37.478226Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -340,17 +340,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P022",
+      "Name": "Ashutosh Tripathy (39)",
+      "Mobile": "9867917163 - (417071)",
+      "Flat": "J1305",
+      "Photo": "https://drive.google.com/open?id=1xyMB6KVHI_qVA7VqJp6pkJZK4T3wtac5",
+      "Priority Chart": "P1: Lawn Tennis | P2: Table Tennis | P3: Badminton | P4: Pickle Ball",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Intermediate",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Never Played",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
