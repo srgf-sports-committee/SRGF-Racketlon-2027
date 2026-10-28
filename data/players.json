@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-26T11:14:36.752Z",
-  "sourceUpdatedAt": "2026-10-26T11:14:36.752Z",
-  "syncedAt": "2026-10-28T07:15:41.059064Z",
+  "updatedAt": "2026-10-28T14:07:40.005Z",
+  "sourceUpdatedAt": "2026-10-28T14:07:40.005Z",
+  "syncedAt": "2026-10-28T14:07:41.016092Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -356,17 +356,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P023",
+      "Name": "guru prasad (36)*",
+      "Mobile": "7276000312 - (333464)",
+      "Flat": "D1607",
+      "Photo": "https://drive.google.com/open?id=1k4s7zNvczqflxObxPqezCaNio5WSRPnc",
+      "Priority Chart": "P1: Lawn Tennis | P2: Badminton | P3: Table Tennis | P4: Pickle Ball",
+      "Preferred Category": "Racketlon",
+      "Badminton Level": "Intermediate",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Advanced",
+      "Pickle Ball Level": "Never Played",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
