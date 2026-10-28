@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-28T08:25:42.340602+00:00",
+  "generatedAt": "2026-10-28T15:17:43.030988+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -244,6 +244,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P022.jpg"
+    },
+    {
+      "id": "P023",
+      "name": "guru prasad (36)*",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Advanced",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P023.jpg"
     }
   ]
 }
