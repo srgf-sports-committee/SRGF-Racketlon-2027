@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-30T14:34:03.331019+00:00",
+  "generatedAt": "2026-10-30T19:40:16.946130+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -255,6 +255,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P023.jpg"
+    },
+    {
+      "id": "P024",
+      "name": "Nitin Singh (41)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P024.jpg"
     }
   ]
 }
