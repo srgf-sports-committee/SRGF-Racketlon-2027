@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-02T08:20:56.020169+00:00",
+  "generatedAt": "2026-11-02T18:33:50.911018+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -266,6 +266,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P024.jpg"
+    },
+    {
+      "id": "P025",
+      "name": "Abhay Indu  (46)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P025.jpg"
     }
   ]
 }
