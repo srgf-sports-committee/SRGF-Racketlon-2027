@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-03T07:56:21.746994+00:00",
+  "generatedAt": "2026-11-03T15:44:06.150881+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -288,6 +288,28 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P026.jpg"
+    },
+    {
+      "id": "P027",
+      "name": "Rahul bhadani (40)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P027.jpg"
+    },
+    {
+      "id": "P028",
+      "name": "Thejaswini  (40)",
+      "category": "Racketlon",
+      "badminton": "Never Played",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P028.jpg"
     }
   ]
 }
