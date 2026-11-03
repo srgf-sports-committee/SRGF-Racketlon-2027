@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-02T18:32:15.525Z",
-  "sourceUpdatedAt": "2026-11-02T18:32:15.525Z",
-  "syncedAt": "2026-11-03T01:45:03.621197Z",
+  "updatedAt": "2026-11-03T05:06:52.559Z",
+  "sourceUpdatedAt": "2026-11-03T05:06:52.559Z",
+  "syncedAt": "2026-11-03T08:39:43.260798Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -404,17 +404,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P026",
+      "Name": "Kishore Mrinal (37)*",
+      "Mobile": "7204280570 - (405123)",
+      "Flat": "E1705",
+      "Photo": "https://drive.google.com/open?id=1ZbZVxZE6XnMqV06NojGaLHKVfKvySZkd",
+      "Priority Chart": "P1: Lawn Tennis | P2: Table Tennis | P3: Pickle Ball | P4: Badminton",
+      "Preferred Category": "Individual",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Intermediate",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Never Played",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
