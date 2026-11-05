@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-03T09:53:07.563Z",
-  "sourceUpdatedAt": "2026-11-03T09:53:07.563Z",
-  "syncedAt": "2026-11-05T10:42:00.132980Z",
+  "updatedAt": "2026-11-05T14:56:49.892Z",
+  "sourceUpdatedAt": "2026-11-05T14:56:49.892Z",
+  "syncedAt": "2026-11-05T18:18:48.007009Z",
   "rows": [
     {
       "Player ID": "P001",
@@ -452,17 +452,17 @@
       "Active": "1"
     },
     {
-      "Player ID": "",
-      "Name": "",
-      "Mobile": "",
-      "Flat": "",
-      "Photo": "",
-      "Priority Chart": "",
-      "Preferred Category": "",
-      "Badminton Level": "",
-      "Table Tennis Level": "",
-      "Lawn Tennis Level": "",
-      "Pickle Ball Level": "",
+      "Player ID": "P029",
+      "Name": "Nilotpal De (44)",
+      "Mobile": "9739096419 - (410532)",
+      "Flat": "F-1706",
+      "Photo": "https://drive.google.com/open?id=1doECvkAm0Gy9-ZhCQF5xQJK522wD9boO",
+      "Priority Chart": "P1: Lawn Tennis | P2: Pickle Ball | P3: Badminton | P4: Table Tennis",
+      "Preferred Category": "Individual",
+      "Badminton Level": "Beginner",
+      "Table Tennis Level": "Beginner",
+      "Lawn Tennis Level": "Intermediate",
+      "Pickle Ball Level": "Beginner",
       "Team ID": "",
       "Auction Amount": "0",
       "Active": "1"
