@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-05T08:35:36.081031+00:00",
+  "generatedAt": "2026-11-05T22:24:35.739890+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -310,6 +310,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P028.jpg"
+    },
+    {
+      "id": "P029",
+      "name": "Nilotpal De (44)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P029.jpg"
     }
   ]
 }
