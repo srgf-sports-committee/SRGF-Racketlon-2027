@@ -166,9 +166,10 @@ function getRegistrationStats_(){
 
   const priorities = ['P1','P2','P3','P4'];
   const priorityCounts = {};
-
+  const individualPriority1Counts = {};
   sports.forEach(sport => {
     priorityCounts[sport.name] = {P1:0, P2:0, P3:0, P4:0};
+    individualPriority1Counts[sport.name] = 0;
   });
 
   const genderCounts = {Male:0, Female:0, Other:0, Unspecified:0};
@@ -193,13 +194,15 @@ function getRegistrationStats_(){
       genderCounts,
       ageGroups,
       priorityCounts,
+      individualPriority1Counts,
       generatedAt:new Date().toISOString()
     };
   }
 
-  // Only read the columns needed for these statistics.
-  // O = Age, P = Gender, R:U = sport priorities.
-  const rows = sh.getRange(2, 1, lastRow - 1, 21).getDisplayValues();
+  // O = Age, P = Gender, category is detected from the response header, R:U = sport priorities.
+  const headers = sh.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(v => String(v || '').trim().toLowerCase());
+  const categoryIndex = headers.findIndex(h => h.includes('category') || h.includes('participation type') || h.includes('registration type'));
+  const rows = sh.getRange(2, 1, lastRow - 1, Math.max(21, categoryIndex + 1)).getDisplayValues();
 
   let total = 0;
 
@@ -240,6 +243,8 @@ function getRegistrationStats_(){
       genderCounts.Unspecified++;
     }
 
+    const categoryText = categoryIndex >= 0 ? String(row[categoryIndex] || '').trim().toLowerCase() : '';
+    const isIndividual = categoryText.includes('individual');
     sports.forEach(sport => {
       const value = String(row[sport.column - 1] || '')
         .trim().toUpperCase();
@@ -249,6 +254,7 @@ function getRegistrationStats_(){
         // and "P1 – Highest Priority".
         if(new RegExp('^' + priority + '(?:\\s|$|[-–—])').test(value)){
           priorityCounts[sport.name][priority]++;
+          if(isIndividual && priority === 'P1') individualPriority1Counts[sport.name]++;
         }
       });
     });
@@ -260,6 +266,7 @@ function getRegistrationStats_(){
     genderCounts,
     ageGroups,
     priorityCounts,
+    individualPriority1Counts,
     generatedAt:new Date().toISOString()
   };
 }
