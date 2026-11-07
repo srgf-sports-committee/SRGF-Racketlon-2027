@@ -1,30 +1,30 @@
 {
-  "updatedAt": "2026-11-07T09:57:15.005Z",
-  "sourceUpdatedAt": "2026-11-07T09:57:15.005Z",
-  "syncedAt": "2026-11-07T10:05:40.993253Z",
+  "updatedAt": "2026-11-07T12:35:55.731Z",
+  "sourceUpdatedAt": "2026-11-07T12:35:55.731Z",
+  "syncedAt": "2026-11-07T16:23:57.180062Z",
   "rows": [
     {
       "Team ID": "T1",
       "Team Name": "SRGF Smash Masters",
-      "Initial Budget": "990000000",
+      "Initial Budget": "500000000",
       "Active": "1"
     },
     {
       "Team ID": "T2",
       "Team Name": "SRGF Racket Rebels",
-      "Initial Budget": "990000000",
+      "Initial Budget": "500000000",
       "Active": "1"
     },
     {
       "Team ID": "T3",
       "Team Name": "SRGF Quad-Court Kings",
-      "Initial Budget": "990000000",
+      "Initial Budget": "500000000",
       "Active": "1"
     },
     {
       "Team ID": "T4",
       "Team Name": "SRGF Four-Paddle Prodigies",
-      "Initial Budget": "990000000",
+      "Initial Budget": "500000000",
       "Active": "1"
     }
   ]

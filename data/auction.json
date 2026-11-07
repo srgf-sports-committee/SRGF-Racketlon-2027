@@ -1,6 +1,87 @@
 {
-  "updatedAt": "2026-11-07T09:57:15.005Z",
-  "sourceUpdatedAt": "2026-11-07T09:57:15.005Z",
-  "syncedAt": "2026-11-07T10:05:40.993253Z",
-  "rows": []
+  "updatedAt": "2026-11-07T12:35:55.731Z",
+  "sourceUpdatedAt": "2026-11-07T12:35:55.731Z",
+  "syncedAt": "2026-11-07T16:23:57.180062Z",
+  "rows": [
+    {
+      "Auction ID": "LOCAL-1794051334114",
+      "Player ID": "P008",
+      "Player Name": "Saurabh Kumar (36)   ➤ C",
+      "Team ID": "T1",
+      "Team Name": "SRGF Smash Masters",
+      "Amount": "10000000",
+      "Timestamp": "2026-11-07T11:35:34.114Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794051360872",
+      "Player ID": "P002",
+      "Player Name": "Ranvijay Singh (32)   ➤ C",
+      "Team ID": "T2",
+      "Team Name": "SRGF Racket Rebels",
+      "Amount": "10000000",
+      "Timestamp": "2026-11-07T11:36:00.872Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794051381837",
+      "Player ID": "P006",
+      "Player Name": "Abhinav Tonk (40)   ➤ C",
+      "Team ID": "T3",
+      "Team Name": "SRGF Quad-Court Kings",
+      "Amount": "10000000",
+      "Timestamp": "2026-11-07T11:36:21.837Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794051395839",
+      "Player ID": "P012",
+      "Player Name": "Sudhir Kumar (51)   ➤ C",
+      "Team ID": "T4",
+      "Team Name": "SRGF Four-Paddle Prodigies",
+      "Amount": "10000000",
+      "Timestamp": "2026-11-07T11:36:35.839Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794051601048",
+      "Player ID": "P007",
+      "Player Name": "Chandra Bhushan (32)   ➤ VC",
+      "Team ID": "T3",
+      "Team Name": "SRGF Quad-Court Kings",
+      "Amount": "100000000",
+      "Timestamp": "2026-11-07T11:40:01.048Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794051789708",
+      "Player ID": "P009",
+      "Player Name": "Kumar Pratik (34)   ➤ VC",
+      "Team ID": "T4",
+      "Team Name": "SRGF Four-Paddle Prodigies",
+      "Amount": "92000000",
+      "Timestamp": "2026-11-07T11:43:09.708Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794052160522",
+      "Player ID": "P015",
+      "Player Name": "Bhupesh kumar (30)   ➤ VC",
+      "Team ID": "T1",
+      "Team Name": "SRGF Smash Masters",
+      "Amount": "74000000",
+      "Timestamp": "2026-11-07T11:49:20.522Z",
+      "Notes": ""
+    },
+    {
+      "Auction ID": "LOCAL-1794052182932",
+      "Player ID": "P017",
+      "Player Name": "Anshul bhardwaj (41)   ➤ VC",
+      "Team ID": "T2",
+      "Team Name": "SRGF Racket Rebels",
+      "Amount": "10000000",
+      "Timestamp": "2026-11-07T11:49:42.932Z",
+      "Notes": ""
+    }
+  ]
 }
