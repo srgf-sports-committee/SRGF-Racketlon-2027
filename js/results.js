@@ -464,10 +464,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       // For non-Racketlon fixtures, Column G stores the winning team.
       const winningTeam = resolveTeamName(String(row[6] ?? "").trim());
       if (!winningTeam) return;
-      const [team1, team2] = matchTeams(row);
+      const team1 = resolveTeamName(playerTeam(p1));
+      const team2 = resolveTeamName(playerTeam(p2));
       let result = "";
       if (team1 && teamKey(team1) === teamKey(winningTeam)) result = "Side 1";
       else if (team2 && teamKey(team2) === teamKey(winningTeam)) result = "Side 2";
+      else {
+        // Fallback to the fixture's explicit team fields if player-team
+        // membership is not present in the Teams payload.
+        const fixtureTeams = matchTeams(row);
+        if (fixtureTeams[0] && teamKey(fixtureTeams[0]) === teamKey(winningTeam)) result = "Side 1";
+        else if (fixtureTeams[1] && teamKey(fixtureTeams[1]) === teamKey(winningTeam)) result = "Side 2";
+      }
       if (result) addRecord(sport, p1, p2, result);
     });
 
