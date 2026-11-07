@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-07T07:50:14.603735+00:00",
+  "generatedAt": "2026-11-07T10:21:24.914593+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -376,6 +376,28 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P034.jpg"
+    },
+    {
+      "id": "P035",
+      "name": "Vineet  Nair (40)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P035.jpg"
+    },
+    {
+      "id": "P036",
+      "name": "Saurav Agarwal (42)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Intermediate",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P036.jpg"
     }
   ]
 }
