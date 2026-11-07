@@ -454,8 +454,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           const score = parseScore(scoreText);
           if (!score) return;
           const result = score[0] > score[1]
-            ? "Side 1"
-            : score[0] < score[1] ? "Side 2" : "Draw";
+            ? "Side 1 Win"
+            : score[0] < score[1] ? "Side 2 Win" : "Draw";
           addRecord(item.sport, p1, p2, result);
         });
         return;
@@ -467,8 +467,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const team1 = resolveTeamName(playerTeam(p1));
       const team2 = resolveTeamName(playerTeam(p2));
       let result = "";
-      if (team1 && teamKey(team1) === teamKey(winningTeam)) result = "Side 1";
-      else if (team2 && teamKey(team2) === teamKey(winningTeam)) result = "Side 2";
+      if (team1 && teamKey(team1) === teamKey(winningTeam)) result = "Side 1 Win";
+      else if (team2 && teamKey(team2) === teamKey(winningTeam)) result = "Side 2 Win";
       else {
         // Fallback to the fixture's explicit team fields if player-team
         // membership is not present in the Teams payload.
@@ -484,9 +484,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const csv = "\\uFEFF" + [headers, ...records]
+    const csv = "\uFEFF" + [headers, ...records]
       .map(row => row.map(csvCell).join(","))
-      .join("\\r\\n");
+      .join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
