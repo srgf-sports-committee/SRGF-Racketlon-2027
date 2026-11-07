@@ -385,6 +385,111 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderPlayerResults();
   }
 
+
+  // Admin-only export in the SRGF Sports match-upload CSV format.
+  // Player values are names from FIXTURES columns E and F (not player IDs).
+  function updateExportButtonVisibility() {
+    const button = $("exportResultsBtn");
+    if (!button) return;
+    button.classList.toggle("hidden", !SRGFAuth.canAuction());
+  }
+
+  function csvCell(value) {
+    const text = String(value ?? "");
+    return /[",\\r\\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+
+  function exportResultsCsv() {
+    if (!SRGFAuth.canAuction()) return;
+
+    const headers = [
+      "Match ID", "Match Date", "Sport", "Format",
+      "Player 1 ID", "Player 2 ID", "Player 3 ID", "Player 4 ID",
+      "Result", "Status", "Notes"
+    ];
+    const exportDate = new Date();
+    const dateText = [
+      exportDate.getFullYear(),
+      String(exportDate.getMonth() + 1).padStart(2, "0"),
+      String(exportDate.getDate()).padStart(2, "0")
+    ].join("-");
+    const records = [];
+    let matchNumber = 0;
+
+    function addRecord(sport, p1, p2, result) {
+      if (!p1 || !p2 || !result) return;
+      matchNumber += 1;
+      records.push([
+        "E0001M" + String(matchNumber).padStart(4, "0"),
+        dateText,
+        sport,
+        "Singles",
+        p1,
+        p2,
+        "",
+        "",
+        result,
+        "Completed",
+        ""
+      ]);
+    }
+
+    fixtureRows.forEach(row => {
+      const sport = String(row[0] ?? "").trim();
+      const p1 = String(row[4] ?? "").trim();
+      const p2 = String(row[5] ?? "").trim();
+      if (!sport || !p1 || !p2) return;
+
+      if (isRacketlon(sport)) {
+        // FIXTURES score columns: H=Badminton, I=Lawn Tennis,
+        // J=Table Tennis, K=Pickleball.
+        [
+          { sport: "Bad", column: 7 },
+          { sport: "TT", column: 9 },
+          { sport: "LT", column: 8 },
+          { sport: "PB", column: 10 }
+        ].forEach(item => {
+          const scoreText = String(row[item.column] ?? "").trim();
+          if (!scoreText) return;
+          const score = parseScore(scoreText);
+          if (!score) return;
+          const result = score[0] > score[1]
+            ? "Side 1"
+            : score[0] < score[1] ? "Side 2" : "Draw";
+          addRecord(item.sport, p1, p2, result);
+        });
+        return;
+      }
+
+      // For non-Racketlon fixtures, Column G stores the winning team.
+      const winningTeam = resolveTeamName(String(row[6] ?? "").trim());
+      if (!winningTeam) return;
+      const [team1, team2] = matchTeams(row);
+      let result = "";
+      if (team1 && teamKey(team1) === teamKey(winningTeam)) result = "Side 1";
+      else if (team2 && teamKey(team2) === teamKey(winningTeam)) result = "Side 2";
+      if (result) addRecord(sport, p1, p2, result);
+    });
+
+    if (!records.length) {
+      alert("No completed fixture results are available to export.");
+      return;
+    }
+
+    const csv = "\\uFEFF" + [headers, ...records]
+      .map(row => row.map(csvCell).join(","))
+      .join("\\r\\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "SRGF_Racketlon_2027_Results_" + dateText + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function bindTabs() {
     const r = $("playerScoresRacketlonTab");
     const n = $("playerScoresNonRacketlonTab");
@@ -442,5 +547,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   bindTabs();
+  updateExportButtonVisibility();
+  window.addEventListener("srgf-auth-change", updateExportButtonVisibility);
+  $("exportResultsBtn")?.addEventListener("click", exportResultsCsv);
   await load();
 });
