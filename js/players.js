@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   playerSearch?.addEventListener("input",filterPlayerOptions);
   sportFilter?.addEventListener("change",()=>{buildSkillOptions();applyFilters();});
   skillFilterButton?.addEventListener("click",()=>skillFilterDropdown.classList.contains("hidden")?openSkillFilter():closeSkillFilter());
-  document.addEventListener("click",event=>{if(!$("players")?.contains(event.target)||!$("players .skill-filter-wrap")?.contains(event.target))closeSkillFilter();});
+  document.addEventListener("click",event=>{if(!skillFilterButton?.parentElement?.contains(event.target))closeSkillFilter();});
   categoryFilter?.addEventListener("change",applyFilters);
   captainNomineeFilter?.addEventListener("change",applyFilters);
   document.addEventListener("click",event=>{if(!$("playerNameCombo")?.contains(event.target))closePlayerDropdown();});
