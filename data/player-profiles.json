@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-08T08:02:22.502562+00:00",
+  "generatedAt": "2026-11-08T15:00:58.261885+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -409,6 +409,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P037.png"
+    },
+    {
+      "id": "P038",
+      "name": "Gyana Ranjan Swain (29)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Intermediate",
+      "tennis": "Beginner",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P038.jpg"
     }
   ]
 }
