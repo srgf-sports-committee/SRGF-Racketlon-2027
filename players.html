@@ -48,12 +48,13 @@
 .players-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
 .players-filters>div{min-width:0}.players-result-count{color:var(--muted);font-size:12px;margin:0 0 8px}
 .skill-filter-wrap{position:relative}
-.skill-filter-button{width:100%;min-height:42px;text-align:left;padding:10px 12px;border:1px solid var(--border,#d5ddd7);border-radius:8px;background:var(--surface,#fff);color:inherit;font:inherit;cursor:pointer}
-.skill-filter-button:after{content:"▾";float:right;color:var(--muted)}
-.skill-filter-dropdown{position:absolute;z-index:30;top:100%;left:0;right:0;max-height:240px;overflow:auto;margin-top:4px;padding:8px;background:var(--surface,#fff);border:1px solid var(--border,#d5ddd7);border-radius:8px;box-shadow:0 8px 24px #0002}
+.skill-filter-button{display:block;width:100%;box-sizing:border-box;min-height:38px;margin:0;padding:10px 30px 10px 10px;text-align:left;font-family:inherit;font-size:14px;font-weight:normal;line-height:normal;color:var(--text);background:rgba(7,31,42,.76);border:1px solid rgba(126,220,219,.25);border-radius:7px;outline:none;cursor:pointer;position:relative}
+.skill-filter-button:after{content:"";position:absolute;right:12px;top:50%;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text);transform:translateY(-25%)}
+.skill-filter-button:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(72,224,209,.10)}
+.skill-filter-dropdown{position:absolute;z-index:30;top:100%;left:0;right:0;max-height:240px;overflow:auto;margin-top:4px;padding:6px;background:#0c2a20;border:1px solid rgba(126,220,219,.25);border-radius:7px;box-shadow:0 8px 24px #0005;color:var(--text)}
 .skill-filter-options{display:grid;gap:2px}
-.skill-filter-option{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:5px;cursor:pointer;font-size:13px}
-.skill-filter-option:hover{background:var(--soft,#f3f6f4)}
+.skill-filter-option{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:5px;cursor:pointer;font-size:13px;color:var(--text)}
+.skill-filter-option:hover{background:rgba(72,224,209,.10)}
 .skill-filter-option input{margin:0}
 @media(max-width:700px){.players-filters{grid-template-columns:1fr}}
 </style>
