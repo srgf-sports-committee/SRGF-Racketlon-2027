@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T03:00:30.556572+00:00",
+  "generatedAt": "2026-11-11T10:34:27.913265+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -420,6 +420,17 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P038.jpg"
+    },
+    {
+      "id": "P039",
+      "name": "Advitya Aggarwal  (13)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P039.jpg"
     }
   ]
 }
