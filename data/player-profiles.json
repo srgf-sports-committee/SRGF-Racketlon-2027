@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-13T10:01:37.966333+00:00",
+  "generatedAt": "2026-11-13T17:40:21.061048+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -457,13 +457,24 @@
     {
       "id": "P042",
       "name": "S R Brijesh Chandra (36)",
-      "category": "Individual",
+      "category": "Racketlon",
       "badminton": "Advanced",
       "tt": "Advanced",
       "tennis": "Beginner",
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P042.jpg"
+    },
+    {
+      "id": "P043",
+      "name": "Amit Patidar (31)",
+      "category": "Racketlon",
+      "badminton": "Advanced",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P043.jpg"
     }
   ]
 }
