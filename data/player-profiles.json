@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T16:01:41.006191+00:00",
+  "generatedAt": "2026-11-14T20:35:01.040204+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -519,6 +519,17 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P047.jpg"
+    },
+    {
+      "id": "P048",
+      "name": "Shashwat Kumar (14)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": ""
     }
   ]
 }
