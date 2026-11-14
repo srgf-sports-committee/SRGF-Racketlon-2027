@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T09:31:52.151129+00:00",
+  "generatedAt": "2026-11-14T16:01:41.006191+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -497,6 +497,28 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P045.jpg"
+    },
+    {
+      "id": "P046",
+      "name": "Pawan Upadhyay  (41)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P046.jpg"
+    },
+    {
+      "id": "P047",
+      "name": "Devyam singh (10)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P047.jpg"
     }
   ]
 }
