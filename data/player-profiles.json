@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T02:47:29.521618+00:00",
+  "generatedAt": "2026-11-14T09:31:52.151129+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -475,6 +475,28 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P043.jpg"
+    },
+    {
+      "id": "P044",
+      "name": "K N VENKATESWARA RAO (63)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Intermediate",
+      "tennis": "Beginner",
+      "pickle": "Beginner",
+      "active": true,
+      "image": "assets/player-photos/P044.jpg"
+    },
+    {
+      "id": "P045",
+      "name": "Sarthak R (37)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P045.jpg"
     }
   ]
 }
