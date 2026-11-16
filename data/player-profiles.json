@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-16T03:04:37.241969+00:00",
+  "generatedAt": "2026-11-16T11:01:13.426902+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -552,6 +552,17 @@
       "pickle": "Beginner",
       "active": true,
       "image": "assets/player-photos/P050.jpg"
+    },
+    {
+      "id": "P051",
+      "name": "Sonam Saxena (37)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Advanced",
+      "tennis": "Beginner",
+      "pickle": "Intermediate",
+      "active": true,
+      "image": "assets/player-photos/P051.jpg"
     }
   ]
 }
