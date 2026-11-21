@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       if (isRacketlon(value(row, ["Sport"]))) {
-        const tierMatch = value(row, ["Tier"]).match(/\\d+/);
+        const tierMatch = value(row, ["Tier"]).match(/\d+/);
         const tierNumber = tierMatch ? Number(tierMatch[0]) : 0;
         if (tierNumber >= 1 && tierNumber <= 9 && winnerKey) {
           const tierKey = String(tierNumber);
@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       fixtureHeaders.forEach((h, i) => {
-        if (!/^(?:game|set)\\d+/.test(norm(h))) return;
+        if (!/^(?:game|set)\d+/.test(norm(h))) return;
         const parsed = parseScore(row[i]);
         if (!parsed) return;
         if (a) {
@@ -373,8 +373,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const isDblB = norm(tierB) === "dbl";
       if (isDblA !== isDblB) return isDblA ? 1 : -1;
 
-      const numA = Number((String(tierA).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
-      const numB = Number((String(tierB).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
+      const numA = Number((String(tierA).match(/\d+(?:\\.\d+)?/) || [])[0]);
+      const numB = Number((String(tierB).match(/\d+(?:\\.\d+)?/) || [])[0]);
       const hasNumA = Number.isFinite(numA);
       const hasNumB = Number.isFinite(numB);
       if (hasNumA && hasNumB && numA !== numB) return numA - numB;
