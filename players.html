@@ -39,13 +39,14 @@
       <div id="skillFilterOptions" class="skill-filter-options"></div>
     </div>
   </div>
+  <div><label class="field" for="teamFilter">Team</label><select id="teamFilter"><option value="">All Teams</option></select></div>
 </div>
 <div id="playersResultCount" class="players-result-count" aria-live="polite"></div>
 <div class="result-table-wrap"><table><thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Badminton</th><th>TT</th><th>Tennis</th><th>Pickleball</th><th>Team</th></tr></thead>
 <tbody id="playersBody"></tbody></table></div>
 </div>
 <style>
-.players-filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
+.players-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
 .players-filters>div{min-width:0}.players-result-count{color:var(--muted);font-size:12px;margin:0 0 8px}
 .skill-filter-wrap{position:relative}
 .skill-filter-button{display:block;width:100%;box-sizing:border-box;min-height:38px;margin:0;padding:10px 30px 10px 10px;text-align:left;font-family:inherit;font-size:14px;font-weight:normal;line-height:normal;color:var(--text);background:rgba(7,31,42,.76);border:1px solid rgba(126,220,219,.25);border-radius:7px;outline:none;cursor:pointer;position:relative}
@@ -57,7 +58,7 @@
 .skill-filter-option:hover{background:rgba(217,238,99,.12)}
 .skill-filter-option input[type="checkbox"]{display:block;flex:0 0 16px;width:16px!important;height:16px;margin:0;padding:0;accent-color:var(--accent);cursor:pointer}
 .skill-filter-option span{display:block;flex:1;min-width:0;text-align:left}
-@media(max-width:700px){.players-filters{grid-template-columns:1fr}}
+@media(max-width:1000px){.players-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}\n@media(max-width:700px){.players-filters{grid-template-columns:1fr}}
 </style>
 </section>
 
