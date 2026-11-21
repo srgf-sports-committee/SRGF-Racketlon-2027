@@ -396,10 +396,51 @@ document.addEventListener("DOMContentLoaded", async () => {
       (groups[key] ||= []).push(x);
     });
 
-    Object.values(groups).forEach(group => group.sort((a, b) => activeTab === "racketlon"
-      ? b.points - a.points || a.player.localeCompare(b.player)
-      : b.wins - a.wins || (b.gamesWon - b.losses) - (a.gamesWon - a.losses) || b.pd - a.pd || a.player.localeCompare(b.player)
-    ));
+    Object.values(groups).forEach(group => {
+      if (activeTab === "racketlon") {
+        // For players tied on Total Points, calculate a mini head-to-head
+        // table from their direct Racketlon fixtures. Sum each player's
+        // entered game-score points against the other tied player(s).
+        const tiedPlayers = new Set(
+          group.filter(x => x.points === group[0]?.points).map(x => norm(x.player))
+        );
+        const headToHeadPoints = new Map([...tiedPlayers].map(player => [player, 0]));
+
+        if (tiedPlayers.size > 1) {
+          fixtureRows.forEach(row => {
+            if (!isRacketlon(value(row, ["Sport"]))) return;
+            if (norm(value(row, ["Tier"])) !== norm(group[0]?.tier)) return;
+
+            const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+            const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+            const key1 = norm(p1);
+            const key2 = norm(p2);
+            if (!p1 || !p2 || !tiedPlayers.has(key1) || !tiedPlayers.has(key2) || key1 === key2) return;
+
+            fixtureHeaders.forEach((h, i) => {
+              if (!/^(?:game|set)\\d+/.test(norm(h))) return;
+              const parsed = parseScore(row[i]);
+              if (!parsed) return;
+              headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
+              headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
+            });
+          });
+        }
+
+        group.sort((a, b) =>
+          b.points - a.points ||
+          (headToHeadPoints.get(norm(b.player)) || 0) - (headToHeadPoints.get(norm(a.player)) || 0) ||
+          a.player.localeCompare(b.player)
+        );
+      } else {
+        group.sort((a, b) =>
+          b.wins - a.wins ||
+          (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
+          b.pd - a.pd ||
+          a.player.localeCompare(b.player)
+        );
+      }
+    });
 
     const head = $("playerScoresHead");
     if (head) {
@@ -437,7 +478,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("playerScoresTable")?.classList.remove("hidden");
     const msg = $("playerScoresMessage");
     if (msg) msg.textContent = activeTab === "racketlon"
-      ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points. If tied, the head-to-head result between tied players will be used.`
+      ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points → Head-to-head points (sum of entered game scores against the other tied player(s)).`
       : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → Net Game Difference (Games Won − Games Lost) → Point Difference.`;
   }
 
