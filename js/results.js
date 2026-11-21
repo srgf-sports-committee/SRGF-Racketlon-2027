@@ -373,8 +373,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const isDblB = norm(tierB) === "dbl";
       if (isDblA !== isDblB) return isDblA ? 1 : -1;
 
-      const numA = Number((String(tierA).match(/\d+(?:\\.\d+)?/) || [])[0]);
-      const numB = Number((String(tierB).match(/\d+(?:\\.\d+)?/) || [])[0]);
+      const numA = Number((String(tierA).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
+      const numB = Number((String(tierB).match(/\\d+(?:\\.\\d+)?/) || [])[0]);
       const hasNumA = Number.isFinite(numA);
       const hasNumB = Number.isFinite(numB);
       if (hasNumA && hasNumB && numA !== numB) return numA - numB;
