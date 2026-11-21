@@ -239,7 +239,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (tierNumber >= 1 && tierNumber <= 9 && winnerKey) {
           const tierKey = String(tierNumber);
           if (!racketlonTierWins[tierKey]) racketlonTierWins[tierKey] = {};
-          racketlonTierWins[tierKey][winnerKey] = (racketlonTierWins[tierKey][winnerKey] || 0) + 1;
+          racketlonTierWins[tierKey][winnerKey] = racketlonTierWins[tierKey][winnerKey] || { name: winner, count: 0 };
+          racketlonTierWins[tierKey][winnerKey].count++;
         }
       } else {
         const points = number(value(row, ["Points"]));
@@ -264,10 +265,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     Object.entries(racketlonTierWins).forEach(([tier, teamWins]) => {
-      const ranked = Object.entries(teamWins).sort((a, b) => b[1] - a[1]);
-      if (!ranked.length || (ranked.length > 1 && ranked[0][1] === ranked[1][1])) return;
+      const ranked = Object.values(teamWins).sort((a, b) => b.count - a.count);
+      if (!ranked.length || (ranked.length > 1 && ranked[0].count === ranked[1].count)) return;
       const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
-      ensure(ranked[0][0]).score += points;
+      ensure(ranked[0].name).score += points;
     });
 
     teamsData.forEach(t => {
