@@ -212,9 +212,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!body || !table) return;
 
     const stats = {};
-    const racketlonTierWins = {};
     const racketlonTierFixtureCounts = {};
     const racketlonTierCompletedCounts = {};
+    const racketlonTierTeamPoints = {};
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -243,15 +243,21 @@ document.addEventListener("DOMContentLoaded", async () => {
           racketlonTierFixtureCounts[tierKey] = (racketlonTierFixtureCounts[tierKey] || 0) + 1;
           if (winnerKey) {
             racketlonTierCompletedCounts[tierKey] = (racketlonTierCompletedCounts[tierKey] || 0) + 1;
-            if (!racketlonTierWins[tierKey]) racketlonTierWins[tierKey] = {};
-            racketlonTierWins[tierKey][winnerKey] = racketlonTierWins[tierKey][winnerKey] || { name: winner, count: 0 };
-            racketlonTierWins[tierKey][winnerKey].count++;
           }
         }
       } else {
         const points = number(value(row, ["Points"]));
         if (winnerKey && points !== 0) ensure(winner).score += points;
       }
+
+      const racketlonRow = isRacketlon(value(row, ["Sport"]));
+      const tierMatch = value(row, ["Tier"]).match(/\d+/);
+      const tierNumber = tierMatch ? Number(tierMatch[0]) : 0;
+      const tierKey = String(tierNumber);
+      const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+      const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+      const teamA = resolveTeamName(playerTeam(p1) || a);
+      const teamB = resolveTeamName(playerTeam(p2) || b);
 
       fixtureHeaders.forEach((h, i) => {
         if (!/^(?:game|set)\d+/.test(norm(h))) return;
@@ -267,6 +273,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (parsed[1] > parsed[0]) ensure(b).gamesWon++;
           else if (parsed[1] < parsed[0]) ensure(b).losses++;
         }
+
+        // Mirror Racketlon Player Scores: sum each side's entered game points,
+        // then combine the player totals by their team for this tier.
+        if (racketlonRow && tierNumber >= 1 && tierNumber <= 9 && (p1 || p2)) {
+          const tierTeams = racketlonTierTeamPoints[tierKey] ||= {};
+          if (teamA) tierTeams[teamKey(teamA)] = tierTeams[teamKey(teamA)] || { name: teamA, points: 0 };
+          if (teamB) tierTeams[teamKey(teamB)] = tierTeams[teamKey(teamB)] || { name: teamB, points: 0 };
+          if (teamA && p1) tierTeams[teamKey(teamA)].points += parsed[0];
+          if (teamB && p2) tierTeams[teamKey(teamB)].points += parsed[1];
+        }
       });
     });
 
@@ -277,15 +293,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         racketlonTierIssues.push(`Tier ${tier}: ${completedCount}/${fixtureCount} fixtures have a winning team`);
         return;
       }
-      const ranked = Object.values(racketlonTierWins[tier] || {}).sort((a, b) => b.count - a.count);
+
+      const ranked = Object.values(racketlonTierTeamPoints[tier] || {})
+        .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
       if (!ranked.length) {
-        racketlonTierIssues.push(`Tier ${tier}: no winning team recorded`);
+        racketlonTierIssues.push(`Tier ${tier}: no Racketlon player scores available`);
         return;
       }
-      if (ranked.length > 1 && ranked[0].count === ranked[1].count) {
-        racketlonTierIssues.push(`Tier ${tier}: tied on ${ranked[0].count} match wins`);
+      if (ranked.length > 1 && ranked[0].points === ranked[1].points) {
+        racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points`);
         return;
       }
+
       const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
       ensure(ranked[0].name).score += points;
     });
