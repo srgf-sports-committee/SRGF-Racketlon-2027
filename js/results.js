@@ -347,7 +347,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
 
             fixtureHeaders.forEach((header, index) => {
-              if (!/^(?:game|set)\\d+/.test(norm(header))) return;
+              if (!/^(?:game|set)\d+/.test(norm(header))) return;
               const parsed = parseScore(row[index]);
               if (!parsed) return;
               headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
