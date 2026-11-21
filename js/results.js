@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const teamA = resolveTeamName(playerTeam(p1) || a);
       const teamB = resolveTeamName(playerTeam(p2) || b);
 
-      if (!racketlonRow && tierNumber >= 0 && p1 && value(row, ["Sport"]) && value(row, ["Tier"])) {
+      if (!racketlonRow && (p1 || p2) && value(row, ["Sport"]) && value(row, ["Tier"])) {
         const sportName = value(row, ["Sport"]);
         const tierName = value(row, ["Tier"]);
         const groupKey = `${norm(sportName)}|||${norm(tierName)}`;
