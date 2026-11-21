@@ -212,6 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!body || !table) return;
 
     const stats = {};
+    const racketlonTierWins = {};
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -232,11 +233,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         else if (b && teamKey(b) === winnerKey) ensure(b).wins++;
       }
 
-      const points = number(value(row, ["Points"]));
-      if (winnerKey && points !== 0) ensure(winner).score += points;
+      if (isRacketlon(value(row, ["Sport"]))) {
+        const tierMatch = value(row, ["Tier"]).match(/\\d+/);
+        const tierNumber = tierMatch ? Number(tierMatch[0]) : 0;
+        if (tierNumber >= 1 && tierNumber <= 9 && winnerKey) {
+          const tierKey = String(tierNumber);
+          if (!racketlonTierWins[tierKey]) racketlonTierWins[tierKey] = {};
+          racketlonTierWins[tierKey][winnerKey] = (racketlonTierWins[tierKey][winnerKey] || 0) + 1;
+        }
+      } else {
+        const points = number(value(row, ["Points"]));
+        if (winnerKey && points !== 0) ensure(winner).score += points;
+      }
 
       fixtureHeaders.forEach((h, i) => {
-        if (!/^(?:game|set)\d+/.test(norm(h))) return;
+        if (!/^(?:game|set)\\d+/.test(norm(h))) return;
         const parsed = parseScore(row[i]);
         if (!parsed) return;
         if (a) {
@@ -250,6 +261,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           else if (parsed[1] < parsed[0]) ensure(b).losses++;
         }
       });
+    });
+
+    Object.entries(racketlonTierWins).forEach(([tier, teamWins]) => {
+      const ranked = Object.entries(teamWins).sort((a, b) => b[1] - a[1]);
+      if (!ranked.length || (ranked.length > 1 && ranked[0][1] === ranked[1][1])) return;
+      const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
+      ensure(ranked[0][0]).score += points;
     });
 
     teamsData.forEach(t => {
