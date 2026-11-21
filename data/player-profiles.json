@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-21T02:39:54.542802+00:00",
+  "generatedAt": "2026-11-21T17:33:38.816533+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -563,6 +563,17 @@
       "pickle": "Intermediate",
       "active": true,
       "image": "assets/player-photos/P051.jpg"
+    },
+    {
+      "id": "P052",
+      "name": "AASHRITH KEMPANNA (12)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Intermediate",
+      "tennis": "Beginner",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P052.jpg"
     }
   ]
 }
