@@ -94,17 +94,40 @@ document.addEventListener("DOMContentLoaded",async()=>{
         (h.includes("captain")&&/(nomination|nominate|interested|volunteer)/.test(h));
     });
   }
+  function formResponseNameColumnIndex(){
+    const headers=formResponseHeaders.map(header=>String(header||"").trim().toLowerCase());
+    const preferred=["name","full name","player name","participant name","applicant name","your name","your full name"];
+    for(const wanted of preferred){
+      const index=headers.findIndex(header=>header.replace(/[?:]+$/g,"").trim()===wanted);
+      if(index>=0)return index;
+    }
+    return headers.findIndex(header=>
+      /\b(?:full|player|participant|applicant)\s+name\b|\byour\s+name\b/.test(header)
+    );
+  }
+  function sortFormResponseRows(rows){
+    const nameColumn=formResponseNameColumnIndex();
+    if(nameColumn<0)return rows;
+    return rows.map((row,index)=>({row,index,name:String(row[nameColumn]??"").trim()}))
+      .sort((a,b)=>{
+        if(!a.name&&!b.name)return a.index-b.index;
+        if(!a.name)return 1;
+        if(!b.name)return -1;
+        return a.name.localeCompare(b.name,undefined,{sensitivity:"base",numeric:true})||a.index-b.index;
+      })
+      .map(item=>item.row);
+  }
   function filteredFormResponseRows(){
     const choice=captainNominationFilter?.value||"";
     const column=captainNominationColumnIndex();
-    if(!choice||column<0)return formResponseRows;
-    return formResponseRows.filter(row=>{
+    const filtered=!choice||column<0?formResponseRows.slice():formResponseRows.filter(row=>{
       const value=String(row[column]??"").trim().toLowerCase();
       if(choice==="captain")return /\bcaptain\b/.test(value.replace(/vice\s*captain/g,""));
       if(choice==="vice-captain")return /vice\s*captain/.test(value);
       if(choice==="player")return value==="";
       return true;
     });
+    return sortFormResponseRows(filtered);
   }
   function renderFormResponses(){
     const isPhotoColumn=header=>/photo|picture|image/i.test(String(header||""));
