@@ -215,6 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const racketlonTierFixtureCounts = {};
     const racketlonTierCompletedCounts = {};
     const racketlonTierTeamPoints = {};
+    const racketlonTierPlayerPoints = {};
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -282,6 +283,22 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (teamB) tierTeams[teamKey(teamB)] = tierTeams[teamKey(teamB)] || { name: teamB, points: 0 };
           if (teamA && p1) tierTeams[teamKey(teamA)].points += parsed[0];
           if (teamB && p2) tierTeams[teamKey(teamB)].points += parsed[1];
+
+          // Keep each player's tier total as well, so equal team totals can
+          // be resolved using the same individual ranking criteria.
+          const tierPlayers = racketlonTierPlayerPoints[tierKey] ||= {};
+          if (p1) {
+            const playerKey = norm(p1);
+            tierPlayers[playerKey] ||= { name: p1, team: teamA, points: 0 };
+            if (!tierPlayers[playerKey].team && teamA) tierPlayers[playerKey].team = teamA;
+            tierPlayers[playerKey].points += parsed[0];
+          }
+          if (p2) {
+            const playerKey = norm(p2);
+            tierPlayers[playerKey] ||= { name: p2, team: teamB, points: 0 };
+            if (!tierPlayers[playerKey].team && teamB) tierPlayers[playerKey].team = teamB;
+            tierPlayers[playerKey].points += parsed[1];
+          }
         }
       });
     });
@@ -300,13 +317,79 @@ document.addEventListener("DOMContentLoaded", async () => {
         racketlonTierIssues.push(`Tier ${tier}: no Racketlon player scores available`);
         return;
       }
+      let winningTeam = ranked[0];
       if (ranked.length > 1 && ranked[0].points === ranked[1].points) {
-        racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points`);
-        return;
+        const tiedTeams = ranked.filter(team => team.points === ranked[0].points);
+        const players = Object.values(racketlonTierPlayerPoints[tier] || {});
+        const headToHeadPoints = new Map();
+        const playersByTotal = new Map();
+
+        // Match the Player Scores rule: within each equal-Total-Points group,
+        // compare the points scored in direct fixtures against the other tied players.
+        players.forEach(player => {
+          const scoreKey = String(player.points);
+          if (!playersByTotal.has(scoreKey)) playersByTotal.set(scoreKey, []);
+          playersByTotal.get(scoreKey).push(player);
+        });
+
+        playersByTotal.forEach(tiedPlayers => {
+          if (tiedPlayers.length < 2) return;
+          const tiedPlayerKeys = new Set(tiedPlayers.map(player => norm(player.name)));
+          tiedPlayerKeys.forEach(key => headToHeadPoints.set(key, 0));
+
+          fixtureRows.forEach(row => {
+            if (!isRacketlon(value(row, ["Sport"]))) return;
+            if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier || tier)) return;
+            const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+            const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+            const key1 = norm(p1);
+            const key2 = norm(p2);
+            if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
+
+            fixtureHeaders.forEach((header, index) => {
+              if (!/^(?:game|set)\\d+/.test(norm(header))) return;
+              const parsed = parseScore(row[index]);
+              if (!parsed) return;
+              headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
+              headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
+            });
+          });
+        });
+
+        const playerRank = (a, b) =>
+          b.points - a.points ||
+          (headToHeadPoints.get(norm(b.name)) || 0) - (headToHeadPoints.get(norm(a.name)) || 0) ||
+          a.name.localeCompare(b.name);
+
+        const teamLeaders = tiedTeams.map(team => {
+          const teamPlayers = players.filter(player => teamKey(player.team) === teamKey(team.name)).sort(playerRank);
+          return { team, leader: teamPlayers[0] || null };
+        }).sort((a, b) => {
+          if (!a.leader && !b.leader) return a.team.name.localeCompare(b.team.name);
+          if (!a.leader) return 1;
+          if (!b.leader) return -1;
+          return playerRank(a.leader, b.leader) || a.team.name.localeCompare(b.team.name);
+        });
+
+        const first = teamLeaders[0];
+        const second = teamLeaders[1];
+        if (!first?.leader || !second?.leader) {
+          racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points; individual player tie-break data unavailable`);
+          return;
+        }
+
+        const samePlayerRank =
+          first.leader.points === second.leader.points &&
+          (headToHeadPoints.get(norm(first.leader.name)) || 0) === (headToHeadPoints.get(norm(second.leader.name)) || 0);
+        if (samePlayerRank) {
+          racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points and their top players are still tied head-to-head`);
+          return;
+        }
+        winningTeam = first.team;
       }
 
       const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
-      ensure(ranked[0].name).score += points;
+      ensure(winningTeam.name).score += points;
     });
 
     teamsData.forEach(t => {
