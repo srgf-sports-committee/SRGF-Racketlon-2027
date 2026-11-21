@@ -213,6 +213,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const stats = {};
     const racketlonTierWins = {};
+    const racketlonTierFixtureCounts = {};
+    const racketlonTierCompletedCounts = {};
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -236,11 +238,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (isRacketlon(value(row, ["Sport"]))) {
         const tierMatch = value(row, ["Tier"]).match(/\d+/);
         const tierNumber = tierMatch ? Number(tierMatch[0]) : 0;
-        if (tierNumber >= 1 && tierNumber <= 9 && winnerKey) {
+        if (tierNumber >= 1 && tierNumber <= 9) {
           const tierKey = String(tierNumber);
-          if (!racketlonTierWins[tierKey]) racketlonTierWins[tierKey] = {};
-          racketlonTierWins[tierKey][winnerKey] = racketlonTierWins[tierKey][winnerKey] || { name: winner, count: 0 };
-          racketlonTierWins[tierKey][winnerKey].count++;
+          racketlonTierFixtureCounts[tierKey] = (racketlonTierFixtureCounts[tierKey] || 0) + 1;
+          if (winnerKey) {
+            racketlonTierCompletedCounts[tierKey] = (racketlonTierCompletedCounts[tierKey] || 0) + 1;
+            if (!racketlonTierWins[tierKey]) racketlonTierWins[tierKey] = {};
+            racketlonTierWins[tierKey][winnerKey] = racketlonTierWins[tierKey][winnerKey] || { name: winner, count: 0 };
+            racketlonTierWins[tierKey][winnerKey].count++;
+          }
         }
       } else {
         const points = number(value(row, ["Points"]));
@@ -264,9 +270,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    Object.entries(racketlonTierWins).forEach(([tier, teamWins]) => {
-      const ranked = Object.values(teamWins).sort((a, b) => b.count - a.count);
-      if (!ranked.length || (ranked.length > 1 && ranked[0].count === ranked[1].count)) return;
+    const racketlonTierIssues = [];
+    Object.entries(racketlonTierFixtureCounts).forEach(([tier, fixtureCount]) => {
+      const completedCount = racketlonTierCompletedCounts[tier] || 0;
+      if (completedCount < fixtureCount) {
+        racketlonTierIssues.push(`Tier ${tier}: ${completedCount}/${fixtureCount} fixtures have a winning team`);
+        return;
+      }
+      const ranked = Object.values(racketlonTierWins[tier] || {}).sort((a, b) => b.count - a.count);
+      if (!ranked.length) {
+        racketlonTierIssues.push(`Tier ${tier}: no winning team recorded`);
+        return;
+      }
+      if (ranked.length > 1 && ranked[0].count === ranked[1].count) {
+        racketlonTierIssues.push(`Tier ${tier}: tied on ${ranked[0].count} match wins`);
+        return;
+      }
       const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
       ensure(ranked[0].name).score += points;
     });
@@ -290,7 +309,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       ? entries.map((x, i) => `<tr class="${i === 0 ? "team-top-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
       : '<tr><td colspan="7">No team results available.</td></tr>';
     table.classList.remove("hidden");
-    if (msg) msg.textContent = entries.length ? `${entries.length} team(s) shown.` : "Results will appear here after fixture scores are entered.";
+    if (msg) msg.textContent = entries.length
+      ? `${entries.length} team(s) shown.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}`
+      : "Results will appear here after fixture scores are entered.";
   }
 
   function renderPlayerResults() {
