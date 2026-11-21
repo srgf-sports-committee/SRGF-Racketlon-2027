@@ -289,13 +289,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           const tierPlayers = racketlonTierPlayerPoints[tierKey] ||= {};
           if (p1) {
             const playerKey = norm(p1);
-            tierPlayers[playerKey] ||= { name: p1, team: teamA, points: 0 };
+            tierPlayers[playerKey] ||= { name: p1, team: teamA, points: 0, tier: value(row, ["Tier"]) };
             if (!tierPlayers[playerKey].team && teamA) tierPlayers[playerKey].team = teamA;
             tierPlayers[playerKey].points += parsed[0];
           }
           if (p2) {
             const playerKey = norm(p2);
-            tierPlayers[playerKey] ||= { name: p2, team: teamB, points: 0 };
+            tierPlayers[playerKey] ||= { name: p2, team: teamB, points: 0, tier: value(row, ["Tier"]) };
             if (!tierPlayers[playerKey].team && teamB) tierPlayers[playerKey].team = teamB;
             tierPlayers[playerKey].points += parsed[1];
           }
@@ -324,8 +324,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const headToHeadPoints = new Map();
         const playersByTotal = new Map();
 
-        // Match the Player Scores rule: within each equal-Total-Points group,
-        // compare the points scored in direct fixtures against the other tied players.
+        // Use the same Total Points -> Head-to-head ranking as the Racketlon
+        // Player Scores table. The top-ranked player among the tied teams
+        // determines which team receives this tier's points.
         players.forEach(player => {
           const scoreKey = String(player.points);
           if (!playersByTotal.has(scoreKey)) playersByTotal.set(scoreKey, []);
@@ -339,7 +340,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           fixtureRows.forEach(row => {
             if (!isRacketlon(value(row, ["Sport"]))) return;
-            if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier || tier)) return;
+            if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier)) return;
             const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
             const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
             const key1 = norm(p1);
@@ -347,7 +348,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
 
             fixtureHeaders.forEach((header, index) => {
-              if (!/^(?:game|set)\d+/.test(norm(header))) return;
+              if (!/^(?:game|set)\\d+/.test(norm(header))) return;
               const parsed = parseScore(row[index]);
               if (!parsed) return;
               headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
@@ -361,31 +362,20 @@ document.addEventListener("DOMContentLoaded", async () => {
           (headToHeadPoints.get(norm(b.name)) || 0) - (headToHeadPoints.get(norm(a.name)) || 0) ||
           a.name.localeCompare(b.name);
 
-        const teamLeaders = tiedTeams.map(team => {
-          const teamPlayers = players.filter(player => teamKey(player.team) === teamKey(team.name)).sort(playerRank);
-          return { team, leader: teamPlayers[0] || null };
-        }).sort((a, b) => {
-          if (!a.leader && !b.leader) return a.team.name.localeCompare(b.team.name);
-          if (!a.leader) return 1;
-          if (!b.leader) return -1;
-          return playerRank(a.leader, b.leader) || a.team.name.localeCompare(b.team.name);
-        });
+        const tiedTeamKeys = new Set(tiedTeams.map(team => teamKey(team.name)));
+        const topPlayer = players
+          .filter(player => player.team && tiedTeamKeys.has(teamKey(player.team)))
+          .sort(playerRank)[0];
 
-        const first = teamLeaders[0];
-        const second = teamLeaders[1];
-        if (!first?.leader || !second?.leader) {
+        if (!topPlayer) {
           racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points; individual player tie-break data unavailable`);
           return;
         }
-
-        const samePlayerRank =
-          first.leader.points === second.leader.points &&
-          (headToHeadPoints.get(norm(first.leader.name)) || 0) === (headToHeadPoints.get(norm(second.leader.name)) || 0);
-        if (samePlayerRank) {
-          racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points and their top players are still tied head-to-head`);
+        winningTeam = tiedTeams.find(team => teamKey(team.name) === teamKey(topPlayer.team));
+        if (!winningTeam) {
+          racketlonTierIssues.push(`Tier ${tier}: unable to match the top Player Score result to a team`);
           return;
         }
-        winningTeam = first.team;
       }
 
       const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
