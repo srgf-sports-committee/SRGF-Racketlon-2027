@@ -398,18 +398,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     Object.values(groups).forEach(group => {
       if (activeTab === "racketlon") {
-        // For players tied on Total Points, calculate a mini head-to-head
-        // table from their direct Racketlon fixtures. Sum each player's
-        // entered game-score points against the other tied player(s).
-        const tiedPlayers = new Set(
-          group.filter(x => x.points === group[0]?.points).map(x => norm(x.player))
-        );
-        const headToHeadPoints = new Map([...tiedPlayers].map(player => [player, 0]));
+        // Apply head-to-head separately to every Total Points tie group.
+        const headToHeadPoints = new Map();
+        const tiedScoreGroups = new Map();
+        group.forEach(player => {
+          const scoreKey = String(player.points);
+          (tiedScoreGroups.get(scoreKey) || tiedScoreGroups.set(scoreKey, []).get(scoreKey)).push(player);
+        });
 
-        if (tiedPlayers.size > 1) {
+        tiedScoreGroups.forEach(tiedGroup => {
+          if (tiedGroup.length < 2) return;
+          const tiedPlayers = new Set(tiedGroup.map(x => norm(x.player)));
+          tiedPlayers.forEach(player => headToHeadPoints.set(player, 0));
+
           fixtureRows.forEach(row => {
             if (!isRacketlon(value(row, ["Sport"]))) return;
-            if (norm(value(row, ["Tier"])) !== norm(group[0]?.tier)) return;
+            if (norm(value(row, ["Tier"])) !== norm(tiedGroup[0]?.tier)) return;
 
             const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
             const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
@@ -418,14 +422,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (!p1 || !p2 || !tiedPlayers.has(key1) || !tiedPlayers.has(key2) || key1 === key2) return;
 
             fixtureHeaders.forEach((h, i) => {
-              if (!/^(?:game|set)\\d+/.test(norm(h))) return;
+              if (!/^(?:game|set)\d+/.test(norm(h))) return;
               const parsed = parseScore(row[i]);
               if (!parsed) return;
               headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
               headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
             });
           });
-        }
+        });
 
         group.sort((a, b) =>
           b.points - a.points ||
