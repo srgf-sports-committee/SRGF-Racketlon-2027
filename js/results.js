@@ -216,6 +216,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const racketlonTierCompletedCounts = {};
     const racketlonTierTeamPoints = {};
     const racketlonTierPlayerPoints = {};
+    const individualTierFixtureCounts = {};
+    const individualTierCompletedCounts = {};
+    const individualTierPlayerStats = {};
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -247,8 +250,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
       } else {
-        const points = number(value(row, ["Points"]));
-        if (winnerKey && points !== 0) ensure(winner).score += points;
+        const sportName = value(row, ["Sport"]);
+        const tierName = value(row, ["Tier"]);
+        if (sportName && tierName && (value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]) || value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]))) {
+          const groupKey = `${norm(sportName)}|||${norm(tierName)}`;
+          individualTierFixtureCounts[groupKey] = individualTierFixtureCounts[groupKey] || { sport: sportName, tier: tierName, count: 0 };
+          individualTierFixtureCounts[groupKey].count++;
+          if (winnerKey) individualTierCompletedCounts[groupKey] = (individualTierCompletedCounts[groupKey] || 0) + 1;
+        }
       }
 
       const racketlonRow = isRacketlon(value(row, ["Sport"]));
@@ -260,10 +269,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       const teamA = resolveTeamName(playerTeam(p1) || a);
       const teamB = resolveTeamName(playerTeam(p2) || b);
 
+      if (!racketlonRow && tierNumber >= 0 && p1 && value(row, ["Sport"]) && value(row, ["Tier"])) {
+        const sportName = value(row, ["Sport"]);
+        const tierName = value(row, ["Tier"]);
+        const groupKey = `${norm(sportName)}|||${norm(tierName)}`;
+        const players = individualTierPlayerStats[groupKey] ||= {};
+        const addPlayer = (playerName, playerTeamName) => {
+          const key = norm(playerName);
+          if (!key) return null;
+          players[key] ||= { name: playerName, team: playerTeamName || "", wins: 0, gamesWon: 0, losses: 0, pd: 0 };
+          if (!players[key].team && playerTeamName) players[key].team = playerTeamName;
+          return players[key];
+        };
+        addPlayer(p1, teamA);
+        if (p2) addPlayer(p2, teamB);
+      }
+
       fixtureHeaders.forEach((h, i) => {
         if (!/^(?:game|set)\d+/.test(norm(h))) return;
         const parsed = parseScore(row[i]);
         if (!parsed) return;
+        if (!racketlonRow) {
+          const sportName = value(row, ["Sport"]);
+          const tierName = value(row, ["Tier"]);
+          const groupKey = `${norm(sportName)}|||${norm(tierName)}`;
+          const players = individualTierPlayerStats[groupKey] ||= {};
+          const playerA = p1 ? (players[norm(p1)] ||= { name: p1, team: teamA, wins: 0, gamesWon: 0, losses: 0, pd: 0 }) : null;
+          const playerB = p2 ? (players[norm(p2)] ||= { name: p2, team: teamB, wins: 0, gamesWon: 0, losses: 0, pd: 0 }) : null;
+          if (playerA) { playerA.pd += parsed[0] - parsed[1]; if (parsed[0] > parsed[1]) playerA.gamesWon++; else if (parsed[0] < parsed[1]) playerA.losses++; }
+          if (playerB) { playerB.pd += parsed[1] - parsed[0]; if (parsed[1] > parsed[0]) playerB.gamesWon++; else if (parsed[1] < parsed[0]) playerB.losses++; }
+        }
         if (a) {
           ensure(a).pd += parsed[0] - parsed[1];
           if (parsed[0] > parsed[1]) ensure(a).gamesWon++;
@@ -301,9 +336,25 @@ document.addEventListener("DOMContentLoaded", async () => {
           }
         }
       });
+
+      if (!racketlonRow && winnerKey) {
+        const sportName = value(row, ["Sport"]);
+        const tierName = value(row, ["Tier"]);
+        const groupKey = `${norm(sportName)}|||${norm(tierName)}`;
+        const players = individualTierPlayerStats[groupKey] ||= {};
+        if (p1 && teamKey(teamA) === winnerKey) {
+          const player = players[norm(p1)] ||= { name: p1, team: teamA, wins: 0, gamesWon: 0, losses: 0, pd: 0 };
+          player.wins++;
+        }
+        if (p2 && teamKey(teamB) === winnerKey) {
+          const player = players[norm(p2)] ||= { name: p2, team: teamB, wins: 0, gamesWon: 0, losses: 0, pd: 0 };
+          player.wins++;
+        }
+      }
     });
 
     const racketlonTierIssues = [];
+    const individualTierIssues = [];
     Object.entries(racketlonTierFixtureCounts).forEach(([tier, fixtureCount]) => {
       const completedCount = racketlonTierCompletedCounts[tier] || 0;
       if (completedCount < fixtureCount) {
@@ -382,6 +433,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       ensure(winningTeam.name).score += points;
     });
 
+    Object.entries(individualTierFixtureCounts).forEach(([groupKey, group]) => {
+      const completed = individualTierCompletedCounts[groupKey] || 0;
+      if (completed < group.count) {
+        individualTierIssues.push(`${group.sport} ${group.tier}: ${completed}/${group.count} fixtures have a winning team`);
+        return;
+      }
+      const rankedPlayers = Object.values(individualTierPlayerStats[groupKey] || {}).sort((a, b) =>
+        b.wins - a.wins ||
+        (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
+        b.pd - a.pd ||
+        a.name.localeCompare(b.name)
+      );
+      if (!rankedPlayers.length) {
+        individualTierIssues.push(`${group.sport} ${group.tier}: no Individual player results available`);
+        return;
+      }
+      [6, 4, 2, 1].forEach((points, index) => {
+        const player = rankedPlayers[index];
+        if (player?.team) ensure(player.team).score += points;
+      });
+    });
+
     teamsData.forEach(t => {
       const name = resolveTeamName(
         t.name || t["Team Name"] || t["TeamName"] || t.Team ||
@@ -402,7 +475,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       : '<tr><td colspan="7">No team results available.</td></tr>';
     table.classList.remove("hidden");
     if (msg) msg.textContent = entries.length
-      ? `${entries.length} team(s) shown.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}`
+      ? `${entries.length} team(s) shown.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}${individualTierIssues.length ? " Individual tier points: " + individualTierIssues.join("; ") + "." : ""}`
       : "Results will appear here after fixture scores are entered.";
   }
 
