@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-22T09:59:40.666819+00:00",
+  "generatedAt": "2026-11-22T17:41:24.447739+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -446,7 +446,7 @@
     {
       "id": "P041",
       "name": "Sachit Kumar (14)",
-      "category": "Individual",
+      "category": "Racketlon",
       "badminton": "Beginner",
       "tt": "Intermediate",
       "tennis": "Never Played",
@@ -596,6 +596,72 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P054.jpg"
+    },
+    {
+      "id": "P055",
+      "name": "Santhaseelan  (60)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Beginner",
+      "tennis": "Intermediate",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P055.jpg"
+    },
+    {
+      "id": "P056",
+      "name": "Dominic  (38)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Beginner",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P056.jpg"
+    },
+    {
+      "id": "P057",
+      "name": "Ananya Jhala (15)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P057.jpg"
+    },
+    {
+      "id": "P058",
+      "name": "Dakshveer Singh Jhala (10)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Beginner",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P058.jpg"
+    },
+    {
+      "id": "P059",
+      "name": "Neeraj Arya (44)",
+      "category": "Individual",
+      "badminton": "Beginner",
+      "tt": "Advanced",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P059.jpg"
+    },
+    {
+      "id": "P060",
+      "name": "Saksham Tiwari (11)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P060.jpg"
     }
   ]
 }
