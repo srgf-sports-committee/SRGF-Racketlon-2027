@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-22T17:41:24.447739+00:00",
+  "generatedAt": "2026-11-22T22:50:14.821246+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -622,7 +622,7 @@
     {
       "id": "P057",
       "name": "Ananya Jhala (15)",
-      "category": "Racketlon",
+      "category": "Individual",
       "badminton": "Intermediate",
       "tt": "Never Played",
       "tennis": "Never Played",
@@ -633,7 +633,7 @@
     {
       "id": "P058",
       "name": "Dakshveer Singh Jhala (10)",
-      "category": "Racketlon",
+      "category": "Individual",
       "badminton": "Intermediate",
       "tt": "Beginner",
       "tennis": "Never Played",
@@ -662,6 +662,28 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P060.jpg"
+    },
+    {
+      "id": "P061",
+      "name": "Divyam Kumawat (15)",
+      "category": "Racketlon",
+      "badminton": "Beginner",
+      "tt": "Intermediate",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P061.jpg"
+    },
+    {
+      "id": "P062",
+      "name": "Atharv Dixit (12)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P062.jpg"
     }
   ]
 }
