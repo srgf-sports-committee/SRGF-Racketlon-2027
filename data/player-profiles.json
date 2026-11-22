@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-22T02:23:47.508652+00:00",
+  "generatedAt": "2026-11-22T09:59:40.666819+00:00",
   "source": "Google Sheet via Apps Script",
   "players": [
     {
@@ -574,6 +574,28 @@
       "pickle": "Never Played",
       "active": true,
       "image": "assets/player-photos/P052.jpg"
+    },
+    {
+      "id": "P053",
+      "name": "Mallikarjuna SG  (41)",
+      "category": "Racketlon",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P053.jpg"
+    },
+    {
+      "id": "P054",
+      "name": "Priyanshu Sheoran (14)",
+      "category": "Individual",
+      "badminton": "Intermediate",
+      "tt": "Never Played",
+      "tennis": "Never Played",
+      "pickle": "Never Played",
+      "active": true,
+      "image": "assets/player-photos/P054.jpg"
     }
   ]
 }
