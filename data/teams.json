@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-22T18:35:52.488Z",
-  "sourceUpdatedAt": "2026-11-22T18:35:52.488Z",
-  "syncedAt": "2026-11-22T23:53:44.869832Z",
+  "updatedAt": "2026-11-23T05:09:49.922Z",
+  "sourceUpdatedAt": "2026-11-23T05:09:49.922Z",
+  "syncedAt": "2026-11-23T06:14:41.169557Z",
   "rows": [
     {
       "Team ID": "T1",
@@ -11,13 +11,13 @@
     },
     {
       "Team ID": "T2",
-      "Team Name": "SRGF Racket Rebels",
+      "Team Name": "SRGF Phoenix",
       "Initial Budget": "500000000",
       "Active": "1"
     },
     {
       "Team ID": "T3",
-      "Team Name": "SRGF Quad-Court Kings",
+      "Team Name": "SRGF Vikings",
       "Initial Budget": "500000000",
       "Active": "1"
     },
