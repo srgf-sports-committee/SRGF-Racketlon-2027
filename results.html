@@ -7,6 +7,9 @@
 <link rel="stylesheet" href="css/srgf.css">
 <style>html.srgf-login-gate-pending main{visibility:hidden}</style>
 <script>document.documentElement.classList.add("srgf-login-gate-pending");</script>
+<style>
+.player-score-view-controls{display:flex;gap:8px;margin:12px 0}.player-score-view-btn{border:1px solid var(--line,#31545d);background:rgba(0,0,0,.16);color:inherit;border-radius:9px;padding:8px 14px;font-weight:700;cursor:pointer}.player-score-view-btn.active{background:linear-gradient(120deg,#8de7c5,#49d7c7);color:#08242b;border-color:transparent}#playerScoresBody tr[data-player-key]{cursor:pointer}#playerScoresBody tr[data-player-key]:focus{outline:2px solid #7de6c2;outline-offset:-2px}#playerScoresBody tr.player-score-selected-row{box-shadow:inset 3px 0 #8de7c5;background:rgba(111,220,180,.14)}.player-scores-tree{border:1px solid rgba(126,207,202,.24);border-radius:12px;padding:16px;margin-top:12px;min-height:90px}.player-score-tree-empty{opacity:.8;padding:12px}.player-score-tree-player{font-weight:800;padding:10px 12px;border-radius:9px;background:rgba(111,220,180,.15);border-left:3px solid #8de7c5}.player-score-tree-player span{display:block;font-size:.82em;font-weight:500;opacity:.75;margin:4px 0 0 24px}.player-score-tree-list{list-style:none;margin:0 0 0 18px;padding:10px 0 0 18px;border-left:1px solid rgba(126,207,202,.45)}.player-score-tree-match{position:relative;padding:0 0 14px 16px}.player-score-tree-dot{position:absolute;left:-23px;top:5px;width:9px;height:9px;border-radius:50%;background:#8de7c5}.player-score-tree-match-title{font-weight:750}.player-score-tree-match-meta{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:.84em;opacity:.86;margin-top:5px}.player-score-tree-games{flex-basis:100%;padding:7px 9px;border-radius:7px;background:rgba(0,0,0,.16)}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -56,12 +59,17 @@
 </div>
 <div class="notice" id="playerScoresMessage">Racketlon Player Scores are calculated from the sum of points.</div>
 <div class="notice tie-break-note"></div>
-<div class="table-wrap result-table-wrap">
+<div class="player-score-view-controls" role="group" aria-label="Player scores view">
+<button type="button" id="playerScoresTableViewBtn" class="player-score-view-btn active" aria-pressed="true">Table View</button>
+<button type="button" id="playerScoresTreeViewBtn" class="player-score-view-btn" aria-pressed="false">Tree View</button>
+</div>
+<div class="table-wrap result-table-wrap" id="playerScoresTableWrap">
 <table id="playerScoresTable">
 <thead id="playerScoresHead"><tr><th>Tier</th><th>Player Name</th><th>Sum Points</th></tr></thead>
 <tbody id="playerScoresBody"></tbody>
 </table>
 </div>
+<div id="playerScoresTreeView" class="player-scores-tree hidden" aria-live="polite"></div>
 </div>
 </section>
 
@@ -70,6 +78,6 @@
 <script src="js/common.js?v=20261012-refresh60"></script>
 <script src="js/auth.js?v=20261012-whatsapp3"></script>
 <script src="js/login-gate.js?v=20261012-2"></script>
-<script src="js/results.js?v=20261124-racketlon-team-placements"></script>
+<script src="js/results.js?v=20261124-player-scores-tree-view"></script>
 </body>
 </html>
