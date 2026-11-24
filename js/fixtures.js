@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
   const roleCanClearResults=()=>SRGFAuth.role()==="ADMIN";
-  function syncClearResultsButton(){const bar=$("clearResultsAdminBar"),update=$("updateAllResultsBtn"),clear=$("clearAllResultsBtn");if(bar)bar.style.display=roleCanEdit()?"flex":"none";if(update)update.style.display=roleCanEdit()?"inline-block":"none";if(clear)clear.style.display=roleCanClearResults()?"inline-block":"none";}
+  function syncClearResultsButton(){const bar=$("clearResultsAdminBar"),update=$("updateAllResultsBtn"),clear=$("clearAllResultsBtn"),exportBtn=$("exportFixturesBtn");if(bar)bar.style.display=roleCanEdit()?"flex":"none";if(update)update.style.display=roleCanEdit()?"inline-block":"none";if(clear)clear.style.display=roleCanClearResults()?"inline-block":"none";if(exportBtn)exportBtn.style.display=roleCanClearResults()?"inline-block":"none";}
 
   function loadPending(){
     try{pendingResults=JSON.parse(localStorage.getItem(PENDING_KEY)||"{}")||{};}catch(_){pendingResults={};}
@@ -568,6 +568,34 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     };
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
+  function exportAllFixtures(){
+    if(!roleCanClearResults()){
+      alert("Admin access is required to export fixtures.");
+      return;
+    }
+    if(!headers.length){
+      alert("Fixture data is not loaded yet.");
+      return;
+    }
+    // Export the complete dataset, independent of all active page filters.
+    // Include every sheet column (including columns hidden in the on-screen table).
+    const csvCell=value=>{
+      const text=String(value??"");
+      return /[",\\r\\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text;
+    };
+    const csv=[headers,...rows].map(row=>row.map(csvCell).join(",")).join("\\r\\n");
+    const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download="SRGF-Fixtures-All-Records-"+new Date().toISOString().slice(0,10)+".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Exported all "+rows.length+" fixture record(s).",false);
+  }
+
   async function pushPendingFixtureResults(){
     if(!roleCanEdit()){
       alert("Admin access is required to push fixture results.");
@@ -768,6 +796,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   setupPlayerDropdown();
   $("clearAllResultsBtn")?.addEventListener("click",clearAllFixtureResults);
   $("updateAllResultsBtn")?.addEventListener("click",pushPendingFixtureResults);
+  $("exportFixturesBtn")?.addEventListener("click",exportAllFixtures);
   syncClearResultsButton();
   window.addEventListener("srgf-auth-change",syncClearResultsButton);
   $("refreshBtn")?.addEventListener("click",load);
