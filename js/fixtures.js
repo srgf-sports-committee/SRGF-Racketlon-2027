@@ -577,14 +577,26 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       alert("Fixture data is not loaded yet.");
       return;
     }
-    // Export the complete dataset, independent of all active page filters.
-    // Include every sheet column (including columns hidden in the on-screen table).
+    // Export every row and every sheet column, ignoring the active page filters.
+    // Keep score-looking values as text so spreadsheet apps do not convert 21-10 into a date.
+    const scoreColumns=headers.map((h,i)=>({name:norm(h),i}))
+      .filter(x=>/^(?:game|set)\d+/.test(x.name)).map(x=>x.i);
     const csvCell=value=>{
       const text=String(value??"");
-      return /[",\\r\\n]/.test(text)?'"'+text.replace(/"/g,'""')+'"':text;
+      return '"'+text.replace(/"/g,'""')+'"';
     };
-    const csv=[headers,...rows].map(row=>row.map(csvCell).join(",")).join("\\r\\n");
-    const blob=new Blob(["\\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+    const csvRows=[headers,...rows].map((row,rowIndex)=>{
+      const values=headers.map((_,i)=>{
+        const raw=row[i]??"";
+        if(rowIndex>0&&scoreColumns.includes(i)&&/^\s*\d+\s*[-:]\s*\d+\s*$/.test(String(raw))){
+          return '="'+String(raw).trim().replace(/"/g,'""')+'"';
+        }
+        return raw;
+      });
+      return values.map(csvCell).join(",");
+    });
+    const csv=csvRows.join("\r\n");
+    const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");
     link.href=url;
