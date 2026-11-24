@@ -568,6 +568,65 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     };
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
+  async function pushPendingFixtureResults(){
+    if(!roleCanClearResults()){
+      alert("Admin access is required to push fixture results.");
+      return;
+    }
+    const entries=Object.entries(pendingResults).filter(([key,value])=>Number.isInteger(Number(key))&&rows[Number(key)]&&value);
+    if(!entries.length){
+      alert("There are no pending fixture results to push. All locally saved fixture edits are already synced.");
+      return;
+    }
+    const answer=prompt("This will push "+entries.length+" pending fixture result(s) to the FIXTURES sheet.\n\nTo continue, type YES in capital letters.");
+    if(answer===null)return;
+    if(answer!=="YES"){
+      alert("Confirmation did not match. No results were pushed. Enter exactly YES in capital letters.");
+      return;
+    }
+    const button=$("updateAllResultsBtn");
+    if(button){button.disabled=true;button.textContent="Updating…";}
+    let saved=0,failed=[];
+    try{
+      for(const [key,value] of entries){
+        const i=Number(key);
+        try{
+          const body=new URLSearchParams({
+            action:"saveFixtureResult",
+            sheet:"FIXTURES",
+            rowNumber:String(i+2),
+            scores:JSON.stringify(value.scores||[]),
+            winningTeam:value.winningTeam||"",
+            token:SRGFAuth.token()
+          });
+          const res=await SRGF.fetchTimeout(SRGF_CONFIG.API_URL,{
+            method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+            body
+          },20000);
+          const result=await res.json();
+          if(!res.ok||!result.ok)throw new Error(result.error||"Save failed");
+          delete pendingResults[key];
+          saved++;
+          SRGF.updateBrowserCacheDataset("fixtures",i,headers,rows[i]);
+          savePending();
+        }catch(e){failed.push("Fixture row "+(i+2)+": "+(e.message||e));}
+      }
+      loadVersion++;
+      savePending();
+      if(failed.length){
+        setStatus(saved+" fixture result(s) pushed; "+failed.length+" still pending.",true);
+        alert(saved+" result(s) pushed to Google Sheets. "+failed.length+" failed and remain pending.\n\n"+failed.join("\n"));
+      }else{
+        setStatus("✓ All "+saved+" pending fixture result(s) pushed to Google Sheets",false);
+        alert("Successfully pushed all "+saved+" pending fixture result(s) to Google Sheets.");
+      }
+    }finally{
+      if(button){button.disabled=false;button.textContent="Update Results";}
+      syncClearResultsButton();
+    }
+  }
+
   async function clearAllFixtureResults(){
     if(!roleCanClearResults()){
       alert("Admin access is required to clear fixture results.");
@@ -714,6 +773,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   loadPending();
   setupPlayerDropdown();
   $("clearAllResultsBtn")?.addEventListener("click",clearAllFixtureResults);
+  $("updateAllResultsBtn")?.addEventListener("click",pushPendingFixtureResults);
   syncClearResultsButton();
   window.addEventListener("srgf-auth-change",syncClearResultsButton);
   $("refreshBtn")?.addEventListener("click",load);
