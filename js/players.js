@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   const selectedSkills=new Set();
   const clean=v=>String(v??"").trim();
   const skillFor=(p,key)=>clean(p[sportFields[key]] ?? p[sportAliases[key]] ?? "");
+  const priority1For=p=>{const chart=clean(p["Priority Chart"]??p["PriorityChart"]??"");const match=chart.match(/P1\s*:\s*([^|]+)/i);return match?clean(match[1]):"";};
   function buildPlayerOptions(){
     const names=[...new Set(allRows.map(r=>r.name).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     playerOptions.innerHTML="";
@@ -87,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     });
     $("playersResultCount").textContent=shown+" of "+allRows.length+" players";
     const noResults=$("playersNoResults");
-    if(!shown){if(!noResults){const tr=document.createElement("tr");tr.id="playersNoResults";tr.innerHTML='<td colspan="8">No players match these filters.</td>';$("playersBody").appendChild(tr);}}
+    if(!shown){if(!noResults){const tr=document.createElement("tr");tr.id="playersNoResults";tr.innerHTML='<td colspan="9">No players match these filters.</td>';$("playersBody").appendChild(tr);}}
     else noResults?.remove();
   }
   function render(data){
@@ -98,7 +99,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const teamId=p["Team ID"]||p.team||auction.find(a=>String(a["Player ID"]||a.playerId)===String(id))?.["Team ID"]||"";
       const values={badminton:skillFor(p,"badminton"),tt:skillFor(p,"tt"),tennis:skillFor(p,"tennis"),pickle:skillFor(p,"pickle")};
       const tr=document.createElement("tr");
-      tr.innerHTML='<td>'+esc(id)+'</td><td>'+esc(name)+'</td><td>'+esc(p["Preferred Category"]||p.category||"")+'</td><td>'+esc(values.badminton)+'</td><td>'+esc(values.tt)+'</td><td>'+esc(values.tennis)+'</td><td>'+esc(values.pickle)+'</td><td>'+esc(teamName(teamId))+'</td>';
+      tr.innerHTML='<td>'+esc(id)+'</td><td>'+esc(name)+'</td><td>'+esc(priority1For(p))+'</td><td>'+esc(p["Preferred Category"]||p.category||"")+'</td><td>'+esc(values.badminton)+'</td><td>'+esc(values.tt)+'</td><td>'+esc(values.tennis)+'</td><td>'+esc(values.pickle)+'</td><td>'+esc(teamName(teamId))+'</td>';
       return {player:p,name,element:tr,values,team:clean(teamName(teamId))};
     });
     const body=$("playersBody");body.innerHTML="";allRows.forEach(row=>body.appendChild(row.element));
