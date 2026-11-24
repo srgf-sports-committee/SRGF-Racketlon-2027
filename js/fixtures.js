@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
   const roleCanClearResults=()=>SRGFAuth.role()==="ADMIN";
-  function syncClearResultsButton(){const bar=$("clearResultsAdminBar");if(bar)bar.style.display=roleCanClearResults()?"flex":"none";}
+  function syncClearResultsButton(){const bar=$("clearResultsAdminBar"),update=$("updateAllResultsBtn"),clear=$("clearAllResultsBtn");if(bar)bar.style.display=roleCanEdit()?"flex":"none";if(update)update.style.display=roleCanEdit()?"inline-block":"none";if(clear)clear.style.display=roleCanClearResults()?"inline-block":"none";}
 
   function loadPending(){
     try{pendingResults=JSON.parse(localStorage.getItem(PENDING_KEY)||"{}")||{};}catch(_){pendingResults={};}
@@ -569,7 +569,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     modal.querySelector("#closeResultBtn").onclick=()=>modal.classList.add("hidden");
   }
   async function pushPendingFixtureResults(){
-    if(!roleCanClearResults()){
+    if(!roleCanEdit()){
       alert("Admin access is required to push fixture results.");
       return;
     }
