@@ -528,6 +528,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         // any older cache-first/live-retry request so it cannot overwrite this
         // freshly saved result with a stale snapshot.
         loadVersion++;
+        // Google Sheets confirmed the write: update the shared cache now too,
+        // so the next manual refresh cannot restore the previous result.
+        SRGF.updateBrowserCacheDataset("fixtures",i,headers,rows[i]);
         delete pendingResults[String(i)];
         savePending();
         setStatus("✓ Result saved to Google Sheets",false);
