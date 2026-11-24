@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   nav("fixtures");
 
   let headers=[], rows=[], filtered=[];
+  // Ignore any cache/live load that started before a successful result save.
+  let loadVersion=0;
   const PENDING_KEY="SRGF_PENDING_FIXTURE_RESULTS_V1";
   let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
@@ -522,10 +524,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         },20000);
         const j=await res.json();
         if(!j.ok)throw new Error(j.error||"Save failed");
+        // The edited result is already reflected in the current rows. Invalidate
+        // any older cache-first/live-retry request so it cannot overwrite this
+        // freshly saved result with a stale snapshot.
+        loadVersion++;
         delete pendingResults[String(i)];
         savePending();
         setStatus("✓ Result saved to Google Sheets",false);
-        await load();
       }catch(e){
         saveBtn.disabled=false;
         saveBtn.textContent=editing?"Update Result":"Save Result";
@@ -590,6 +595,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   async function load(){
+    const thisLoad=++loadVersion;
     // Editors use the same cache-first/live-retry loader as viewers.
     // This prevents a temporary Google Sheets/API failure from blanking the
     // fixture page. Saving a result still goes directly to Apps Script.
@@ -599,7 +605,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
         const f=d.data||[];
         headers=d.headers||Object.keys(f[0]||{});
         rows=f.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
-        applyPending();
         applyPending();
         try{
           const td=await loadJsonDataset("teams");
@@ -613,6 +618,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
         if(d.retryPromise){
           d.retryPromise.then(latest=>{
+            if(thisLoad!==loadVersion)return;
             const f2=latest.data?.fixtures||[];
             headers=Object.keys(f2[0]||{});
             rows=f2.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
@@ -646,6 +652,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
       if(d.retryPromise){
         d.retryPromise.then(latest=>{
+          if(thisLoad!==loadVersion)return;
           const f2=latest.data?.fixtures||[];
           headers=Object.keys(f2[0]||{});
           rows=f2.map(x=>Array.isArray(x)?x:headers.map(h=>x[h]??""));
