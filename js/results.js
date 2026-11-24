@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let fixtureRows = [];
   let teamsData = [];
   let activeTab = "racketlon";
+  let playerScoresView = "table";
+  let selectedPlayerKey = "";
   const playerScoreFilterState = {
     racketlon: { sport: "", tier: "" },
     nonRacketlon: { sport: "", tier: "" }
@@ -623,17 +625,69 @@ document.addEventListener("DOMContentLoaded", async () => {
     const rows = groupKeys.flatMap(k => groups[k]);
     const top = new Set(Object.values(groups).map(g => g[0]?.player).filter(Boolean));
     body.innerHTML = rows.length ? rows.map(x => {
-      const cls = top.has(x.player) ? "racketlon-top-player" : "";
+      const key = norm(x.sport) + "|||" + norm(x.tier) + "|||" + norm(x.player);
+      const cls = [top.has(x.player) ? "racketlon-top-player" : "", selectedPlayerKey === key ? "player-score-selected-row" : ""].filter(Boolean).join(" ");
       return activeTab === "racketlon"
-        ? `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${esc(x.team || "—")}</td><td>${x.points}</td></tr>`
-        : `<tr class="${cls}"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${esc(x.team || "—")}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
+        ? `<tr class="${cls}" data-player-key="${esc(key)}" tabindex="0"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${esc(x.team || "—")}</td><td>${x.points}</td></tr>`
+        : `<tr class="${cls}" data-player-key="${esc(key)}" tabindex="0"><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.player)}</td><td>${esc(x.team || "—")}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`;
     }).join("") : `<tr><td colspan="${activeTab === "racketlon" ? 5 : 9}">No player scores available.</td></tr>`;
 
     $("playerScoresTable")?.classList.remove("hidden");
+    renderPlayerScoreView(rows);
     const msg = $("playerScoresMessage");
     if (msg) msg.textContent = activeTab === "racketlon"
       ? `${rows.length} Racketlon player result(s) shown. Ranking: Total Points → Head-to-head points (sum of entered game scores against the other tied player(s)).`
       : `${rows.length} non-Racketlon player result(s) shown. Ranking: Matches Won → Net Game Difference (Games Won − Games Lost) → Point Difference.`;
+  }
+
+  function renderPlayerScoreView(rows) {
+    const tableWrap = $("playerScoresTableWrap");
+    const treeWrap = $("playerScoresTreeView");
+    $("playerScoresTableViewBtn")?.classList.toggle("active", playerScoresView === "table");
+    $("playerScoresTreeViewBtn")?.classList.toggle("active", playerScoresView === "tree");
+    $("playerScoresTableViewBtn")?.setAttribute("aria-pressed", String(playerScoresView === "table"));
+    $("playerScoresTreeViewBtn")?.setAttribute("aria-pressed", String(playerScoresView === "tree"));
+    tableWrap?.classList.toggle("hidden", playerScoresView !== "table");
+    treeWrap?.classList.toggle("hidden", playerScoresView !== "tree");
+    if (playerScoresView !== "tree" || !treeWrap) return;
+    const selected = rows.find(x => norm(x.sport) + "|||" + norm(x.tier) + "|||" + norm(x.player) === selectedPlayerKey);
+    if (!selected) {
+      treeWrap.innerHTML = '<div class="player-score-tree-empty">Select a player from the table first, then choose Tree View to see all their recorded matches.</div>';
+      return;
+    }
+    const matches = [];
+    fixtureRows.forEach((row, index) => {
+      const sportName = value(row, ["Sport"]), tierName = value(row, ["Tier"]);
+      if (norm(sportName) !== norm(selected.sport) || norm(tierName) !== norm(selected.tier)) return;
+      if (activeTab === "racketlon" && !isRacketlon(sportName)) return;
+      if (activeTab === "nonRacketlon" && isRacketlon(sportName)) return;
+      const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+      const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+      if (norm(p1) !== norm(selected.player) && norm(p2) !== norm(selected.player)) return;
+      const teams = matchTeams(row), scores = [];
+      fixtureHeaders.forEach((h, i) => {
+        if (!/^(?:game|set)\d+/i.test(norm(h))) return;
+        const raw = String(row[i] ?? "").trim();
+        if (raw) scores.push(h + ": " + raw);
+      });
+      const winner = resolveTeamName(value(row, ["Winning Team", "Winner Team", "Winner"]));
+      matches.push({
+        title: value(row, ["Match", "Fixture"]) || teams.filter(Boolean).join(" vs ") || ("Match " + (index + 1)),
+        date: value(row, ["Date", "Match Date", "Fixture Date"]),
+        opponent: norm(p1) === norm(selected.player) ? p2 : p1,
+        teams, winner, scores
+      });
+    });
+    const children = matches.length ? matches.map((m, i) => {
+      const meta = [];
+      if (m.date) meta.push("<span><strong>Date:</strong> " + esc(m.date) + "</span>");
+      if (m.opponent) meta.push("<span><strong>Opponent:</strong> " + esc(m.opponent) + "</span>");
+      if (m.teams.some(Boolean)) meta.push("<span><strong>Teams:</strong> " + esc(m.teams[0] || "—") + " vs " + esc(m.teams[1] || "—") + "</span>");
+      meta.push("<span><strong>" + (m.winner ? "Winner: " + esc(m.winner) : (m.scores.length ? "Game scores entered" : "No result entered yet")) + "</strong></span>");
+      if (m.scores.length) meta.push('<span class="player-score-tree-games">' + m.scores.map(esc).join(" · ") + "</span>");
+      return '<li class="player-score-tree-match"><span class="player-score-tree-dot"></span><div class="player-score-tree-match-title">' + esc(m.title || ("Match " + (i + 1))) + '</div><div class="player-score-tree-match-meta">' + meta.join("") + "</div></li>";
+    }).join("") : '<li class="player-score-tree-match">No matching fixtures found for this player in the selected sport and tier.</li>';
+    treeWrap.innerHTML = '<div class="player-score-tree-player">👤 ' + esc(selected.player) + '<span>' + esc(selected.sport) + " · " + esc(selected.tier) + '</span></div><ol class="player-score-tree-list">' + children + "</ol>";
   }
 
   function render() {
@@ -756,6 +810,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function bindTabs() {
+    $("playerScoresTableViewBtn")?.addEventListener("click", () => { playerScoresView = "table"; render(); });
+    $("playerScoresTreeViewBtn")?.addEventListener("click", () => { playerScoresView = "tree"; render(); });
+    $("playerScoresBody")?.addEventListener("click", event => {
+      const row = event.target.closest("tr[data-player-key]");
+      if (!row) return;
+      selectedPlayerKey = row.dataset.playerKey || "";
+      render();
+    });
+    $("playerScoresBody")?.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const row = event.target.closest("tr[data-player-key]");
+      if (!row) return;
+      event.preventDefault();
+      selectedPlayerKey = row.dataset.playerKey || "";
+      render();
+    });
     const r = $("playerScoresRacketlonTab");
     const n = $("playerScoresNonRacketlonTab");
     r?.addEventListener("click", () => {
