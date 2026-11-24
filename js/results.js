@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   let activeTab = "racketlon";
   let playerScoresView = "table";
   let selectedPlayerKey = "";
+  let teamPointsView = "table";
+  let selectedTeamKey = "";
   const playerScoreFilterState = {
     racketlon: { sport: "", tier: "" },
     nonRacketlon: { sport: "", tier: "" }
@@ -221,6 +223,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const individualTierFixtureCounts = {};
     const individualTierCompletedCounts = {};
     const individualTierPlayerStats = {};
+    const teamContributions = {};
+    const addTeamContribution = (team, player, sport, tier, points) => {
+      if (!team || !player) return;
+      const key = teamKey(team);
+      (teamContributions[key] ||= []).push({ player, sport, tier, points });
+    };
     const ensure = name => {
       const clean = resolveTeamName(name);
       if (!clean) return null;
@@ -435,7 +443,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       [6, 4, 2, 1].forEach((points, index) => {
         const team = teams[index];
-        if (team) ensure(team.name).score += points;
+        if (team) {
+          ensure(team.name).score += points;
+          const leader = teamLeader.get(teamKey(team.name));
+          if (leader) addTeamContribution(team.name, leader.name, "Racketlon", "Tier " + tier, points);
+        }
       });
     });
 
@@ -457,7 +469,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       [6, 4, 2, 1].forEach((points, index) => {
         const player = rankedPlayers[index];
-        if (player?.team) ensure(player.team).score += points;
+        if (player?.team) {
+          ensure(player.team).score += points;
+          addTeamContribution(player.team, player.name, group.sport, group.tier, points);
+        }
       });
     });
 
@@ -477,11 +492,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     body.innerHTML = entries.length
-      ? entries.map((x, i) => `<tr class="${i === 0 ? "team-top-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
+      ? entries.map((x, i) => `<tr tabindex="0" data-team-key="${esc(teamKey(x.name))}" class="${i === 0 ? "team-top-row" : ""}${selectedTeamKey === teamKey(x.name) ? " player-score-selected-row" : ""}"><td>${esc(x.name)}</td><td>${x.score}</td><td>${x.wins}</td><td>${x.gamesWon}</td><td>${x.losses}</td><td>${x.gamesWon - x.losses > 0 ? "+" : ""}${x.gamesWon - x.losses}</td><td>${x.pd > 0 ? "+" : ""}${x.pd}</td></tr>`).join("")
       : '<tr><td colspan="7">No team results available.</td></tr>';
-    table.classList.remove("hidden");
+    table.classList.toggle("hidden", teamPointsView === "tree");
+    const tree = $("teamPointsTreeView");
+    const viewBtn = $("teamPointsTableViewBtn");
+    if (tree) {
+      const selectedTeam = entries.find(x => teamKey(x.name) === selectedTeamKey);
+      const contributions = teamContributions[selectedTeamKey] || [];
+      tree.classList.toggle("hidden", teamPointsView !== "tree");
+      tree.innerHTML = teamPointsView === "tree" && selectedTeam
+        ? `<h3>${esc(selectedTeam.name)} — Points Contribution</h3><div class="table-wrap"><table><thead><tr><th>Player</th><th>Sport</th><th>Tier</th><th>Points</th></tr></thead><tbody>${contributions.length ? contributions.map(x => `<tr><td>${esc(x.player)}</td><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${x.points}</td></tr>`).join("") : '<tr><td colspan="4">No points contributions available.</td></tr>'}</tbody></table></div>`
+        : "";
+    }
+    if (viewBtn) viewBtn.classList.toggle("hidden", teamPointsView !== "tree");
     if (msg) msg.textContent = entries.length
-      ? `${entries.length} team(s) shown.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}${individualTierIssues.length ? " Individual tier points: " + individualTierIssues.join("; ") + "." : ""}`
+      ? (teamPointsView === "tree" ? "Points awarded to this team by player, sport and tier." : `${entries.length} team(s) shown. Double-click a team to view its points contribution.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}${individualTierIssues.length ? " Individual tier points: " + individualTierIssues.join("; ") + "." : ""}`)
       : "Results will appear here after fixture scores are entered.";
   }
 
@@ -861,6 +887,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function bindTabs() {
+    $("teamPointsTableViewBtn")?.addEventListener("click", () => { teamPointsView = "table"; render(); });
+    $("teamPointsBody")?.addEventListener("click", event => {
+      const row = event.target.closest("tr[data-team-key]");
+      if (!row) return;
+      selectedTeamKey = row.dataset.teamKey || "";
+      $("teamPointsBody")?.querySelectorAll("tr[data-team-key]").forEach(item => {
+        item.classList.toggle("player-score-selected-row", item === row);
+      });
+    });
+    $("teamPointsBody")?.addEventListener("dblclick", event => {
+      const row = event.target.closest("tr[data-team-key]");
+      if (!row) return;
+      selectedTeamKey = row.dataset.teamKey || "";
+      teamPointsView = "tree";
+      render();
+    });
+    $("teamPointsBody")?.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const row = event.target.closest("tr[data-team-key]");
+      if (!row) return;
+      event.preventDefault();
+      selectedTeamKey = row.dataset.teamKey || "";
+      teamPointsView = "tree";
+      render();
+    });
     $("playerScoresTableViewBtn")?.addEventListener("click", () => { playerScoresView = "table"; render(); });
     $("playerScoresBody")?.addEventListener("click", event => {
       const row = event.target.closest("tr[data-player-key]");
