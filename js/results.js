@@ -227,7 +227,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const addTeamContribution = (team, player, sport, tier, points) => {
       if (!team || !player) return;
       const key = teamKey(team);
-      (teamContributions[key] ||= []).push({ player, sport, tier, points });
+      const rows = teamContributions[key] ||= [];
+      const existing = rows.find(item =>
+        norm(item.player) === norm(player) &&
+        norm(item.sport) === norm(sport) &&
+        norm(item.tier) === norm(tier)
+      );
+      if (existing) {
+        if (points !== undefined && points !== null) existing.points = points;
+      } else {
+        rows.push({ player, sport, tier, points: points ?? "" });
+      }
     };
     const ensure = name => {
       const clean = resolveTeamName(name);
@@ -278,6 +288,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
       const teamA = resolveTeamName(playerTeam(p1) || a);
       const teamB = resolveTeamName(playerTeam(p2) || b);
+
+      // Keep every fixture-listed player visible, even before their tier's
+      // placement points have been awarded.
+      if (racketlonRow || value(row, ["Sport"])) {
+        const sportName = value(row, ["Sport"]);
+        const tierName = value(row, ["Tier"]);
+        if (p1) addTeamContribution(teamA, p1, sportName, tierName);
+        if (p2) addTeamContribution(teamB, p2, sportName, tierName);
+      }
 
       if (!racketlonRow && (p1 || p2) && value(row, ["Sport"]) && value(row, ["Tier"])) {
         const sportName = value(row, ["Sport"]);
@@ -502,7 +521,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const contributions = teamContributions[selectedTeamKey] || [];
       tree.classList.toggle("hidden", teamPointsView !== "tree");
       tree.innerHTML = teamPointsView === "tree" && selectedTeam
-        ? `<h3>${esc(selectedTeam.name)} — Points Contribution</h3><div class="table-wrap"><table><thead><tr><th>Player</th><th>Sport</th><th>Tier</th><th>Points</th></tr></thead><tbody>${contributions.length ? contributions.map(x => `<tr><td>${esc(x.player)}</td><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${x.points}</td></tr>`).join("") : '<tr><td colspan="4">No points contributions available.</td></tr>'}</tbody></table></div>`
+        ? `<h3>${esc(selectedTeam.name)} — Points Contribution</h3><div class="table-wrap"><table><thead><tr><th>Player</th><th>Sport</th><th>Tier</th><th>Points</th></tr></thead><tbody>${contributions.length ? contributions.map(x => `<tr><td>${esc(x.player)}</td><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${x.points === undefined || x.points === null ? "" : x.points}</td></tr>`).join("") : '<tr><td colspan="4">No points contributions available.</td></tr>'}</tbody></table></div>`
         : "";
     }
     if (viewBtn) viewBtn.classList.toggle("hidden", teamPointsView !== "tree");
