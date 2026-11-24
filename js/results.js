@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       // placement points have been awarded.
       if (racketlonRow || value(row, ["Sport"])) {
         const sportName = value(row, ["Sport"]);
-        const tierName = value(row, ["Tier"]);
+        const tierName = racketlonRow && tierNumber ? "Tier " + tierNumber : value(row, ["Tier"]);
         if (p1) addTeamContribution(teamA, p1, sportName, tierName);
         if (p2) addTeamContribution(teamB, p2, sportName, tierName);
       }
