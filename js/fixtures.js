@@ -399,14 +399,16 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     $("fixtureCompletedCount").textContent=completed;
     $("fixturePendingCount").textContent=rows.length-completed;
 
+    // Hide the Points column in the Fixtures table only; keep its Sheet data intact.
+    const visibleColumnIndexes=headers.map((h,i)=>({h,i})).filter(x=>norm(x.h)!=="points").map(x=>x.i);
     $("fixturesHead").innerHTML=headers.length
-      ? `<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join("")}${roleCanEdit()?"<th>Action</th>":""}</tr>`
+      ? `<tr>${visibleColumnIndexes.map(i=>`<th>${esc(headers[i])}</th>`).join("")}${roleCanEdit()?"<th>Action</th>":""}</tr>`
       : "";
 
     $("fixturesBody").innerHTML=filtered.length
       ? filtered.map(x=>{
-          const cells=x.r.map((v,i)=>{
-            let out=String(v??"");
+          const cells=visibleColumnIndexes.map(i=>{
+            let out=String(x.r[i]??"");
             if(norm(headers[i])==="schedule")out=formatSchedule(out);
             // Render any single-cell result containing P1, P2, P3, P4 in that order as compact badges.
             const parts = out.split(/\s*\|\s*/).map(function(part){return part.trim();});
@@ -419,7 +421,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
           }).join("");
           return `<tr>${cells}${roleCanEdit()?`<td><button class="secondary edit-result" data-i="${x.i}">${done(x.r)?"Edit Result":"Enter Result"}</button></td>`:""}</tr>`;
         }).join("")
-      : `<tr><td colspan="${headers.length+(roleCanEdit()?1:0)||1}">No fixtures found.</td></tr>`;
+      : `<tr><td colspan="${visibleColumnIndexes.length+(roleCanEdit()?1:0)||1}">No fixtures found.</td></tr>`;
 
     $("fixtureMessage").textContent=`Showing ${filtered.length} of ${rows.length} fixture(s).`;
     document.querySelectorAll(".edit-result").forEach(b=>b.onclick=()=>openModal(Number(b.dataset.i)));
