@@ -429,7 +429,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     const r=rows[i], gi=gameIdx();
     const fixtureSport=val(r,["Sport"]);
     const isRacketlon=norm(fixtureSport)==="racketlon";
-    const gameLabels=isRacketlon?["Badminton","Table Tennis","Lawn Tennis","Pickle Ball"]:["Game 1","Game 2","Game 3"];
+    const gameLabels=isRacketlon?["Badminton","Table Tennis","Lawn Tennis","Pickle Ball"]:(norm(fixtureSport)==="lawn tennis"?["Game 1"]:["Game 1","Game 2","Game 3"]);
     const gameCount=gameLabels.length;
     const p1=val(r,["Player 1","Player1","Player 1 Name","Player1Name"])||"Player 1";
     const p2=val(r,["Player 2","Player2","Player 2 Name","Player2Name"])||"Player 2";
