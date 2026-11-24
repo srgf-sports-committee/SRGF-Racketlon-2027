@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let allRows=[];
   let selectedPlayer="";
   const playerButton=$("playerNameButton"), playerDropdown=$("playerNameDropdown"), playerSearch=$("playerNameSearch"), playerOptions=$("playerNameOptions");
-  const sportFilter=$("sportFilter"), skillFilterButton=$("skillFilterButton"), skillFilterDropdown=$("skillFilterDropdown"), skillFilterOptions=$("skillFilterOptions"), categoryFilter=$("categoryFilter"), captainNomineeFilter=$("captainNomineeFilter"), teamFilter=$("teamFilter"), priority1Filter=$("priority1Filter");
+  const sportFilter=$("sportFilter"), skillFilterButton=$("skillFilterButton"), skillFilterDropdown=$("skillFilterDropdown"), skillFilterOptions=$("skillFilterOptions"), categoryFilter=$("categoryFilter"), teamFilter=$("teamFilter"), priority1Filter=$("priority1Filter");
   const NO_TEAM_VALUE="__NO_TEAM__";
   const selectedSkills=new Set();
   const clean=v=>String(v??"").trim();
@@ -82,10 +82,10 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(previous===""||teamNames.includes(previous)||(hasBlank&&previous===NO_TEAM_VALUE))teamFilter.value=previous;
   }
   function applyFilters(){
-    const sport=sportFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), captainNominee=clean(captainNomineeFilter?.value), selectedTeam=teamFilter?.value||"", selectedPriority1=priority1Filter?.value||"";
+    const sport=sportFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), selectedTeam=teamFilter?.value||"", selectedPriority1=priority1Filter?.value||"";
     let shown=0;
     allRows.forEach(row=>{
-      const playerMatch=(!selectedPlayer||row.name===selectedPlayer) && (!captainNominee || (captainNominee==="yes" ? /\*\s*$/.test(row.name) : !/\*\s*$/.test(row.name)));
+      const playerMatch=!selectedPlayer||row.name===selectedPlayer;
       const skills=sport?[skillFor(row.player,sport)]:Object.keys(sportFields).map(key=>skillFor(row.player,key));
       const skillMatch=!selectedSkills.size||skills.some(value=>selectedSkills.has(clean(value)));
       const rowCategory=clean(row.player["Preferred Category"] ?? row.player.category ?? "").toLocaleLowerCase();
@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const teamId=p["Team ID"]||p.team||auction.find(a=>String(a["Player ID"]||a.playerId)===String(id))?.["Team ID"]||"";
       const values={badminton:skillFor(p,"badminton"),tt:skillFor(p,"tt"),tennis:skillFor(p,"tennis"),pickle:skillFor(p,"pickle")};
       const tr=document.createElement("tr");
-      tr.innerHTML='<td>'+esc(id)+'</td><td>'+esc(name)+'</td><td>'+esc(priority1For(p))+'</td><td>'+esc(p["Preferred Category"]||p.category||"")+'</td><td>'+esc(values.badminton)+'</td><td>'+esc(values.tt)+'</td><td>'+esc(values.tennis)+'</td><td>'+esc(values.pickle)+'</td><td>'+esc(teamName(teamId))+'</td>';
+      tr.innerHTML='<td>'+esc(id)+'</td><td>'+esc(name)+'</td><td>'+esc(p["Preferred Category"]||p.category||"")+'</td><td>'+esc(priority1For(p))+'</td><td>'+esc(values.badminton)+'</td><td>'+esc(values.tt)+'</td><td>'+esc(values.tennis)+'</td><td>'+esc(values.pickle)+'</td><td>'+esc(teamName(teamId))+'</td>';
       return {player:p,name,element:tr,values,team:clean(teamName(teamId))};
     });
     const body=$("playersBody");body.innerHTML="";allRows.forEach(row=>body.appendChild(row.element));
@@ -122,7 +122,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   categoryFilter?.addEventListener("change",applyFilters);
   teamFilter?.addEventListener("change",applyFilters);
   priority1Filter?.addEventListener("change",applyFilters);
-  captainNomineeFilter?.addEventListener("change",applyFilters);
   document.addEventListener("click",event=>{if(!$("playerNameCombo")?.contains(event.target))closePlayerDropdown();});
   document.addEventListener("keydown",event=>{if(event.key==="Escape"){closePlayerDropdown();closeSkillFilter();}});
   try{
