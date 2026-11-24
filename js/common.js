@@ -11,8 +11,7 @@
   const CACHE_KEY = "SRGF_RACKETLON_2027_LATEST_GOOD_DATA_V4";
   const LEGACY_CACHE_KEYS = ["SRGF_RACKETLON_2027_LATEST_GOOD_DATA_V3"];
   const RETRY_MS = 15000;
-  const PAGE_REFRESH_MS = 60000;
-
+  
   function removeFreshness(){
     document.querySelectorAll("#dataFreshness,.data-freshness").forEach(el=>el.remove());
   }
@@ -219,7 +218,6 @@
 
   document.addEventListener("DOMContentLoaded",()=>{
     removeFreshness();
-    startPageAutoRefresh();
     const brand=document.querySelector(".brand-wrap");
     if(brand){
       brand.style.cursor="pointer";
@@ -230,28 +228,10 @@
     }
   });
 
-  function startPageAutoRefresh(){
-    const path=String(location.pathname||"").toLowerCase();
-
-    // Auto-refresh ONLY these three public pages.
-    const allowed =
-      /(?:^|\/)players\.html$/.test(path) ||
-      /(?:^|\/)results\.html$/.test(path) ||
-      /(?:^|\/)teams\.html$/.test(path) ||
-      /(?:^|\/)registration-dashboard\.html$/.test(path);
-
-    if(!allowed)return;
-
-    setInterval(()=>{
-      // Do not interrupt an active edit/modal interaction.
-      if(document.querySelector(".modal:not(.hidden), input:focus, textarea:focus, select:focus"))return;
-      location.reload();
-    },PAGE_REFRESH_MS);
-  }
 
   window.SRGF={
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
     loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,
-    setStatus,removeFreshness,nav,startPageAutoRefresh
+    setStatus,removeFreshness,nav
   };
 })();
