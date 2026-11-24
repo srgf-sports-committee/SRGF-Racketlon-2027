@@ -60,6 +60,28 @@
     }catch(_){return false;}
   }
 
+  // Write a confirmed Google Sheets change through to the shared browser cache.
+  // Advance updatedAt so a stale in-flight/live snapshot cannot roll this row back.
+  function updateBrowserCacheDataset(name,rowIndex,headers,row){
+    try{
+      const cached=readBrowserData();
+      if(!cached || !cached.data || typeof cached.data!=="object")return false;
+      const list=cached.data[name];
+      if(!Array.isArray(list))return false;
+      const updated={};
+      (headers||[]).forEach((header,i)=>{updated[header]=row?.[i]??"";});
+      const existing=list[rowIndex];
+      list[rowIndex]=Array.isArray(existing)
+        ? (headers||[]).map((_,i)=>row?.[i]??"")
+        : {...(existing&&typeof existing==="object"?existing:{}),...updated};
+      const now=new Date().toISOString();
+      cached.savedAt=now;
+      cached.updatedAt=now;
+      localStorage.setItem(CACHE_KEY,JSON.stringify(cached));
+      return true;
+    }catch(_){return false;}
+  }
+
   async function fetchTimeout(url,opts={},ms=15000){
     const ctrl=new AbortController();
     const timer=setTimeout(()=>ctrl.abort(),ms);
@@ -231,7 +253,7 @@
 
   window.SRGF={
     C,$,esc,money,norm,sleep,fetchTimeout,jsonFile,live,
-    loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,
+    loadJsonDataset,loadLiveFirstDataset,loadLiveFirstAll,loadDataset,updateBrowserCacheDataset,
     setStatus,removeFreshness,nav
   };
 })();
