@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let allRows=[];
   let selectedPlayer="";
   const playerButton=$("playerNameButton"), playerDropdown=$("playerNameDropdown"), playerSearch=$("playerNameSearch"), playerOptions=$("playerNameOptions");
-  const sportFilter=$("sportFilter"), skillFilterButton=$("skillFilterButton"), skillFilterDropdown=$("skillFilterDropdown"), skillFilterOptions=$("skillFilterOptions"), categoryFilter=$("categoryFilter"), captainNomineeFilter=$("captainNomineeFilter"), teamFilter=$("teamFilter");
+  const sportFilter=$("sportFilter"), skillFilterButton=$("skillFilterButton"), skillFilterDropdown=$("skillFilterDropdown"), skillFilterOptions=$("skillFilterOptions"), categoryFilter=$("categoryFilter"), captainNomineeFilter=$("captainNomineeFilter"), teamFilter=$("teamFilter"), priority1Filter=$("priority1Filter");
   const NO_TEAM_VALUE="__NO_TEAM__";
   const selectedSkills=new Set();
   const clean=v=>String(v??"").trim();
@@ -65,6 +65,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     categoryFilter.innerHTML='<option value="">All Categories</option>'+categories.map(category=>'<option value="'+esc(category)+'">'+esc(category)+'</option>').join("");
     if(categories.includes(previous))categoryFilter.value=previous;
   }
+  function buildPriority1Options(){
+    const previous=priority1Filter.value;
+    const values=[...new Set(allRows.map(row=>priority1For(row.player)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const hasBlank=allRows.some(row=>!priority1For(row.player));
+    priority1Filter.innerHTML='<option value="">All Priority 1</option>'+values.map(value=>'<option value="'+esc(value)+'">'+esc(value)+'</option>').join("")+(hasBlank?'<option value="__NO_PRIORITY1__">(Blank)</option>':"");
+    if(previous===""||values.includes(previous)||(hasBlank&&previous==="__NO_PRIORITY1__"))priority1Filter.value=previous;
+  }
   function buildTeamOptions(){
     const previous=teamFilter.value;
     const teamNames=[...new Set(allRows.map(row=>row.team).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
@@ -75,7 +82,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(previous===""||teamNames.includes(previous)||(hasBlank&&previous===NO_TEAM_VALUE))teamFilter.value=previous;
   }
   function applyFilters(){
-    const sport=sportFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), captainNominee=clean(captainNomineeFilter?.value), selectedTeam=teamFilter?.value||"";
+    const sport=sportFilter.value, category=clean(categoryFilter.value).toLocaleLowerCase(), captainNominee=clean(captainNomineeFilter?.value), selectedTeam=teamFilter?.value||"", selectedPriority1=priority1Filter?.value||"";
     let shown=0;
     allRows.forEach(row=>{
       const playerMatch=(!selectedPlayer||row.name===selectedPlayer) && (!captainNominee || (captainNominee==="yes" ? /\*\s*$/.test(row.name) : !/\*\s*$/.test(row.name)));
@@ -84,7 +91,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const rowCategory=clean(row.player["Preferred Category"] ?? row.player.category ?? "").toLocaleLowerCase();
       const categoryMatch=!category||rowCategory===category;
       const teamMatch=!selectedTeam||(selectedTeam===NO_TEAM_VALUE?!row.team:row.team===selectedTeam);
-      const show=playerMatch&&skillMatch&&categoryMatch&&teamMatch; row.element.hidden=!show; if(show)shown++;
+      const rowPriority1=priority1For(row.player);
+      const priority1Match=!selectedPriority1||(selectedPriority1==="__NO_PRIORITY1__"?!rowPriority1:rowPriority1===selectedPriority1);
+      const show=playerMatch&&skillMatch&&categoryMatch&&teamMatch&&priority1Match; row.element.hidden=!show; if(show)shown++;
     });
     $("playersResultCount").textContent=shown+" of "+allRows.length+" players";
     const noResults=$("playersNoResults");
@@ -103,7 +112,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       return {player:p,name,element:tr,values,team:clean(teamName(teamId))};
     });
     const body=$("playersBody");body.innerHTML="";allRows.forEach(row=>body.appendChild(row.element));
-    buildPlayerOptions();buildSkillOptions();buildCategoryOptions();buildTeamOptions();applyFilters();
+    buildPlayerOptions();buildSkillOptions();buildCategoryOptions();buildTeamOptions();buildPriority1Options();applyFilters();
   }
   playerButton?.addEventListener("click",()=>playerDropdown.classList.contains("hidden")?openPlayerDropdown():closePlayerDropdown());
   playerSearch?.addEventListener("input",filterPlayerOptions);
@@ -112,6 +121,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   document.addEventListener("click",event=>{if(!skillFilterButton?.parentElement?.contains(event.target))closeSkillFilter();});
   categoryFilter?.addEventListener("change",applyFilters);
   teamFilter?.addEventListener("change",applyFilters);
+  priority1Filter?.addEventListener("change",applyFilters);
   captainNomineeFilter?.addEventListener("change",applyFilters);
   document.addEventListener("click",event=>{if(!$("playerNameCombo")?.contains(event.target))closePlayerDropdown();});
   document.addEventListener("keydown",event=>{if(event.key==="Escape"){closePlayerDropdown();closeSkillFilter();}});
