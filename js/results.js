@@ -460,7 +460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return a.name.localeCompare(b.name);
       });
 
-      [6, 4, 2, 1].forEach((points, index) => {
+      [4, 3, 2, 1].forEach((points, index) => {
         const team = teams[index];
         if (team) {
           ensure(team.name).score += points;
@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         individualTierIssues.push(`${group.sport} ${group.tier}: no Individual player results available`);
         return;
       }
-      [6, 4, 2, 1].forEach((points, index) => {
+      [4, 3, 2, 1].forEach((points, index) => {
         const player = rankedPlayers[index];
         if (player?.team) {
           ensure(player.team).score += points;
