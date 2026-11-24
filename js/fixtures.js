@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   let pendingResults={};
   const roleCanEdit=()=>SRGFAuth.canEditFixtures();
   const roleCanClearResults=()=>SRGFAuth.role()==="ADMIN";
-  function syncClearResultsButton(){const bar=$("clearResultsAdminBar");if(bar)bar.style.display=roleCanClearResults()?"block":"none";}
+  function syncClearResultsButton(){const bar=$("clearResultsAdminBar");if(bar)bar.style.display=roleCanClearResults()?"flex":"none";}
 
   function loadPending(){
     try{pendingResults=JSON.parse(localStorage.getItem(PENDING_KEY)||"{}")||{};}catch(_){pendingResults={};}
