@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-23T14:06:36.813Z",
-  "sourceUpdatedAt": "2026-11-23T14:06:36.813Z",
-  "syncedAt": "2026-11-24T04:03:20.913616Z",
+  "updatedAt": "2026-11-24T11:20:34.799Z",
+  "sourceUpdatedAt": "2026-11-24T11:20:34.799Z",
+  "syncedAt": "2026-11-24T14:46:49.158173Z",
   "rows": [
     {
       "Auction ID": "LOCAL-1794051334114",
@@ -18,7 +18,7 @@
       "Player ID": "P002",
       "Player Name": "Ranvijay Singh (32)   ➤ C",
       "Team ID": "T2",
-      "Team Name": "SRGF Racket Rebels",
+      "Team Name": "SRGF Phoenix",
       "Amount": "10000000",
       "Timestamp": "2026-11-07T11:36:00.872Z",
       "Notes": ""
@@ -28,7 +28,7 @@
       "Player ID": "P006",
       "Player Name": "Abhinav Tonk (40)   ➤ C",
       "Team ID": "T3",
-      "Team Name": "SRGF Quad-Court Kings",
+      "Team Name": "SRGF Vikings",
       "Amount": "10000000",
       "Timestamp": "2026-11-07T11:36:21.837Z",
       "Notes": ""
@@ -38,7 +38,7 @@
       "Player ID": "P012",
       "Player Name": "Sudhir Kumar (51)   ➤ C",
       "Team ID": "T4",
-      "Team Name": "SRGF Four-Paddle Prodigies",
+      "Team Name": "SRGF QuadraForce",
       "Amount": "10000000",
       "Timestamp": "2026-11-07T11:36:35.839Z",
       "Notes": ""
@@ -48,7 +48,7 @@
       "Player ID": "P007",
       "Player Name": "Chandra Bhushan (32)   ➤ VC",
       "Team ID": "T3",
-      "Team Name": "SRGF Quad-Court Kings",
+      "Team Name": "SRGF Vikings",
       "Amount": "100000000",
       "Timestamp": "2026-11-07T11:40:01.048Z",
       "Notes": ""
@@ -58,7 +58,7 @@
       "Player ID": "P009",
       "Player Name": "Kumar Pratik (34)   ➤ VC",
       "Team ID": "T4",
-      "Team Name": "SRGF Four-Paddle Prodigies",
+      "Team Name": "SRGF QuadraForce",
       "Amount": "92000000",
       "Timestamp": "2026-11-07T11:43:09.708Z",
       "Notes": ""
@@ -78,7 +78,7 @@
       "Player ID": "P017",
       "Player Name": "Anshul bhardwaj (41)   ➤ VC",
       "Team ID": "T2",
-      "Team Name": "SRGF Racket Rebels",
+      "Team Name": "SRGF Phoenix",
       "Amount": "10000000",
       "Timestamp": "2026-11-07T11:49:42.932Z",
       "Notes": ""
