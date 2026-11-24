@@ -578,12 +578,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       alert("There are no pending fixture results to push. All locally saved fixture edits are already synced.");
       return;
     }
-    const answer=prompt("This will push "+entries.length+" pending fixture result(s) to the FIXTURES sheet.\n\nTo continue, type YES in capital letters.");
-    if(answer===null)return;
-    if(answer!=="YES"){
-      alert("Confirmation did not match. No results were pushed. Enter exactly YES in capital letters.");
-      return;
-    }
     const button=$("updateAllResultsBtn");
     if(button){button.disabled=true;button.textContent="Updating…";}
     let saved=0,failed=[];
