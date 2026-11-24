@@ -29,6 +29,7 @@
       </div>
     </div>
   </div>
+  <div><label class="field" for="priority1Filter">Priority 1</label><select id="priority1Filter"><option value="">All Priority 1</option></select></div>
   <div><label class="field" for="captainNomineeFilter">Captain Nominee</label><select id="captainNomineeFilter"><option value="">All Players</option><option value="yes">Yes</option><option value="no">No</option></select></div>
   <div><label class="field" for="categoryFilter">Category</label><select id="categoryFilter"><option value="">All Categories</option></select></div>
   <div><label class="field" for="sportFilter">Sport</label><select id="sportFilter"><option value="">All Sports</option><option value="badminton">Badminton</option><option value="tt">Table Tennis</option><option value="tennis">Lawn Tennis</option><option value="pickle">Pickle Ball</option></select></div>
@@ -46,7 +47,7 @@
 <tbody id="playersBody"></tbody></table></div>
 </div>
 <style>
-.players-filters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
+.players-filters{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;align-items:end;margin-bottom:12px}
 .players-filters>div{min-width:0}.players-result-count{color:var(--muted);font-size:12px;margin:0 0 8px}
 .skill-filter-wrap{position:relative}
 .skill-filter-button{display:block;width:100%;box-sizing:border-box;min-height:38px;margin:0;padding:10px 30px 10px 10px;text-align:left;font-family:inherit;font-size:14px;font-weight:normal;line-height:normal;color:var(--text);background:rgba(7,31,42,.76);border:1px solid rgba(126,220,219,.25);border-radius:7px;outline:none;cursor:pointer;position:relative}
@@ -68,6 +69,6 @@
 <script src="js/common.js?v=20261124-no-auto-refresh"></script>
 <script src="js/auth.js?v=20261012-whatsapp3"></script>
 <script src="js/login-gate.js?v=20261012-2"></script>
-<script src="js/players.js?v=20261124-priority1-column"></script>
+<script src="js/players.js?v=20261124-priority1-filter"></script>
 </body>
 </html>
