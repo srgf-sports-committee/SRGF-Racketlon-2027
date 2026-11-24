@@ -362,75 +362,79 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const ranked = Object.values(racketlonTierTeamPoints[tier] || {})
-        .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
-      if (!ranked.length) {
+      const teams = Object.values(racketlonTierTeamPoints[tier] || {});
+      if (!teams.length) {
         racketlonTierIssues.push(`Tier ${tier}: no Racketlon player scores available`);
         return;
       }
-      let winningTeam = ranked[0];
-      if (ranked.length > 1 && ranked[0].points === ranked[1].points) {
-        const tiedTeams = ranked.filter(team => team.points === ranked[0].points);
-        const players = Object.values(racketlonTierPlayerPoints[tier] || {});
-        const headToHeadPoints = new Map();
-        const playersByTotal = new Map();
 
-        // Use the same Total Points -> Head-to-head ranking as the Racketlon
-        // Player Scores table. The top-ranked player among the tied teams
-        // determines which team receives this tier's points.
-        players.forEach(player => {
-          const scoreKey = String(player.points);
-          if (!playersByTotal.has(scoreKey)) playersByTotal.set(scoreKey, []);
-          playersByTotal.get(scoreKey).push(player);
-        });
+      const players = Object.values(racketlonTierPlayerPoints[tier] || {});
+      const headToHeadPoints = new Map();
+      const playersByTotal = new Map();
 
-        playersByTotal.forEach(tiedPlayers => {
-          if (tiedPlayers.length < 2) return;
-          const tiedPlayerKeys = new Set(tiedPlayers.map(player => norm(player.name)));
-          tiedPlayerKeys.forEach(key => headToHeadPoints.set(key, 0));
+      // Match the existing Racketlon Player Scores tie-break: Total Points,
+      // then head-to-head points within each equal-Total-Points group.
+      players.forEach(player => {
+        const scoreKey = String(player.points);
+        if (!playersByTotal.has(scoreKey)) playersByTotal.set(scoreKey, []);
+        playersByTotal.get(scoreKey).push(player);
+      });
 
-          fixtureRows.forEach(row => {
-            if (!isRacketlon(value(row, ["Sport"]))) return;
-            if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier)) return;
-            const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
-            const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
-            const key1 = norm(p1);
-            const key2 = norm(p2);
-            if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
+      playersByTotal.forEach(tiedPlayers => {
+        if (tiedPlayers.length < 2) return;
+        const tiedPlayerKeys = new Set(tiedPlayers.map(player => norm(player.name)));
+        tiedPlayerKeys.forEach(key => headToHeadPoints.set(key, 0));
 
-            fixtureHeaders.forEach((header, index) => {
-              if (!/^(?:game|set)\d+/.test(norm(header))) return;
-              const parsed = parseScore(row[index]);
-              if (!parsed) return;
-              headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
-              headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
-            });
+        fixtureRows.forEach(row => {
+          if (!isRacketlon(value(row, ["Sport"]))) return;
+          if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier)) return;
+          const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
+          const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
+          const key1 = norm(p1);
+          const key2 = norm(p2);
+          if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
+
+          fixtureHeaders.forEach((header, index) => {
+            if (!/^(?:game|set)\\d+/.test(norm(header))) return;
+            const parsed = parseScore(row[index]);
+            if (!parsed) return;
+            headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
+            headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
           });
         });
+      });
 
-        const playerRank = (a, b) =>
-          b.points - a.points ||
-          (headToHeadPoints.get(norm(b.name)) || 0) - (headToHeadPoints.get(norm(a.name)) || 0) ||
-          a.name.localeCompare(b.name);
+      const playerRank = (a, b) =>
+        b.points - a.points ||
+        (headToHeadPoints.get(norm(b.name)) || 0) - (headToHeadPoints.get(norm(a.name)) || 0) ||
+        a.name.localeCompare(b.name);
 
-        const tiedTeamKeys = new Set(tiedTeams.map(team => teamKey(team.name)));
-        const topPlayer = players
-          .filter(player => player.team && tiedTeamKeys.has(teamKey(player.team)))
+      // Each team is represented by its highest-ranked Racketlon player.
+      // This applies the same head-to-head ranking when team game-score
+      // totals are tied, while still ranking every team in the tier.
+      const teamLeader = new Map();
+      teams.forEach(team => {
+        const leader = players
+          .filter(player => player.team && teamKey(player.team) === teamKey(team.name))
           .sort(playerRank)[0];
+        if (leader) teamLeader.set(teamKey(team.name), leader);
+      });
 
-        if (!topPlayer) {
-          racketlonTierIssues.push(`Tier ${tier}: teams tied on ${ranked[0].points} Player Score points; individual player tie-break data unavailable`);
-          return;
-        }
-        winningTeam = tiedTeams.find(team => teamKey(team.name) === teamKey(topPlayer.team));
-        if (!winningTeam) {
-          racketlonTierIssues.push(`Tier ${tier}: unable to match the top Player Score result to a team`);
-          return;
-        }
-      }
+      teams.sort((a, b) => {
+        const scoreDifference = b.points - a.points;
+        if (scoreDifference) return scoreDifference;
+        const leaderA = teamLeader.get(teamKey(a.name));
+        const leaderB = teamLeader.get(teamKey(b.name));
+        if (leaderA && leaderB) return playerRank(leaderA, leaderB);
+        if (leaderA) return -1;
+        if (leaderB) return 1;
+        return a.name.localeCompare(b.name);
+      });
 
-      const points = Number(tier) <= 3 ? 6 : Number(tier) <= 6 ? 4 : 2;
-      ensure(winningTeam.name).score += points;
+      [6, 4, 2, 1].forEach((points, index) => {
+        const team = teams[index];
+        if (team) ensure(team.name).score += points;
+      });
     });
 
     Object.entries(individualTierFixtureCounts).forEach(([groupKey, group]) => {
