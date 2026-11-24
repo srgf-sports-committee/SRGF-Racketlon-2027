@@ -479,9 +479,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const display=found?String(found.name||found.id||v).trim():String(v).trim();
       if(display&&!fixtureTeams.some(x=>norm(x)===norm(display)))fixtureTeams.push(display);
     });
-    if(currentWinner&&!fixtureTeams.some(x=>norm(x)===norm(currentWinner))){
+    if(currentWinner){
+      // Resolve a stored Team ID to its display name before checking for duplicates.
+      // Otherwise the same team can appear twice when the fixture stores IDs but
+      // the dropdown displays names.
       const found=teamMap.find(tm=>norm(tm?.id)===norm(currentWinner)||norm(tm?.name)===norm(currentWinner));
-      fixtureTeams.push(found?String(found.name||found.id||currentWinner).trim():currentWinner);
+      const winnerDisplay=found?String(found.name||found.id||currentWinner).trim():currentWinner;
+      if(winnerDisplay&&!fixtureTeams.some(x=>norm(x)===norm(winnerDisplay))){
+        fixtureTeams.push(winnerDisplay);
+      }
     }
 
     const games=modal.querySelector(".games");
