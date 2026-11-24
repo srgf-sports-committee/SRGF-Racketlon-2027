@@ -20,12 +20,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     Object.keys(pendingResults).forEach(key=>{
       const p=pendingResults[key], i=Number(key);
       if(!Number.isInteger(i)||!rows[i]||!p)return;
-      if(p.clearResult){
-        gameIdx().forEach(gi=>{if(gi!==undefined)rows[i][gi]="";});
-        const wi=findHeaderIndex([/^winningteam/]);
-        if(wi>=0)rows[i][wi]="";
-        return;
-      }
       if(p.winningTeam!==undefined&&p.winningTeam!==""){
         const wi=findHeaderIndex([/^winningteam/]);
         if(wi>=0)rows[i][wi]=p.winningTeam;
@@ -526,13 +520,12 @@ document.addEventListener("DOMContentLoaded", async ()=>{
       const scores=[];
       for(let g=1;g<=gameCount;g++){const av=modal.querySelector('.g1[data-g="'+g+'"]').value.trim(),bv=modal.querySelector('.g2[data-g="'+g+'"]').value.trim();if((av==="")!==(bv==="")){alert("Enter both scores for "+gameLabels[g-1]+", or leave both blank to keep the existing result.");return;}if(av!==""&&bv!=="")scores.push({game:g,player1:Number(av),player2:Number(bv)});}
       const winner=modal.querySelector("#fixtureWinningTeam")?.value.trim()||"";
-      const clearResult=!winner&&!scores.length;
-      // A completely blank result is an intentional clear and must be sent to Google Sheets.
+      if(!winner&&!scores.length){alert("Enter at least one field to update.");return;}
       // Show the result immediately. Do not wait for Google Sheets.
       // Keep it as a local pending change until Apps Script confirms the write.
       saveBtn.disabled=true;
       saveBtn.textContent="Saving...";
-      pendingResults[String(i)]={scores,winningTeam:winner,clearResult,savedAt:Date.now()};
+      pendingResults[String(i)]={scores,winningTeam:winner,savedAt:Date.now()};
       savePending();
       applyPending();
       render();
