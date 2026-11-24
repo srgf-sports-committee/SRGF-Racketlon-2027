@@ -866,7 +866,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const row = event.target.closest("tr[data-player-key]");
       if (!row) return;
       selectedPlayerKey = row.dataset.playerKey || "";
-      render();
+      // Update selection styling without rebuilding the table. Rebuilding on
+      // the first click removes the row before the browser can emit dblclick.
+      $("playerScoresBody")?.querySelectorAll("tr[data-player-key]").forEach(item => {
+        item.classList.toggle("player-score-selected-row", item === row);
+      });
     });
     $("playerScoresBody")?.addEventListener("dblclick", event => {
       const row = event.target.closest("tr[data-player-key]");
