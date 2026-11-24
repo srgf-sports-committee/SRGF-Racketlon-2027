@@ -217,6 +217,25 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     if(selected) select.value=selected.value;
   }
 
+  function refreshTeamLegend(){
+    const legend=$("fixtureTeamLegend");
+    if(!legend)return;
+    const teams=Array.isArray(window.__SRGF_TEAMS)?window.__SRGF_TEAMS:[];
+    const entries=teams.map(t=>({
+      id:String(t?.id??"").trim(),
+      name:String(t?.name??"").trim()
+    })).filter(t=>t.id&&t.name&&norm(t.id)!==norm(t.name));
+    const seen=new Set();
+    const unique=entries.filter(t=>{
+      const key=norm(t.id);
+      if(seen.has(key))return false;
+      seen.add(key);
+      return true;
+    }).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true,sensitivity:"base"}));
+    legend.textContent=unique.map(t=>t.id+" = "+t.name).join("  ·  ");
+    legend.style.display=unique.length?"block":"none";
+  }
+
   function refreshSportFilter(){
     const select=$("fixtureSportFilter");
     if(!select)return;
@@ -376,6 +395,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   }
 
   function render(){
+    refreshTeamLegend();
     refreshTeamFilter();
     refreshSportFilter();
     refreshTierFilter();
