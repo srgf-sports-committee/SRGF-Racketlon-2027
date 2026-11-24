@@ -862,11 +862,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function bindTabs() {
     $("playerScoresTableViewBtn")?.addEventListener("click", () => { playerScoresView = "table"; render(); });
-    $("playerScoresTreeViewBtn")?.addEventListener("click", () => { playerScoresView = "tree"; render(); });
     $("playerScoresBody")?.addEventListener("click", event => {
       const row = event.target.closest("tr[data-player-key]");
       if (!row) return;
       selectedPlayerKey = row.dataset.playerKey || "";
+      render();
+    });
+    $("playerScoresBody")?.addEventListener("dblclick", event => {
+      const row = event.target.closest("tr[data-player-key]");
+      if (!row) return;
+      selectedPlayerKey = row.dataset.playerKey || "";
+      playerScoresView = "tree";
       render();
     });
     $("playerScoresBody")?.addEventListener("keydown", event => {
