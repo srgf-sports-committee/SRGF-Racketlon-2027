@@ -224,11 +224,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const individualTierCompletedCounts = {};
     const individualTierPlayerStats = {};
     const teamContributions = {};
-    const addTeamContribution = (team, fixture, sport, tier, points) => {
-      if (!team) return;
+    const addTeamContribution = (team, player, sport, tier, points) => {
+      if (!team || !player) return;
       const key = teamKey(team);
       const rows = teamContributions[key] ||= [];
-      rows.push({ fixture: fixture || "Fixture", sport, tier, points: points ?? "" });
+      rows.push({ player, sport, tier, points });
     };
     const ensure = name => {
       const clean = resolveTeamName(name);
@@ -256,10 +256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const winningTeam = ensure(winner);
           if (winningTeam) {
             winningTeam.score += fixturePoints;
-            const fixtureName = value(row, ["Match", "Fixture"]) ||
-              [value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]), value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"])].filter(Boolean).join(" vs ") ||
-              "Fixture";
-            addTeamContribution(winningTeam.name, fixtureName, value(row, ["Sport"]), value(row, ["Tier"]), rawPoints);
+
           }
         }
       }
@@ -293,6 +290,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
       const teamA = resolveTeamName(playerTeam(p1) || a);
       const teamB = resolveTeamName(playerTeam(p2) || b);
+
+      // Show each player's match outcome in the selected team's drill-down.
+      // A player on the winning team receives 6; a player on the losing team receives 0.
+      if (winnerKey) {
+        const sportName = value(row, ["Sport"]);
+        const tierName = value(row, ["Tier"]);
+        if (p1 && teamA) addTeamContribution(teamA, p1, sportName, tierName, teamKey(teamA) === winnerKey ? 6 : 0);
+        if (p2 && teamB) addTeamContribution(teamB, p2, sportName, tierName, teamKey(teamB) === winnerKey ? 6 : 0);
+      }
 
 
       if (!racketlonRow && (p1 || p2) && value(row, ["Sport"]) && value(row, ["Tier"])) {
@@ -402,7 +408,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const contributions = teamContributions[selectedTeamKey] || [];
       tree.classList.toggle("hidden", teamPointsView !== "tree");
       tree.innerHTML = teamPointsView === "tree" && selectedTeam
-        ? `<h3>${esc(selectedTeam.name)} — Points Contribution</h3><div class="table-wrap"><table><thead><tr><th>Fixture / Match</th><th>Sport</th><th>Tier</th><th>Points</th></tr></thead><tbody>${contributions.length ? contributions.map(x => `<tr><td>${esc(x.fixture)}</td><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${esc(x.points)}</td></tr>`).join("") : '<tr><td colspan="4">No fixture points recorded for this team.</td></tr>'}</tbody></table></div>`
+        ? `<h3>${esc(selectedTeam.name)} — Player Match Points</h3><div class="table-wrap"><table><thead><tr><th>Player Name</th><th>Sport</th><th>Tier</th><th>Points</th></tr></thead><tbody>${contributions.length ? contributions.map(x => `<tr><td>${esc(x.player)}</td><td>${esc(x.sport)}</td><td>${esc(x.tier)}</td><td>${x.points}</td></tr>`).join("") : '<tr><td colspan="4">No player match results available for this team.</td></tr>'}</tbody></table></div>`
         : "";
     }
     if (viewBtn) viewBtn.classList.toggle("hidden", teamPointsView !== "tree");
