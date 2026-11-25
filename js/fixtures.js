@@ -421,8 +421,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     $("fixtureCompletedCount").textContent=completed;
     $("fixturePendingCount").textContent=rows.length-completed;
 
-    // Hide the Points column in the Fixtures table only; keep its Sheet data intact.
-    const visibleColumnIndexes=headers.map((h,i)=>({h,i})).filter(x=>norm(x.h)!=="points").map(x=>x.i);
+    // Show every fixture sheet column, including Points.
+    const visibleColumnIndexes=headers.map((h,i)=>i);
     $("fixturesHead").innerHTML=headers.length
       ? `<tr>${visibleColumnIndexes.map(i=>`<th>${esc(headers[i])}</th>`).join("")}${roleCanEdit()?"<th>Action</th>":""}</tr>`
       : "";
