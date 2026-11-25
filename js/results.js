@@ -291,13 +291,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const teamA = resolveTeamName(playerTeam(p1) || a);
       const teamB = resolveTeamName(playerTeam(p2) || b);
 
-      // Show each player's match outcome in the selected team's drill-down.
-      // A player on the winning team receives 6; a player on the losing team receives 0.
+      // Record the fixture's Points value for every named player on each team.
+      // Players receive the full fixture Points value when their team wins, otherwise 0.
       if (winnerKey) {
         const sportName = value(row, ["Sport"]);
         const tierName = value(row, ["Tier"]);
-        if (p1 && teamA) addTeamContribution(teamA, p1, sportName, tierName, teamKey(teamA) === winnerKey ? 6 : 0);
-        if (p2 && teamB) addTeamContribution(teamB, p2, sportName, tierName, teamKey(teamB) === winnerKey ? 6 : 0);
+        const fixturePoints = number(value(row, ["Points"]));
+        if (p1 && teamA) addTeamContribution(teamA, p1, sportName, tierName, teamKey(teamA) === winnerKey ? fixturePoints : 0);
+        if (p2 && teamB) addTeamContribution(teamB, p2, sportName, tierName, teamKey(teamB) === winnerKey ? fixturePoints : 0);
       }
 
 
