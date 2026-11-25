@@ -257,6 +257,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (winnerKey) {
         if (a && teamKey(a) === winnerKey) ensure(a).wins++;
         else if (b && teamKey(b) === winnerKey) ensure(b).wins++;
+
+        // Team-wise Points are the sum of the Points column in Fixtures.
+        const fixturePoints = number(value(row, ["Points"]));
+        if (fixturePoints) {
+          const winningTeam = ensure(winner);
+          if (winningTeam) {
+            winningTeam.score += fixturePoints;
+            addTeamContribution(winningTeam.name, "Match points", value(row, ["Sport"]), value(row, ["Tier"]), fixturePoints);
+          }
+        }
       }
 
       if (isRacketlon(value(row, ["Sport"]))) {
@@ -382,119 +392,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    const racketlonTierIssues = [];
-    const individualTierIssues = [];
-    Object.entries(racketlonTierFixtureCounts).forEach(([tier, fixtureCount]) => {
-      const completedCount = racketlonTierCompletedCounts[tier] || 0;
-      if (completedCount < fixtureCount) {
-        racketlonTierIssues.push(`Tier ${tier}: ${completedCount}/${fixtureCount} fixtures have a winning team`);
-        return;
-      }
-
-      const teams = Object.values(racketlonTierTeamPoints[tier] || {});
-      if (!teams.length) {
-        racketlonTierIssues.push(`Tier ${tier}: no Racketlon player scores available`);
-        return;
-      }
-
-      const players = Object.values(racketlonTierPlayerPoints[tier] || {});
-      const headToHeadPoints = new Map();
-      const playersByTotal = new Map();
-
-      // Match the existing Racketlon Player Scores tie-break: Total Points,
-      // then head-to-head points within each equal-Total-Points group.
-      players.forEach(player => {
-        const scoreKey = String(player.points);
-        if (!playersByTotal.has(scoreKey)) playersByTotal.set(scoreKey, []);
-        playersByTotal.get(scoreKey).push(player);
-      });
-
-      playersByTotal.forEach(tiedPlayers => {
-        if (tiedPlayers.length < 2) return;
-        const tiedPlayerKeys = new Set(tiedPlayers.map(player => norm(player.name)));
-        tiedPlayerKeys.forEach(key => headToHeadPoints.set(key, 0));
-
-        fixtureRows.forEach(row => {
-          if (!isRacketlon(value(row, ["Sport"]))) return;
-          if (norm(value(row, ["Tier"])) !== norm(tiedPlayers[0]?.tier)) return;
-          const p1 = value(row, ["Player 1", "Player1", "Player 1 Name", "Player1Name"]);
-          const p2 = value(row, ["Player 2", "Player2", "Player 2 Name", "Player2Name"]);
-          const key1 = norm(p1);
-          const key2 = norm(p2);
-          if (!p1 || !p2 || !tiedPlayerKeys.has(key1) || !tiedPlayerKeys.has(key2) || key1 === key2) return;
-
-          fixtureHeaders.forEach((header, index) => {
-            if (!/^(?:game|set)\\d+/.test(norm(header))) return;
-            const parsed = parseScore(row[index]);
-            if (!parsed) return;
-            headToHeadPoints.set(key1, (headToHeadPoints.get(key1) || 0) + parsed[0]);
-            headToHeadPoints.set(key2, (headToHeadPoints.get(key2) || 0) + parsed[1]);
-          });
-        });
-      });
-
-      const playerRank = (a, b) =>
-        b.points - a.points ||
-        (headToHeadPoints.get(norm(b.name)) || 0) - (headToHeadPoints.get(norm(a.name)) || 0) ||
-        a.name.localeCompare(b.name);
-
-      // Each team is represented by its highest-ranked Racketlon player.
-      // This applies the same head-to-head ranking when team game-score
-      // totals are tied, while still ranking every team in the tier.
-      const teamLeader = new Map();
-      teams.forEach(team => {
-        const leader = players
-          .filter(player => player.team && teamKey(player.team) === teamKey(team.name))
-          .sort(playerRank)[0];
-        if (leader) teamLeader.set(teamKey(team.name), leader);
-      });
-
-      teams.sort((a, b) => {
-        const scoreDifference = b.points - a.points;
-        if (scoreDifference) return scoreDifference;
-        const leaderA = teamLeader.get(teamKey(a.name));
-        const leaderB = teamLeader.get(teamKey(b.name));
-        if (leaderA && leaderB) return playerRank(leaderA, leaderB);
-        if (leaderA) return -1;
-        if (leaderB) return 1;
-        return a.name.localeCompare(b.name);
-      });
-
-      [4, 3, 2, 1].forEach((points, index) => {
-        const team = teams[index];
-        if (team) {
-          ensure(team.name).score += points;
-          const leader = teamLeader.get(teamKey(team.name));
-          if (leader) addTeamContribution(team.name, leader.name, "Racketlon", "Tier " + tier, points);
-        }
-      });
-    });
-
-    Object.entries(individualTierFixtureCounts).forEach(([groupKey, group]) => {
-      const completed = individualTierCompletedCounts[groupKey] || 0;
-      if (completed < group.count) {
-        individualTierIssues.push(`${group.sport} ${group.tier}: ${completed}/${group.count} fixtures have a winning team`);
-        return;
-      }
-      const rankedPlayers = Object.values(individualTierPlayerStats[groupKey] || {}).sort((a, b) =>
-        b.wins - a.wins ||
-        (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
-        b.pd - a.pd ||
-        a.name.localeCompare(b.name)
-      );
-      if (!rankedPlayers.length) {
-        individualTierIssues.push(`${group.sport} ${group.tier}: no Individual player results available`);
-        return;
-      }
-      [4, 3, 2, 1].forEach((points, index) => {
-        const player = rankedPlayers[index];
-        if (player?.team) {
-          ensure(player.team).score += points;
-          addTeamContribution(player.team, player.name, group.sport, group.tier, points);
-        }
-      });
-    });
-
     teamsData.forEach(t => {
       const name = resolveTeamName(
         t.name || t["Team Name"] || t["TeamName"] || t.Team ||
@@ -504,10 +401,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const entries = Object.values(stats).sort((a, b) =>
-      b.score - a.score ||
-      b.wins - a.wins ||
-      (b.gamesWon - b.losses) - (a.gamesWon - a.losses) ||
-      b.pd - a.pd || a.name.localeCompare(b.name)
+      b.score - a.score || a.name.localeCompare(b.name)
     );
 
     body.innerHTML = entries.length
@@ -526,7 +420,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (viewBtn) viewBtn.classList.toggle("hidden", teamPointsView !== "tree");
     if (msg) msg.textContent = entries.length
-      ? (teamPointsView === "tree" ? "Points awarded to this team by player, sport and tier." : `${entries.length} team(s) shown. Double-click a team to view its points contribution.${racketlonTierIssues.length ? " Racketlon tier points: " + racketlonTierIssues.join("; ") + "." : ""}${individualTierIssues.length ? " Individual tier points: " + individualTierIssues.join("; ") + "." : ""}`)
+      ? (teamPointsView === "tree" ? "Points summed from the Fixtures sheet for this team." : `${entries.length} team(s) shown. Total Points are the sum of the Points column in Fixtures. Double-click a team to view its points contribution.`)
       : "Results will appear here after fixture scores are entered.";
   }
 
